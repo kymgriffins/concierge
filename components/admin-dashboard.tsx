@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
 
-export function AdminDashboard() {
+export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<Booking[]>([]);
@@ -86,61 +86,6 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-            <span className="text-2xl">📊</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalBookings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <span className="text-2xl">✅</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.completedBookings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats ? Math.round((stats.completedBookings / stats.totalBookings) * 100) : 0}% completion rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Bookings</CardTitle>
-            <span className="text-2xl">📅</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.todayBookings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {todaySchedule.length} confirmed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Satisfaction</CardTitle>
-            <span className="text-2xl">⭐</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.satisfactionRate || 0}%</div>
-            <p className="text-xs text-muted-foreground">
-              Based on feedback
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Main Content Grid */}
       <div className="flex justify-end">
         <Button variant="outline" onClick={refresh}>Refresh</Button>
@@ -176,7 +121,7 @@ export function AdminDashboard() {
               ))}
             </div>
             <Separator className="my-4" />
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => onNavigate?.('bookings')}>
               View All Bookings
             </Button>
           </CardContent>
@@ -219,7 +164,7 @@ export function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button className="h-20 flex-col">
+            <Button className="h-20 flex-col" onClick={() => onNavigate?.('bookings')}>
               <span className="text-2xl mb-2">✈️</span>
               New Booking
             </Button>

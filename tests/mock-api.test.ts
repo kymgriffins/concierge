@@ -63,3 +63,23 @@ describe('MockAPI messages, roster and tasks', () => {
     expect(d).toBe(true);
   });
 });
+
+describe('MockAPI authentication and current user', () => {
+  it('can login as Waithera and report current user', async () => {
+    const res = await MockAPI.login('Waithera', 'password');
+    expect(res.success).toBe(true);
+    const user = await MockAPI.getCurrentUser();
+    expect(user).toBeDefined();
+    expect(user?.name).toBe('Waithera');
+  });
+
+  it('can login as Annabelle by email and logout', async () => {
+    const res = await MockAPI.login('annabelle@airport.com', 'pw');
+    expect(res.success).toBe(true);
+    const user = await MockAPI.getCurrentUser();
+    expect(user?.name).toBe('Annabelle');
+    await MockAPI.logout();
+    const after = await MockAPI.getCurrentUser();
+    expect(after).toBeNull();
+  });
+});

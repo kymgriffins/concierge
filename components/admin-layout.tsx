@@ -117,8 +117,8 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
                 <AvatarFallback>SM</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Staff Member</p>
-                <p className="text-xs text-muted-foreground truncate">concierge@airport.com</p>
+                <p className="text-sm font-medium truncate">Waithera</p>
+                <p className="text-xs text-muted-foreground truncate">waithera@airport.com</p>
               </div>
             </div>
           </div>

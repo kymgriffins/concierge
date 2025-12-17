@@ -330,8 +330,13 @@ export interface Agent {
 const mockAgents: Agent[] = [
   { id: 'a1', name: 'Staff Member A', email: 'staff.a@airport.com', role: 'agent', phone: '+1-555-1001' },
   { id: 'a2', name: 'Staff Member B', email: 'staff.b@airport.com', role: 'agent', phone: '+1-555-1002' },
+  { id: 'a3', name: 'Annabelle', email: 'annabelle@airport.com', role: 'agent', phone: '+1-555-1101' },
+  { id: 'a4', name: 'Waithera', email: 'waithera@airport.com', role: 'concierge', phone: '+1-555-1102' },
   { id: 's1', name: 'Supervisor Sam', email: 'supervisor@airport.com', role: 'supervisor', phone: '+1-555-2001' }
 ];
+
+// Current logged-in user (mock session)
+let mockCurrentUser: Agent | null = null;
 
 // Incoming messages / conversations
 export interface IncomingMessage {
@@ -404,21 +409,34 @@ export class MockAPI {
   // Authentication
   static async login(username: string, password: string): Promise<{ success: boolean; token?: string; user?: any }> {
     await this.delay();
+    if (!username || !password) return { success: false };
 
-    if (username && password) {
+    // Simplified mock auth: match username to agent name or email
+    const lower = username.toLowerCase();
+    const agent = mockAgents.find(a => a.name.toLowerCase() === lower || a.email.toLowerCase() === lower);
+
+    if (agent) {
+      mockCurrentUser = agent;
       return {
         success: true,
         token: 'mock-jwt-token-' + Date.now(),
-        user: {
-          id: '1',
-          name: 'Waithera',
-          role: 'concierge',
-          email: 'Waithera@airportconcierge.com'
-        }
+        user: agent
       };
     }
 
-    return { success: false };
+    // default fallback: create a simple concierge session using provided username
+    mockCurrentUser = { id: 'guest', name: username, email: `${username}@airportconcierge.local`, role: 'concierge' } as Agent;
+    return { success: true, token: 'mock-jwt-token-' + Date.now(), user: mockCurrentUser };
+  }
+
+  static async getCurrentUser(): Promise<Agent | null> {
+    await this.delay(50);
+    return mockCurrentUser;
+  }
+
+  static async logout(): Promise<void> {
+    await this.delay(50);
+    mockCurrentUser = null;
   }
 
   // Bookings
