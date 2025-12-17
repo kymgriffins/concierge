@@ -6,6 +6,9 @@ import { AdminCustomers } from "./admin-customers";
 import { AdminDashboard } from "./admin-dashboard";
 import { AdminServices } from "./admin-services";
 import { AdminActivity } from "./admin-activity";
+import { AdminConversations } from "./admin-conversations";
+import { AdminRoster } from "./admin-roster";
+import { AdminTasks } from "./admin-tasks";
 import { AdminLayout } from "./admin-layout";
 
 export function AdminPanel() {
@@ -21,6 +24,12 @@ export function AdminPanel() {
         return <AdminCustomers />;
       case "services":
         return <AdminServices />;
+      case "conversations":
+        return <AdminConversations />;
+      case "roster":
+        return <AdminRoster />;
+      case "tasks":
+        return <AdminTasks />;
       case "activity":
         return <AdminActivity />;
       case "analytics":

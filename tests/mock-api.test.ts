@@ -31,3 +31,35 @@ describe('MockAPI basic operations', () => {
     expect(deleted).toBe(true);
   });
 });
+
+describe('MockAPI messages, roster and tasks', () => {
+  it('can list and mark incoming messages processed', async () => {
+    const messages = await MockAPI.getIncomingMessages();
+    expect(messages.length).toBeGreaterThan(0);
+    const m = await MockAPI.createIncomingMessage({ source: 'sms', message: 'Test message', senderContact: '000' });
+    expect(m).toBeDefined();
+    const updated = await MockAPI.markMessageProcessed(m.id, true);
+    expect(updated?.processed).toBe(true);
+  });
+
+  it('can create and manage roster shifts', async () => {
+    const before = await MockAPI.getRoster();
+    const s = await MockAPI.createRosterShift({ date: '2025-12-20', shift: 'night', agentId: 'a1', notes: 'Test' });
+    expect(s).toBeDefined();
+    const updated = await MockAPI.updateRosterShift(s.id, { notes: 'Updated' });
+    expect(updated?.notes).toBe('Updated');
+    const deleted = await MockAPI.deleteRosterShift(s.id);
+    expect(deleted).toBe(true);
+    const after = await MockAPI.getRoster();
+    expect(after.length).toBeGreaterThanOrEqual(before.length);
+  });
+
+  it('can create and manage tasks', async () => {
+    const t = await MockAPI.createTask({ title: 'Test Task', status: 'open', createdAt: new Date().toISOString() } as any);
+    expect(t).toBeDefined();
+    const u = await MockAPI.updateTask(t.id, { status: 'in_progress' });
+    expect(u?.status).toBe('in_progress');
+    const d = await MockAPI.deleteTask(t.id);
+    expect(d).toBe(true);
+  });
+});

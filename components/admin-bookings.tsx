@@ -5,16 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import DateTimePicker from "@/components/ui/date-time-picker";
+import DatePicker from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking } from "@/lib/mock-api";
 
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState<'date' | 'passenger' | 'flight'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -38,6 +46,18 @@ export function AdminBookings() {
   useEffect(() => {
     filterBookings();
   }, [bookings, searchTerm, statusFilter]);
+  
+  useEffect(() => {
+    filterBookings();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [sortBy, sortDir]);
+
+  useEffect(() => {
+    setPage(1); // reset page when filters change
+  }, [searchTerm, statusFilter, startDate, endDate, perPage]);
 
   const loadBookings = async () => {
     try {
@@ -66,6 +86,23 @@ export function AdminBookings() {
         booking.company.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Date range filter
+    if (startDate) {
+      filtered = filtered.filter(b => b.date >= startDate);
+    }
+    if (endDate) {
+      filtered = filtered.filter(b => b.date <= endDate);
+    }
+
+    // sort
+    filtered = filtered.sort((a, b) => {
+      let v = 0;
+      if (sortBy === 'date') v = a.date.localeCompare(b.date);
+      if (sortBy === 'passenger') v = a.passengerName.localeCompare(b.passengerName);
+      if (sortBy === 'flight') v = a.flightNumber.localeCompare(b.flightNumber);
+      return sortDir === 'asc' ? v : -v;
+    });
 
     setFilteredBookings(filtered);
   };
@@ -175,6 +212,9 @@ export function AdminBookings() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / perPage));
+  const paginated = filteredBookings.slice((page - 1) * perPage, page * perPage);
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -218,6 +258,10 @@ export function AdminBookings() {
                 className="w-full"
               />
             </div>
+            <div className="flex gap-2">
+              <DatePicker value={startDate} onChange={(v) => setStartDate(v)} />
+              <DatePicker value={endDate} onChange={(v) => setEndDate(v)} />
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by status" />
@@ -236,7 +280,7 @@ export function AdminBookings() {
         </CardContent>
       </Card>
 
-      {/* Bookings List */}
+      {/* Bookings Table */}
       {/* Create / Edit form */}
       {showCreate && (
         <Card>
@@ -253,8 +297,7 @@ export function AdminBookings() {
                 <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 <Input placeholder="Flight number" value={form.flightNumber || ''} onChange={(e) => setForm({ ...form, flightNumber: e.target.value })} />
                 <Input placeholder="Airline" value={form.airline || ''} onChange={(e) => setForm({ ...form, airline: e.target.value })} />
-                <Input type="date" value={form.date || ''} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-                <Input type="time" value={form.time || ''} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+                <DateTimePicker date={form.date || null} time={form.time || null} onChange={(d, t) => setForm({ ...form, date: d || '', time: t || '' })} />
                 <Input placeholder="Terminal" value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
                 <Input type="number" min={1} placeholder="Passengers" value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
                 <Select value={form.status || 'new'} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
@@ -303,86 +346,88 @@ export function AdminBookings() {
           </CardContent>
         </Card>
       )}
-      <div className="space-y-4">
-        {filteredBookings.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground">No bookings found matching your criteria.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredBookings.map((booking) => (
-            <Card key={booking.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{booking.passengerName}</h3>
-                      <Badge variant={getStatusColor(booking.status)}>
-                        {booking.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                      <div>
-                        <span className="font-medium">Flight:</span> {booking.flightNumber} ({booking.airline})
-                      </div>
-                      <div>
-                        <span className="font-medium">Date:</span> {formatDate(booking.date)} at {booking.time}
-                      </div>
-                      <div>
-                        <span className="font-medium">Company:</span> {booking.company}
-                      </div>
-                      <div>
-                        <span className="font-medium">Passengers:</span> {booking.passengerCount}
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <span className="font-medium text-sm">Services:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {booking.services.map((service, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {service.replace('_', ' ')}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    {booking.specialRequests && (
-                      <div className="mt-2 text-sm">
-                        <span className="font-medium">Special Requests:</span> {booking.specialRequests}
-                      </div>
-                    )}
-                  </div>
+      <Card>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm">Per page:</label>
+              <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
+                <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="ml-4 flex items-center gap-2">
+                <label className="text-sm">Sort:</label>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="passenger">Passenger</SelectItem>
+                    <SelectItem value="flight">Flight</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" onClick={() => setSortDir(dir => dir === 'asc' ? 'desc' : 'asc')}>{sortDir === 'asc' ? '↑' : '↓'}</Button>
+              </div>
+            </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-48">
-                    <Select
-                      value={booking.status}
-                      onValueChange={(value: string) => handleStatusChange(booking.id, value as Booking['status'])}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="contacted">Contacted</SelectItem>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setPage(p => Math.max(1, p - 1)); }}>Previous</Button>
+              <div className="text-sm">Page {page} / {totalPages}</div>
+              <Button variant="outline" size="sm" onClick={() => { setPage(p => Math.min(totalPages, p + 1)); }}>Next</Button>
+            </div>
+          </div>
 
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(booking)}>Edit</Button>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedBooking(booking)}>View</Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(booking.id)}>Delete</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+          <div className="overflow-auto">
+            <table className="w-full table-auto border-collapse">
+              <thead>
+                <tr className="text-left text-sm text-muted-foreground border-b">
+                    <th className="p-4">Passenger</th>
+                      <th className="p-4">Flight</th>
+                      <th className="p-4">Date</th>
+                      <th className="p-4">Company</th>
+                      <th className="p-4">Services</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4">Source</th>
+                      <th className="p-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No bookings found.</td></tr>
+                ) : paginated.map(booking => (
+                  <tr key={booking.id} className="border-b hover:bg-muted">
+                    <td className="p-4 align-top">
+                      <div className="font-medium">{booking.passengerName}</div>
+                      <div className="text-sm text-muted-foreground">{booking.phone} • {booking.email}</div>
+                    </td>
+                    <td className="p-4 align-top">{booking.flightNumber} <div className="text-sm text-muted-foreground">{booking.airline} • {booking.time}</div></td>
+                    <td className="p-4 align-top">{formatDate(booking.date)}</td>
+                    <td className="p-4 align-top">{booking.company}</td>
+                    <td className="p-4 align-top">
+                      <div className="flex flex-wrap gap-1">
+                        {booking.services.map(s => <Badge key={s} variant="outline" className="text-xs">{s.replace('_', ' ')}</Badge>)}
+                      </div>
+                    </td>
+                    <td className="p-4 align-top"><Badge variant={getStatusColor(booking.status)}>{booking.status.replace('_', ' ')}</Badge></td>
+                    <td className="p-4 align-top text-sm text-muted-foreground">{booking.source}</td>
+                    <td className="p-4 align-top">
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(booking)}>Edit</Button>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedBooking(booking)}>View</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(booking.id)}>Delete</Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Pagination placeholder */}
       {filteredBookings.length > 0 && (
@@ -409,7 +454,7 @@ export function AdminBookings() {
             <CardDescription>Details for {selectedBooking.passengerName}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><strong>Flight:</strong> {selectedBooking.flightNumber} ({selectedBooking.airline})</div>
               <div><strong>Date:</strong> {formatDate(selectedBooking.date)} at {selectedBooking.time}</div>
               <div><strong>Company:</strong> {selectedBooking.company}</div>

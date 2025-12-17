@@ -318,6 +318,83 @@ const mockCustomers: Customer[] = [
   }
 ];
 
+// Agents (staff) for assignment and roster
+export interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  role: 'agent' | 'supervisor' | 'concierge';
+  phone?: string;
+}
+
+const mockAgents: Agent[] = [
+  { id: 'a1', name: 'Staff Member A', email: 'staff.a@airport.com', role: 'agent', phone: '+1-555-1001' },
+  { id: 'a2', name: 'Staff Member B', email: 'staff.b@airport.com', role: 'agent', phone: '+1-555-1002' },
+  { id: 's1', name: 'Supervisor Sam', email: 'supervisor@airport.com', role: 'supervisor', phone: '+1-555-2001' }
+];
+
+// Incoming messages / conversations
+export interface IncomingMessage {
+  id: string;
+  source: 'whatsapp' | 'email' | 'call' | 'sms';
+  senderName?: string;
+  senderContact?: string;
+  message: string;
+  receivedAt: string;
+  processed: boolean;
+}
+
+const mockIncomingMessages: IncomingMessage[] = [
+  {
+    id: 'm1',
+    source: 'whatsapp',
+    senderName: 'John Smith',
+    senderContact: '+1-555-0123',
+    message: 'Hi, can you book airport assistance for UA 457 on 2025-01-15 at 14:30?',
+    receivedAt: '2025-01-10T09:12:00Z',
+    processed: false
+  },
+  {
+    id: 'm2',
+    source: 'email',
+    senderName: 'Sarah Johnson',
+    senderContact: 'sarah.j@globalsolutions.com',
+    message: 'Please arrange a porter and lounge access for DL 892 on 2025-01-15',
+    receivedAt: '2025-01-12T07:10:00Z',
+    processed: true
+  }
+];
+
+// Roster / shifts
+export interface RosterShift {
+  id: string;
+  date: string; // YYYY-MM-DD
+  shift: 'morning' | 'afternoon' | 'night';
+  agentId: string;
+  notes?: string;
+}
+
+const mockRoster: RosterShift[] = [
+  { id: 'r1', date: '2025-01-15', shift: 'morning', agentId: 'a1', notes: 'Terminal 1 coverage' },
+  { id: 'r2', date: '2025-01-15', shift: 'afternoon', agentId: 'a2', notes: 'Gate support' }
+];
+
+// Tasks assigned to agents (supervisor creates and assigns)
+export interface TaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  assignedTo?: string; // agentId
+  dueDate?: string; // ISO
+  status: 'open' | 'in_progress' | 'done' | 'cancelled';
+  relatedBookingId?: string;
+  createdAt: string;
+}
+
+const mockTasks: TaskItem[] = [
+  { id: 't1', title: 'Meet John Smith at Gate', description: 'Gate B12 at 14:25', assignedTo: 'a1', dueDate: '2025-01-15T14:25:00Z', status: 'open', relatedBookingId: '1', createdAt: '2025-01-14T10:00:00Z' }
+];
+
 // Mock API Functions
 export class MockAPI {
   private static delay(ms: number = 500): Promise<void> {
@@ -553,6 +630,112 @@ export class MockAPI {
     }
 
     return results;
+  }
+
+  // Agents
+  static async getAgents(): Promise<Agent[]> {
+    await this.delay();
+    return mockAgents;
+  }
+
+  // Incoming messages / conversations
+  static async getIncomingMessages(limit: number = 50): Promise<IncomingMessage[]> {
+    await this.delay();
+    return mockIncomingMessages.slice(0, limit).sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
+  }
+
+  static async createIncomingMessage(msg: Omit<IncomingMessage, 'id' | 'receivedAt' | 'processed'>): Promise<IncomingMessage> {
+    await this.delay();
+    const newMsg: IncomingMessage = {
+      ...msg,
+      id: (mockIncomingMessages.length + 1).toString(),
+      receivedAt: new Date().toISOString(),
+      processed: false
+    };
+    mockIncomingMessages.unshift(newMsg);
+    return newMsg;
+  }
+
+  static async markMessageProcessed(id: string, processed: boolean = true): Promise<IncomingMessage | null> {
+    await this.delay();
+    const idx = mockIncomingMessages.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      mockIncomingMessages[idx].processed = processed;
+      return mockIncomingMessages[idx];
+    }
+    return null;
+  }
+
+  // Roster
+  static async getRoster(startDate?: string, endDate?: string): Promise<RosterShift[]> {
+    await this.delay();
+    let results = mockRoster;
+    if (startDate) results = results.filter(r => r.date >= startDate);
+    if (endDate) results = results.filter(r => r.date <= endDate);
+    return results.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  static async createRosterShift(data: Omit<RosterShift, 'id'>): Promise<RosterShift> {
+    await this.delay();
+    const newShift: RosterShift = { ...data, id: (mockRoster.length + 1).toString() };
+    mockRoster.push(newShift);
+    return newShift;
+  }
+
+  static async updateRosterShift(id: string, updates: Partial<RosterShift>): Promise<RosterShift | null> {
+    await this.delay();
+    const idx = mockRoster.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      mockRoster[idx] = { ...mockRoster[idx], ...updates };
+      return mockRoster[idx];
+    }
+    return null;
+  }
+
+  static async deleteRosterShift(id: string): Promise<boolean> {
+    await this.delay();
+    const idx = mockRoster.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      mockRoster.splice(idx, 1);
+      return true;
+    }
+    return false;
+  }
+
+  // Tasks
+  static async getTasks(filter: any = {}): Promise<TaskItem[]> {
+    await this.delay();
+    let results = mockTasks;
+    if (filter.assignedTo) results = results.filter(t => t.assignedTo === filter.assignedTo);
+    if (filter.status) results = results.filter(t => t.status === filter.status);
+    return results.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  static async createTask(data: Omit<TaskItem, 'id' | 'createdAt'>): Promise<TaskItem> {
+    await this.delay();
+    const newTask: TaskItem = { ...data, id: (mockTasks.length + 1).toString(), createdAt: new Date().toISOString() } as TaskItem;
+    mockTasks.unshift(newTask);
+    return newTask;
+  }
+
+  static async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem | null> {
+    await this.delay();
+    const idx = mockTasks.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      mockTasks[idx] = { ...mockTasks[idx], ...updates };
+      return mockTasks[idx];
+    }
+    return null;
+  }
+
+  static async deleteTask(id: string): Promise<boolean> {
+    await this.delay();
+    const idx = mockTasks.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      mockTasks.splice(idx, 1);
+      return true;
+    }
+    return false;
   }
 
   static async getCustomerById(id: string): Promise<Customer | null> {

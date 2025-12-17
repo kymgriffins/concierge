@@ -26,10 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={roboto.variable}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <main className="mx-auto max-w-7xl px-4 py-8">
+          {children}
+        </main>
       </body>
     </html>
   );

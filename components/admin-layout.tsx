@@ -33,8 +33,11 @@ interface AdminLayoutProps {
 const navigation = [
   { name: "Dashboard", id: "dashboard", icon: Home },
   { name: "Bookings", id: "bookings", icon: Calendar },
+    { name: "Conversations", id: "conversations", icon: FileText },
   { name: "Customers", id: "customers", icon: Users },
+    { name: "Roster", id: "roster", icon: Calendar },
   { name: "Services", id: "services", icon: Package },
+    { name: "Tasks", id: "tasks", icon: FileText },
   { name: "Activity", id: "activity", icon: Bell },
   { name: "Analytics", id: "analytics", icon: BarChart3 },
   { name: "Reports", id: "reports", icon: FileText },
