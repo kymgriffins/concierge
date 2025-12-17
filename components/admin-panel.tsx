@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AdminBookings } from "./admin-bookings";
 import { AdminCustomers } from "./admin-customers";
 import { AdminDashboard } from "./admin-dashboard";
+import { AdminServices } from "./admin-services";
+import { AdminActivity } from "./admin-activity";
 import { AdminLayout } from "./admin-layout";
 
 export function AdminPanel() {
@@ -17,6 +19,10 @@ export function AdminPanel() {
         return <AdminBookings />;
       case "customers":
         return <AdminCustomers />;
+      case "services":
+        return <AdminServices />;
+      case "activity":
+        return <AdminActivity />;
       case "analytics":
         return (
           <div className="space-y-6">

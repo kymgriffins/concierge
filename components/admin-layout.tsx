@@ -10,6 +10,7 @@ import {
   Bell,
   Calendar,
   FileText,
+  Package,
   Home,
   LogOut,
   Menu,
@@ -19,6 +20,9 @@ import {
   X
 } from "lucide-react";
 import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { MockAPI } from "@/lib/mock-api";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -30,6 +34,8 @@ const navigation = [
   { name: "Dashboard", id: "dashboard", icon: Home },
   { name: "Bookings", id: "bookings", icon: Calendar },
   { name: "Customers", id: "customers", icon: Users },
+  { name: "Services", id: "services", icon: Package },
+  { name: "Activity", id: "activity", icon: Bell },
   { name: "Analytics", id: "analytics", icon: BarChart3 },
   { name: "Reports", id: "reports", icon: FileText },
   { name: "Settings", id: "settings", icon: Settings },
@@ -37,6 +43,21 @@ const navigation = [
 
 export function AdminLayout({ children, currentPage, onPageChange }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ bookings: any[]; customers: any[] }>({ bookings: [], customers: [] });
+
+  const doSearch = async () => {
+    try {
+      const [bookings, customers] = await Promise.all([
+        MockAPI.searchBookings(query || ''),
+        MockAPI.getCustomers(query || '')
+      ]);
+      setResults({ bookings, customers });
+    } catch (err) {
+      console.error('Search error', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,7 +125,7 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
       {/* Main content */}
       <div className="lg:ml-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6">
             <div className="flex items-center space-x-4">
               <Button
@@ -123,9 +144,32 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
 
             <div className="flex items-center space-x-4">
               {/* Search */}
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                <Search className="h-4 w-4" />
-              </Button>
+              <div>
+                <Button variant="ghost" size="sm" className="hidden sm:flex" onClick={() => setSearchOpen(true)}>
+                  <Search className="h-4 w-4" />
+                </Button>
+                {searchOpen && (
+                  <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] sm:w-96 z-50">
+                    <Card>
+                      <CardContent>
+                        <div className="flex gap-2">
+                          <Input placeholder="Search bookings or customers..." value={query} onChange={(e) => setQuery(e.target.value)} />
+                          <Button onClick={doSearch}>Search</Button>
+                          <Button variant="ghost" onClick={() => { setSearchOpen(false); setQuery(''); setResults({ bookings: [], customers: [] }); }}>Close</Button>
+                        </div>
+                        <div className="mt-3 space-y-2 max-h-64 overflow-auto">
+                          {results.bookings.map(b => (
+                            <div key={b.id} className="p-2 hover:bg-muted rounded">{b.passengerName} • {b.flightNumber}</div>
+                          ))}
+                          {results.customers.map(c => (
+                            <div key={c.id} className="p-2 hover:bg-muted rounded">{c.name} • {c.company}</div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
 
               {/* Notifications */}
               <DropdownMenu>

@@ -430,10 +430,51 @@ export class MockAPI {
     return mockActivityLogs.slice(0, limit);
   }
 
+  static async createActivityLog(logData: Omit<ActivityLog, 'id' | 'timestamp'>): Promise<ActivityLog> {
+    await this.delay();
+    const newLog: ActivityLog = {
+      ...logData,
+      id: (mockActivityLogs.length + 1).toString(),
+      timestamp: new Date().toISOString()
+    };
+    mockActivityLogs.unshift(newLog);
+    return newLog;
+  }
+
   // Service Options
   static async getServiceOptions(): Promise<ServiceOption[]> {
     await this.delay();
     return mockServiceOptions;
+  }
+
+  static async createServiceOption(optionData: Omit<ServiceOption, 'id'>): Promise<ServiceOption> {
+    await this.delay();
+    const newOption: ServiceOption = {
+      ...optionData,
+      id: (mockServiceOptions.length + 1).toString()
+    };
+    mockServiceOptions.push(newOption);
+    return newOption;
+  }
+
+  static async updateServiceOption(id: string, updates: Partial<ServiceOption>): Promise<ServiceOption | null> {
+    await this.delay();
+    const index = mockServiceOptions.findIndex(s => s.id === id);
+    if (index !== -1) {
+      mockServiceOptions[index] = { ...mockServiceOptions[index], ...updates };
+      return mockServiceOptions[index];
+    }
+    return null;
+  }
+
+  static async deleteServiceOption(id: string): Promise<boolean> {
+    await this.delay();
+    const index = mockServiceOptions.findIndex(s => s.id === id);
+    if (index !== -1) {
+      mockServiceOptions.splice(index, 1);
+      return true;
+    }
+    return false;
   }
 
   // Sync Operations
@@ -517,6 +558,16 @@ export class MockAPI {
   static async getCustomerById(id: string): Promise<Customer | null> {
     await this.delay();
     return mockCustomers.find(c => c.id === id) || null;
+  }
+
+  static async createCustomer(customerData: Omit<Customer, 'id'>): Promise<Customer> {
+    await this.delay();
+    const newCustomer: Customer = {
+      ...customerData,
+      id: (mockCustomers.length + 1).toString()
+    };
+    mockCustomers.push(newCustomer);
+    return newCustomer;
   }
 
   static async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer | null> {

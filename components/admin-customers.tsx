@@ -17,6 +17,10 @@ export function AdminCustomers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<Partial<Customer>>({});
 
   useEffect(() => {
     loadCustomers();
@@ -74,6 +78,73 @@ export function AdminCustomers() {
     }
   };
 
+  const resetForm = () => setForm({});
+
+  const handleOpenCreate = () => {
+    resetForm();
+    setShowCreate(true);
+    setEditing(false);
+  };
+
+  const handleSubmitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const payload: any = {
+        name: form.name || '',
+        email: form.email || '',
+        phone: form.phone || '',
+        company: form.company || '',
+        role: form.role || 'Regular',
+        status: (form.status as Customer['status']) || 'active',
+        totalBookings: form.totalBookings || 0,
+        lastBookingDate: form.lastBookingDate || '',
+        notes: form.notes || ''
+      };
+      await MockAPI.createCustomer(payload);
+      await loadCustomers();
+      setShowCreate(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error creating customer:', error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleOpenEdit = (customer: Customer) => {
+    setForm({ ...customer });
+    setEditing(true);
+    setShowCreate(true);
+  };
+
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.id) return;
+    setCreating(true);
+    try {
+      await MockAPI.updateCustomer(form.id, form as Partial<Customer>);
+      await loadCustomers();
+      setShowCreate(false);
+      setEditing(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error updating customer:', error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete customer?')) return;
+    try {
+      await MockAPI.deleteCustomer(id);
+      await loadCustomers();
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -102,7 +173,7 @@ export function AdminCustomers() {
           <h1 className="text-2xl font-bold">Customers</h1>
           <p className="text-muted-foreground">Manage your relationships with passengers and bookers</p>
         </div>
-        <Button>
+        <Button onClick={handleOpenCreate}>
           <span className="mr-2">+</span>
           Add Customer
         </Button>
@@ -135,6 +206,34 @@ export function AdminCustomers() {
       </Card>
 
       {/* Customers List */}
+      {/* Create/Edit form */}
+      {showCreate && (
+        <Card>
+          <CardContent>
+            <form onSubmit={editing ? handleSubmitEdit : handleSubmitCreate} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input placeholder="Name" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input placeholder="Company" value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Input placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <Select value={form.status || 'active'} onValueChange={(v) => setForm({ ...form, status: v as Customer['status'] })}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={creating}>{creating ? 'Saving...' : (editing ? 'Save changes' : 'Create customer')}</Button>
+                <Button variant="outline" onClick={() => { setShowCreate(false); setEditing(false); resetForm(); }}>Cancel</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCustomers.length === 0 ? (
           <div className="col-span-full">
@@ -169,8 +268,9 @@ export function AdminCustomers() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Profile</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => alert('View profile coming soon')}>View Profile</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleOpenEdit(customer)}>Edit Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(customer.id)}>Delete</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(customer.id, customer.status === 'active' ? 'inactive' : 'active')}>
                         {customer.status === 'active' ? 'Deactivate' : 'Activate'}
                       </DropdownMenuItem>

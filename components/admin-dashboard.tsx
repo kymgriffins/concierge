@@ -37,6 +37,33 @@ export function AdminDashboard() {
     loadDashboardData();
   }, []);
 
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const [dashboardStats, bookings, schedule] = await Promise.all([
+        MockAPI.getDashboardStats(),
+        MockAPI.getBookings('all', 5),
+        MockAPI.getTodaySchedule()
+      ]);
+      setStats(dashboardStats);
+      setRecentBookings(bookings);
+      setTodaySchedule(schedule);
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      await MockAPI.syncData();
+      await refresh();
+    } catch (error) {
+      console.error('Error syncing data:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -115,6 +142,10 @@ export function AdminDashboard() {
       </div>
 
       {/* Main Content Grid */}
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={refresh}>Refresh</Button>
+        <Button className="ml-2" onClick={handleSync}>Sync Data</Button>
+      </div>
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Bookings */}
         <Card>
