@@ -1,25 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
-  Menu,
-  X,
-  Home,
-  Calendar,
-  Users,
-  Settings,
-  Bell,
-  Search,
   BarChart3,
+  Bell,
+  Calendar,
   FileText,
-  LogOut
+  Home,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  Users,
+  X
 } from "lucide-react";
+import React, { useState } from "react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -50,9 +49,8 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b">

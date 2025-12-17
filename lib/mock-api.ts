@@ -334,9 +334,9 @@ export class MockAPI {
         token: 'mock-jwt-token-' + Date.now(),
         user: {
           id: '1',
-          name: 'Staff Member',
+          name: 'Waithera',
           role: 'concierge',
-          email: 'staff@airportconcierge.com'
+          email: 'Waithera@airportconcierge.com'
         }
       };
     }
