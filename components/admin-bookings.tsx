@@ -19,16 +19,18 @@ import { List, Plus, Clock, CheckCircle, Eye } from 'lucide-react';
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [sortBy, setSortBy] = useState<'date' | 'passenger' | 'flight'>('date');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string; description: string; icon: string; price?: number; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+  const [serviceFilter, setServiceFilter] = useState("all");
+  const [airlineFilter, setAirlineFilter] = useState("all");
+  const [terminalFilter, setTerminalFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [airlineOptions, setAirlineOptions] = useState<string[]>([]);
+  const [terminalOptions, setTerminalOptions] = useState<string[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -43,6 +45,15 @@ export function AdminBookings() {
     loadServiceOptions();
     (async () => setPermissions(await MockAPI.getPermissions()))();
   }, []);
+
+  useEffect(() => {
+    const airlines = [...new Set(bookings.map(b => b.airline).filter(Boolean) as string[])].sort();
+    setAirlineOptions(airlines);
+    const terminals = [...new Set(bookings.map(b => b.terminal).filter(Boolean) as string[])].sort();
+    setTerminalOptions(terminals);
+    const sources = [...new Set(bookings.map(b => b.source).filter(Boolean) as string[])].sort();
+    setSourceOptions(sources);
+  }, [bookings]);
 
   const loadServiceOptions = async () => {
     try {
@@ -74,11 +85,11 @@ export function AdminBookings() {
 
   useEffect(() => {
     setPage(1); // reset page when filters change
-  }, [searchTerm, statusFilter, startDate, endDate, perPage]);
+  }, [searchTerm, statusFilter, startDate, endDate, serviceFilter, airlineFilter, terminalFilter, sourceFilter, perPage]);
 
   const loadBookings = async () => {
     try {
-      const data = await MockAPI.getBookings('all', 50);
+      const data = await MockAPI.getBookings('all', 1000); // Load all bookings (up to 1000)
       setBookings(data);
     } catch (error) {
       console.error('Error loading bookings:', error);
@@ -110,6 +121,26 @@ export function AdminBookings() {
     }
     if (endDate) {
       filtered = filtered.filter(b => b.date <= endDate);
+    }
+
+    // Service filter
+    if (serviceFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.serviceId === serviceFilter);
+    }
+
+    // Airline filter
+    if (airlineFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.airline === airlineFilter);
+    }
+
+    // Terminal filter
+    if (terminalFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.terminal === terminalFilter);
+    }
+
+    // Source filter
+    if (sourceFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.source === sourceFilter);
     }
 
     // sort
@@ -320,6 +351,61 @@ export function AdminBookings() {
                 className="w-32"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {serviceOptions.map(opt => (
+                    <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={airlineFilter} onValueChange={setAirlineFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Airline" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Airlines</SelectItem>
+                  {airlineOptions.map(airline => (
+                    <SelectItem key={airline} value={airline}>{airline}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={terminalFilter} onValueChange={setTerminalFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Terminal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Terminals</SelectItem>
+                  {terminalOptions.map(terminal => (
+                    <SelectItem key={terminal} value={terminal}>{terminal}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  {sourceOptions.map(source => (
+                    <SelectItem key={source} value={source}>{source}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {(serviceFilter !== 'all' || airlineFilter !== 'all' || terminalFilter !== 'all' || sourceFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setServiceFilter('all'); setAirlineFilter('all'); setTerminalFilter('all'); setSourceFilter('all'); }}
+              >
+                Clear filters
+              </Button>
+            )}
           </div>
         )}
 
@@ -369,10 +455,12 @@ export function AdminBookings() {
       </div>
 
       {/* Status Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
           { status: 'all', label: 'All', count: bookings.length, icon: List, color: 'default' },
           { status: 'new', label: 'New', count: bookings.filter(b => b.status === 'new').length, icon: Plus, color: 'secondary' },
+          { status: 'contacted', label: 'Contacted', count: bookings.filter(b => b.status === 'contacted').length, icon: Plus, color: 'secondary' },
+          { status: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length, icon: Plus, color: 'secondary' },
           { status: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length, icon: Clock, color: 'destructive' },
           { status: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length, icon: CheckCircle, color: 'default' }
         ].map(({ status, label, count, icon: Icon, color }) => (
@@ -383,12 +471,12 @@ export function AdminBookings() {
             }`}
             onClick={() => setStatusFilter(status)}
           >
-            <CardContent className="p-4 text-center">
-              <div className="flex justify-center mb-2">
-                <Icon className="h-6 w-6 text-primary" />
+            <CardContent className="p-3 text-center">
+              <div className="flex justify-center mb-1">
+                <Icon className="h-5 w-5 text-primary" />
               </div>
-              <div className="text-2xl font-bold text-primary">{count}</div>
-              <div className="text-sm text-muted-foreground">{label}</div>
+              <div className="text-xl font-bold text-primary">{count}</div>
+              <div className="text-xs text-muted-foreground">{label}</div>
             </CardContent>
           </Card>
         ))}
