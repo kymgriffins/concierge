@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +14,6 @@ import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from '@/lib/utils';
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
 import { List, Plus, Clock, CheckCircle } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
 
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -34,12 +28,13 @@ export function AdminBookings() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [form, setForm] = useState<Partial<Booking>>({});
   const toast = useToast();
+  const router = useRouter();
   const [permissions, setPermissions] = useState<{ canCreateBooking?: boolean; canDeleteBooking?: boolean; canUpdateBooking?: boolean } | null>(null);
 
   useEffect(() => {
@@ -119,7 +114,7 @@ export function AdminBookings() {
     // sort
     filtered = filtered.sort((a, b) => {
       let v = 0;
-      if (sortBy === 'date') v = a.date.localeCompare(b.date);
+      if (sortBy === 'date') v = (a.date + ' ' + a.time).localeCompare(b.date + ' ' + b.time);
       if (sortBy === 'passenger') v = a.passengerName.localeCompare(b.passengerName);
       if (sortBy === 'flight') v = a.flightNumber.localeCompare(b.flightNumber);
       return sortDir === 'asc' ? v : -v;
@@ -333,6 +328,120 @@ export function AdminBookings() {
         ))}
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Filter bookings by date range, status, and search terms</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Search</label>
+              <Input
+                placeholder="Passenger name, flight, company..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Start Date</label>
+              <DatePicker
+                value={startDate}
+                onChange={setStartDate}
+                placeholder="From date"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">End Date</label>
+              <DatePicker
+                value={endDate}
+                onChange={setEndDate}
+                placeholder="To date"
+              />
+            </div>
+          </div>
+          {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
+            <div className="flex items-center gap-2 mt-4">
+              <span className="text-sm text-muted-foreground">Active filters:</span>
+              {searchTerm && (
+                <Badge variant="secondary" className="text-xs">
+                  Search: {searchTerm}
+                  <button
+                    className="ml-2 hover:text-destructive"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {statusFilter !== 'all' && (
+                <Badge variant="secondary" className="text-xs">
+                  Status: {statusFilter.replace('_', ' ')}
+                  <button
+                    className="ml-2 hover:text-destructive"
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {startDate && (
+                <Badge variant="secondary" className="text-xs">
+                  From: {formatDateUTC(startDate)}
+                  <button
+                    className="ml-2 hover:text-destructive"
+                    onClick={() => setStartDate(null)}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {endDate && (
+                <Badge variant="secondary" className="text-xs">
+                  To: {formatDateUTC(endDate)}
+                  <button
+                    className="ml-2 hover:text-destructive"
+                    onClick={() => setEndDate(null)}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setStartDate(null);
+                  setEndDate(null);
+                }}
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       
 
       {/* Bookings Table */}
@@ -469,7 +578,7 @@ export function AdminBookings() {
         data={filteredBookings}
         defaultPageSize={perPage}
         pageSizeOptions={[10,25,50,100]}
-        onRowClick={(r) => setSelectedBooking(r)}
+        onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
         searchable={true}
         exportable={true}
         emptyMessage="No bookings found matching your criteria"
@@ -495,39 +604,7 @@ export function AdminBookings() {
         </div>
       )}
 
-      {/* Selected booking details (modal) */}
-      <AlertDialog open={!!selectedBooking && !editing} onOpenChange={(open) => { if (!open) setSelectedBooking(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Booking details</AlertDialogTitle>
-            <AlertDialogDescription>Details for {selectedBooking?.passengerName}</AlertDialogDescription>
-          </AlertDialogHeader>
 
-          {selectedBooking && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><strong>Flight:</strong> {selectedBooking.flightNumber} ({selectedBooking.airline})</div>
-                <div><strong>Date:</strong> {formatDate(selectedBooking.date)} at {selectedBooking.time}</div>
-                <div><strong>Company:</strong> {selectedBooking.company}</div>
-                <div><strong>Passengers:</strong> {selectedBooking.passengerCount}</div>
-                <div><strong>Phone:</strong> {selectedBooking.phone}</div>
-                <div><strong>Email:</strong> {selectedBooking.email}</div>
-                <div><strong>Terminal:</strong> {selectedBooking.terminal}</div>
-                <div><strong>Service:</strong> {serviceOptions.find(opt => opt.id === selectedBooking.serviceId && opt.active)?.name || selectedBooking.serviceId}</div>
-                {selectedBooking.specialRequests && <div><strong>Special Requests:</strong> {selectedBooking.specialRequests}</div>}
-                {selectedBooking.shiftId && <div><strong>Assigned Shift:</strong> {selectedBooking.shiftId}</div>}
-                {selectedBooking.assignedAgentId && <div><strong>Assigned Agent:</strong> {selectedBooking.assignedAgentId}</div>}
-              </div>
-
-              <div className="flex gap-2 mt-2">
-                <Button onClick={() => { handleOpenEdit(selectedBooking); }}>Edit</Button>
-                <Button variant="destructive" onClick={() => { handleDelete(selectedBooking.id); setSelectedBooking(null); }}>Delete</Button>
-                <Button variant="outline" onClick={() => setSelectedBooking(null)}>Close</Button>
-              </div>
-            </div>
-          )}
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
