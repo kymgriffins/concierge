@@ -62,7 +62,7 @@ export function AdminPanel() {
   };
 
   return (
-    <AdminLayout currentPage={currentPage} onPageChange={setCurrentPage}>
+    <AdminLayout>
       {renderPage()}
     </AdminLayout>
   );
