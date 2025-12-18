@@ -18,7 +18,8 @@ import {
   Settings,
   Users,
   X,
-  Zap
+  Zap,
+  Target
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +37,7 @@ interface AdminLayoutProps {
 const navigation = [
   { name: "Dashboard", id: "dashboard", icon: Home },
   { name: "Bookings", id: "bookings", icon: Calendar },
+  { name: "Booking Assignments", id: "booking-assignments", icon: Target },
     { name: "Conversations", id: "conversations", icon: FileText },
   { name: "Customers", id: "customers", icon: Users },
     { name: "Roster", id: "roster", icon: Calendar },

@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         time: parsedData.time || '00:00',
         terminal: parsedData.terminal || '',
         passengerCount: parsedData.passengerCount || 1,
-        services: parsedData.services,
+        serviceId: parsedData.services && parsedData.services.length > 0 ? parsedData.services[0] : 'arrival', // Default to arrival if no services parsed
         specialRequests: parsedData.specialRequests || '',
         status: 'new' as const,
         source: mapMessageSource(message.source)

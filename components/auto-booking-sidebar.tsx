@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { MockAPI, IncomingMessage } from "@/lib/mock-api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MockAPI, IncomingMessage, Booking, RosterShift, Agent } from "@/lib/mock-api";
 import { MessageParser } from "@/lib/message-parser";
 import { AutoBookingResult } from "@/app/api/messages/process/route";
 import {
@@ -28,7 +29,10 @@ import {
   MapPin,
   Users,
   Star,
-  AlertCircle
+  AlertCircle,
+  UserCheck,
+  CalendarDays,
+  Target
 } from "lucide-react";
 
 interface ParsedDataDisplayProps {
@@ -166,6 +170,8 @@ export function AutoBookingSidebar() {
   const [selectedMessage, setSelectedMessage] = useState<IncomingMessage | null>(null);
   const [activeTab, setActiveTab] = useState<'input' | 'messages'>('input');
 
+
+
   useEffect(() => {
     loadMessages();
   }, []);
@@ -274,16 +280,20 @@ export function AutoBookingSidebar() {
     }
   };
 
+
+
+
+
   return (
     <div className="w-96 h-full border-l bg-background flex flex-col">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center gap-2 mb-2">
-          <Zap className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Auto-Booking</h2>
+          <Target className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Booking System</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Automatically create bookings from messages
+          Create bookings and assign to shifts & agents
         </p>
       </div>
 
@@ -441,7 +451,7 @@ export function AutoBookingSidebar() {
               </Card>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'messages' ? (
           <div className="p-4 space-y-4">
             {/* Messages List */}
             <div className="space-y-2">
@@ -490,7 +500,7 @@ export function AutoBookingSidebar() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

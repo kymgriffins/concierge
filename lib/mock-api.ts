@@ -13,13 +13,16 @@ export interface Booking {
   time: string;
   terminal?: string;
   passengerCount: number;
-  services: string[];
+  serviceId: string; // Single service per booking
   specialRequests: string;
   status: 'new' | 'contacted' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   source: 'manual' | 'whatsapp' | 'email';
   createdAt: string;
   updatedAt: string;
   notes: string[];
+  // Booking 2.0 fields - assignment to shifts and specific agents
+  shiftId?: string; // Reference to RosterShift.id
+  assignedAgentId?: string; // Reference to Agent.id
 }
 
 export interface ActivityLog {
@@ -65,7 +68,7 @@ const mockBookings: Booking[] = [
     time: '14:30',
     terminal: 'T1',
     passengerCount: 2,
-    services: ['meet_greet', 'fast_track', 'lounge'],
+    serviceId: 'arrival',
     specialRequests: 'VIP passenger, prefers quiet lounge',
     status: 'confirmed',
     source: 'whatsapp',
@@ -85,7 +88,7 @@ const mockBookings: Booking[] = [
     time: '16:15',
     terminal: 'T2',
     passengerCount: 1,
-    services: ['fast_track', 'lounge', 'porter'],
+    serviceId: 'departure',
     specialRequests: 'Business class, needs assistance with 2 suitcases',
     status: 'confirmed',
     source: 'email',
@@ -105,7 +108,7 @@ const mockBookings: Booking[] = [
     time: '18:45',
     terminal: 'T3',
     passengerCount: 3,
-    services: ['meet_greet', 'chauffeur', 'vip_package'],
+    serviceId: 'arrival',
     specialRequests: 'Family with children, need stroller assistance',
     status: 'new',
     source: 'manual',
@@ -125,7 +128,7 @@ const mockBookings: Booking[] = [
     time: '09:20',
     terminal: 'T4',
     passengerCount: 1,
-    services: ['fast_track'],
+    serviceId: 'departure',
     specialRequests: 'Early morning flight, coffee preferred',
     status: 'contacted',
     source: 'whatsapp',
@@ -145,7 +148,7 @@ const mockBookings: Booking[] = [
     time: '12:10',
     terminal: 'T1',
     passengerCount: 4,
-    services: ['meet_greet', 'porter', 'lounge'],
+    serviceId: 'transit',
     specialRequests: 'Group booking, separate lounge reservations needed',
     status: 'in_progress',
     source: 'email',
@@ -200,19 +203,27 @@ const mockActivityLogs: ActivityLog[] = [
 
 const mockServiceOptions: ServiceOption[] = [
   {
-    id: 'meet_greet',
-    name: 'Meet & Greet',
-    description: 'Personalized airport assistance',
-    icon: '✈️',
+    id: 'arrival',
+    name: 'Arrival Service',
+    description: 'Personalized arrival assistance and meet & greet',
+    icon: '🛬',
     price: 150,
     active: true
   },
   {
-    id: 'fast_track',
-    name: 'Fast Track',
-    description: 'Priority security and boarding',
-    icon: '⚡',
-    price: 75,
+    id: 'departure',
+    name: 'Departure Service',
+    description: 'Comprehensive departure assistance and fast track',
+    icon: '🛫',
+    price: 175,
+    active: true
+  },
+  {
+    id: 'transit',
+    name: 'Transit Service',
+    description: 'Seamless transit assistance and lounge access',
+    icon: '🔄',
+    price: 200,
     active: true
   },
   {
@@ -221,7 +232,7 @@ const mockServiceOptions: ServiceOption[] = [
     description: 'VIP lounge with amenities',
     icon: '🍸',
     price: 120,
-    active: true
+    active: false
   },
   {
     id: 'porter',
@@ -229,7 +240,7 @@ const mockServiceOptions: ServiceOption[] = [
     description: 'Professional baggage handling',
     icon: '🛎️',
     price: 50,
-    active: true
+    active: false
   },
   {
     id: 'chauffeur',
@@ -245,7 +256,7 @@ const mockServiceOptions: ServiceOption[] = [
     description: 'Complete premium experience',
     icon: '👑',
     price: 500,
-    active: true
+    active: false
   }
 ];
 
@@ -468,8 +479,33 @@ export interface RosterShift {
 }
 
 const mockRoster: RosterShift[] = [
-  { id: 'r1', date: '2025-01-15', shift: 'morning', agentId: 'a1', notes: 'Terminal 1 coverage' },
-  { id: 'r2', date: '2025-01-15', shift: 'afternoon', agentId: 'a2', notes: 'Gate support' }
+  // Morning shift - 5 agents (group working together)
+  { id: 'r1', date: '2025-01-15', shift: 'morning', agentId: 'a1', notes: 'Terminal 1 coverage - Lead Agent' },
+  { id: 'r2', date: '2025-01-15', shift: 'morning', agentId: 'a2', notes: 'Morning shift - Gate support' },
+  { id: 'r3', date: '2025-01-15', shift: 'morning', agentId: 'a3', notes: 'Morning shift - Baggage services' },
+  { id: 'r4', date: '2025-01-15', shift: 'morning', agentId: 'a4', notes: 'Morning shift - VIP concierge' },
+  { id: 'r5', date: '2025-01-15', shift: 'morning', agentId: 's1', notes: 'Morning shift - Supervisor' },
+
+  // Afternoon shift - 5 agents (group working together)
+  { id: 'r6', date: '2025-01-15', shift: 'afternoon', agentId: 'a1', notes: 'Afternoon shift - Lead Agent' },
+  { id: 'r7', date: '2025-01-15', shift: 'afternoon', agentId: 'a2', notes: 'Afternoon shift - Gate support' },
+  { id: 'r8', date: '2025-01-15', shift: 'afternoon', agentId: 'a3', notes: 'Afternoon shift - Baggage services' },
+  { id: 'r9', date: '2025-01-15', shift: 'afternoon', agentId: 'a4', notes: 'Afternoon shift - VIP concierge' },
+  { id: 'r10', date: '2025-01-15', shift: 'afternoon', agentId: 's1', notes: 'Afternoon shift - Supervisor' },
+
+  // Night shift - 6 agents (group working together)
+  { id: 'r11', date: '2025-01-15', shift: 'night', agentId: 'a1', notes: 'Night shift - Lead Agent' },
+  { id: 'r12', date: '2025-01-15', shift: 'night', agentId: 'a2', notes: 'Night shift - Gate support' },
+  { id: 'r13', date: '2025-01-15', shift: 'night', agentId: 'a3', notes: 'Night shift - Baggage services' },
+  { id: 'r14', date: '2025-01-15', shift: 'night', agentId: 'a4', notes: 'Night shift - VIP concierge' },
+  { id: 'r15', date: '2025-01-15', shift: 'night', agentId: 's1', notes: 'Night shift - Supervisor' },
+
+  // Next day shifts
+  { id: 'r16', date: '2025-01-16', shift: 'morning', agentId: 'a1', notes: 'Terminal 1 coverage - Lead Agent' },
+  { id: 'r17', date: '2025-01-16', shift: 'morning', agentId: 'a2', notes: 'Morning shift - Gate support' },
+  { id: 'r18', date: '2025-01-16', shift: 'morning', agentId: 'a3', notes: 'Morning shift - Baggage services' },
+  { id: 'r19', date: '2025-01-16', shift: 'morning', agentId: 'a4', notes: 'Morning shift - VIP concierge' },
+  { id: 'r20', date: '2025-01-16', shift: 'morning', agentId: 's1', notes: 'Morning shift - Supervisor' }
 ];
 
 // Tasks assigned to agents (supervisor creates and assigns)
@@ -928,6 +964,53 @@ export class MockAPI {
       return true;
     }
     return false;
+  }
+
+  // Booking 2.0 - Assign bookings to shifts and agents
+  static async getAvailableShiftsForDate(date: string): Promise<RosterShift[]> {
+    await this.delay();
+    return mockRoster.filter(r => r.date === date);
+  }
+
+  static async assignBookingToShift(bookingId: string, shiftId: string, agentId?: string): Promise<Booking | null> {
+    await this.delay();
+
+    const booking = mockBookings.find(b => b.id === bookingId);
+    const shift = mockRoster.find(r => r.id === shiftId);
+
+    if (!booking || !shift) return null;
+
+    // If agentId provided, verify it's the assigned agent for the shift
+    if (agentId && shift.agentId !== agentId) {
+      throw new Error('Agent is not assigned to this shift');
+    }
+
+    // Update booking with assignment
+    const updatedBooking = {
+      ...booking,
+      shiftId,
+      assignedAgentId: agentId || shift.agentId,
+      updatedAt: new Date().toISOString()
+    };
+
+    const index = mockBookings.findIndex(b => b.id === bookingId);
+    mockBookings[index] = updatedBooking;
+
+    return updatedBooking;
+  }
+
+  static async getBookingsAssignedToShift(shiftId: string): Promise<Booking[]> {
+    await this.delay();
+    return mockBookings.filter(b => b.shiftId === shiftId);
+  }
+
+  static async getBookingsAssignedToAgent(agentId: string, date?: string): Promise<Booking[]> {
+    await this.delay();
+    let bookings = mockBookings.filter(b => b.assignedAgentId === agentId);
+    if (date) {
+      bookings = bookings.filter(b => b.date === date);
+    }
+    return bookings;
   }
 }
 

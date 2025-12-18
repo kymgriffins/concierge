@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import DatePicker from "@/components/ui/date-picker";
 import TimePicker from "@/components/ui/time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MockAPI, Booking } from "@/lib/mock-api";
+import { MockAPI, Booking, RosterShift, Agent } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from '@/lib/utils';
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
@@ -28,7 +28,7 @@ export function AdminBookings() {
   const [perPage, setPerPage] = useState(25);
   const [sortBy, setSortBy] = useState<'date' | 'passenger' | 'flight'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string }[]>([]);
+  const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string; description: string; icon: string; price?: number; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -51,7 +51,14 @@ export function AdminBookings() {
   const loadServiceOptions = async () => {
     try {
       const opts = await MockAPI.getServiceOptions();
-      setServiceOptions(opts.map(o => ({ id: o.id, name: o.name })));
+      setServiceOptions(opts.map(o => ({
+        id: o.id,
+        name: o.name,
+        description: o.description,
+        icon: o.icon,
+        price: o.price,
+        active: o.active
+      })));
     } catch (error) {
       console.error('Error loading service options:', error);
     }
@@ -172,7 +179,7 @@ export function AdminBookings() {
         time: form.time || '00:00',
         terminal: form.terminal || '',
         passengerCount: form.passengerCount || 1,
-        services: form.services || [],
+        serviceId: form.serviceId || '',
         specialRequests: form.specialRequests || '',
         status: (form.status as Booking['status']) || 'new',
         source: (form.source as Booking['source']) || 'manual'
@@ -257,7 +264,7 @@ export function AdminBookings() {
     { key: 'flight', header: 'Flight', accessor: (r) => r.flightNumber, cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>), sortable: true },
     { key: 'date', header: 'Date', accessor: (r) => r.date, cell: (r) => formatDateUTC(r.date), sortable: true },
     { key: 'company', header: 'Company', accessor: (r) => r.company },
-    { key: 'services', header: 'Services', cell: (r) => (<div className="flex flex-wrap gap-1">{r.services.map(s => <Badge key={s} variant="outline" className="text-xs">{s.replace('_', ' ')}</Badge>)}</div>) },
+    { key: 'service', header: 'Service', cell: (r) => (<Badge variant="outline" className="text-xs">{serviceOptions.find(s => s.id === r.serviceId)?.name || r.serviceId}</Badge>) },
     { key: 'status', header: 'Status', cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>), sortable: true },
     { key: 'source', header: 'Source', accessor: (r) => r.source },
     { key: 'actions', header: '', cell: (r) => (
@@ -377,21 +384,28 @@ export function AdminBookings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-3">Services</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {serviceOptions.map(opt => {
-                        const checked = (form.services || []).includes(opt.id);
-                        return (
-                          <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-                            <input type="checkbox" checked={checked} onChange={(e) => {
-                              const next = new Set(form.services || []);
-                              if (e.target.checked) next.add(opt.id); else next.delete(opt.id);
-                              setForm({ ...form, services: Array.from(next) });
-                            }} className="rounded" />
-                            <span className="text-sm font-medium">{opt.name}</span>
-                          </label>
-                        );
-                      })}
+                    <label className="block text-sm font-medium mb-3">Service</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {serviceOptions.filter(opt => opt.active).map(opt => (
+                        <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="service"
+                            value={opt.id}
+                            checked={form.serviceId === opt.id}
+                            onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
+                            className="text-primary"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{opt.icon}</span>
+                              <span className="text-sm font-medium">{opt.name}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">{opt.description}</p>
+                            <p className="text-xs font-semibold text-primary mt-1">${opt.price}</p>
+                          </div>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
@@ -499,8 +513,10 @@ export function AdminBookings() {
                 <div><strong>Phone:</strong> {selectedBooking.phone}</div>
                 <div><strong>Email:</strong> {selectedBooking.email}</div>
                 <div><strong>Terminal:</strong> {selectedBooking.terminal}</div>
-                <div><strong>Services:</strong> {(selectedBooking.services || []).join(', ')}</div>
+                <div><strong>Service:</strong> {serviceOptions.find(opt => opt.id === selectedBooking.serviceId && opt.active)?.name || selectedBooking.serviceId}</div>
                 {selectedBooking.specialRequests && <div><strong>Special Requests:</strong> {selectedBooking.specialRequests}</div>}
+                {selectedBooking.shiftId && <div><strong>Assigned Shift:</strong> {selectedBooking.shiftId}</div>}
+                {selectedBooking.assignedAgentId && <div><strong>Assigned Agent:</strong> {selectedBooking.assignedAgentId}</div>}
               </div>
 
               <div className="flex gap-2 mt-2">

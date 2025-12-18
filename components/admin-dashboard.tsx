@@ -113,7 +113,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
                       {booking.passengerName}
                     </p>
                     <p className="text-sm text-muted-foreground truncate">
-                      {booking.flightNumber} • {booking.services.length} services
+                      {booking.flightNumber} • 1 service
                     </p>
                   </div>
                   <Badge variant={
@@ -149,7 +149,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
                       {booking.flightNumber} at {booking.time}
                     </p>
                   </div>
-                  <Badge variant="outline">{booking.services.length} services</Badge>
+                  <Badge variant="outline">1 service</Badge>
                 </div>
               ))}
               {todaySchedule.length === 0 && (

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AdminBookings } from "./admin-bookings";
+import { AdminBookingAssignments } from "./admin-booking-assignments";
 import { AdminCustomers } from "./admin-customers";
 import { AdminDashboard } from "./admin-dashboard";
 import { AdminServices } from "./admin-services";
@@ -20,6 +21,8 @@ export function AdminPanel() {
         return <AdminDashboard />;
       case "bookings":
         return <AdminBookings />;
+      case "booking-assignments":
+        return <AdminBookingAssignments />;
       case "customers":
         return <AdminCustomers />;
       case "services":

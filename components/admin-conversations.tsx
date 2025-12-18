@@ -69,7 +69,7 @@ export function AdminConversations() {
       company: '',
       airline: '',
       passengerCount: 1,
-      services: [],
+      serviceId: '',
       specialRequests: msg.message,
       status: 'new',
       source: (msg.source === 'whatsapp' || msg.source === 'email') ? msg.source : 'manual'
@@ -95,7 +95,7 @@ export function AdminConversations() {
         time: parsed.time || '00:00',
         terminal: '',
         passengerCount: parsed.passengerCount || 1,
-        services: parsed.services || [],
+        serviceId: parsed.serviceId || '',
         specialRequests: parsed.specialRequests || '',
         status: parsed.status || 'new',
         source: parsed.source || 'manual'
