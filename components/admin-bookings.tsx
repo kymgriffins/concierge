@@ -19,8 +19,13 @@ import { List, Plus, Clock, CheckCircle, Eye } from 'lucide-react';
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState<'date' | 'passenger' | 'flight'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string; description: string; icon: string; price?: number; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -172,6 +177,7 @@ export function AdminBookings() {
       case 'confirmed': return 'outline';
       case 'in_progress': return 'destructive';
       case 'completed': return 'outline';
+      case 'pending_review': return 'secondary';
       case 'cancelled': return 'destructive';
       default: return 'secondary';
     }
@@ -291,23 +297,78 @@ export function AdminBookings() {
           </div>
         ),
         sortable: true,
+        filterable: true,
+        meta: {
+          mobileCard: {
+            label: 'Passenger',
+            value: (r) => r.passengerName
+          }
+        }
+      },
+      {
+        key: 'flight',
+        header: 'Flight',
+        accessor: (r) => r.flightNumber,
+        cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>),
+        sortable: true,
         filterable: true
       },
-      { key: 'flight', header: 'Flight', accessor: (r) => r.flightNumber, cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>), sortable: true, filterable: true },
-      { key: 'date', header: 'Date', accessor: (r) => r.date, cell: (r) => formatDateUTC(r.date), sortable: true },
-      { key: 'company', header: 'Company', accessor: (r) => r.company, filterable: true },
-      { key: 'service', header: 'Service', cell: (r) => (<Badge variant="outline" className="text-xs">{serviceOptions.find(s => s.id === r.serviceId)?.name || r.serviceId}</Badge>) },
-      { key: 'status', header: 'Status', cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>), sortable: true, filterable: true },
-      { key: 'source', header: 'Source', accessor: (r) => r.source },
-      { key: 'actions', header: '', cell: (r) => (
-        <div className="flex gap-2">
-          <Tooltip content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company} - Status: ${r.status.replace('_', ' ')}`}>
-            <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(r)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-          </Tooltip>
-        </div>
-      ) }
+      {
+        key: 'date',
+        header: 'Date',
+        accessor: (r) => r.date,
+        cell: (r) => formatDateUTC(r.date),
+        sortable: true,
+        meta: {
+          hideOnMobile: true
+        }
+      },
+      {
+        key: 'company',
+        header: 'Company',
+        accessor: (r) => r.company,
+        filterable: true,
+        meta: {
+          hideOnMobile: true
+        }
+      },
+      {
+        key: 'service',
+        header: 'Service',
+        cell: (r) => (<Badge variant="outline" className="text-xs">{serviceOptions.find(s => s.id === r.serviceId)?.name || r.serviceId}</Badge>),
+        meta: {
+          hideOnMobile: true
+        }
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>),
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'source',
+        header: 'Source',
+        accessor: (r) => r.source,
+        meta: {
+          hideOnMobile: true,
+          hideOnTablet: true
+        }
+      },
+      {
+        key: 'actions',
+        header: '',
+        cell: (r) => (
+          <div className="flex gap-2">
+            <Tooltip content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company} - Status: ${r.status.replace('_', ' ')}`}>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(r)} className="touch-manipulation min-h-[44px] min-w-[44px]">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Tooltip>
+          </div>
+        )
+      }
     ];
 
     return (
@@ -443,43 +504,54 @@ export function AdminBookings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Bookings Management</h1>
-          <p className="text-muted-foreground">Manage all airport concierge bookings</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Bookings Management</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage all airport concierge bookings</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleOpenCreate}>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button onClick={handleOpenCreate} className="flex-1 sm:flex-initial touch-manipulation">
             <span className="mr-2">+</span>
             New Booking
           </Button>
         </div>
       </div>
 
-      {/* Status Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        {[
-          { status: 'all', label: 'All', count: bookings.length, icon: List, color: 'default' },
-          { status: 'new', label: 'New', count: bookings.filter(b => b.status === 'new').length, icon: Plus, color: 'secondary' },
-          { status: 'contacted', label: 'Contacted', count: bookings.filter(b => b.status === 'contacted').length, icon: Plus, color: 'secondary' },
-          { status: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length, icon: Plus, color: 'secondary' },
-          { status: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length, icon: Clock, color: 'destructive' },
-          { status: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length, icon: CheckCircle, color: 'default' }
-        ].map(({ status, label, count, icon: Icon, color }) => (
-          <Card
-            key={status}
-            className={`cursor-pointer transition-all hover:shadow-md ${
-              statusFilter === status ? 'ring-2 ring-primary shadow-md' : ''
-            }`}
-            onClick={() => setStatusFilter(status)}
-          >
-            <CardContent className="p-3 text-center">
-              <div className="flex justify-center mb-1">
-                <Icon className="h-5 w-5 text-primary" />
-              </div>
-              <div className="text-xl font-bold text-primary">{count}</div>
-              <div className="text-xs text-muted-foreground">{label}</div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Dynamic Status Tabs */}
+      <div className="w-full">
+        <div className="flex overflow-x-auto scrollbar-hide pb-2">
+          <div className="flex gap-1 sm:gap-2 min-w-max">
+            {[
+              { status: 'all', label: 'All', count: bookings.length, icon: List, color: 'default' },
+              { status: 'new', label: 'New', count: bookings.filter(b => b.status === 'new').length, icon: Plus, color: 'secondary' },
+              { status: 'contacted', label: 'Contacted', count: bookings.filter(b => b.status === 'contacted').length, icon: Plus, color: 'secondary' },
+              { status: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length, icon: Plus, color: 'secondary' },
+              { status: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length, icon: Clock, color: 'destructive' },
+              { status: 'pending_review', label: 'Pending Review', count: bookings.filter(b => b.status === 'pending_review').length, icon: Clock, color: 'secondary' },
+              { status: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length, icon: CheckCircle, color: 'default' }
+            ].map(({ status, label, count, icon: Icon, color }) => (
+              <button
+                key={status}
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                  statusFilter === status
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-background hover:bg-muted/50 border-border text-foreground'
+                }`}
+                onClick={() => setStatusFilter(status)}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-4 w-4 ${statusFilter === status ? 'text-primary-foreground' : 'text-primary'}`} />
+                  <span className="text-sm font-medium whitespace-nowrap">{label}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    statusFilter === status
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {count}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
 
@@ -508,7 +580,7 @@ export function AdminBookings() {
                 </div>
 
                 <form onSubmit={editing ? handleSubmitEdit : handleSubmitCreate} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input placeholder="Passenger name" value={form.passengerName || ''} onChange={(e) => setForm({ ...form, passengerName: e.target.value })} />
                     <Input placeholder="Company" value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
                     <Input placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -519,7 +591,7 @@ export function AdminBookings() {
                     <TimePicker value={form.time || null} onChange={(t) => setForm({ ...form, time: t || '' })} placeholder="Select time" />
                     <Input placeholder="Terminal" value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
                     <Input type="number" min={1} placeholder="Passengers" value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
-                    <Select value={form.status || 'new'} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
+                    <Select value={form.status || 'new'} onValueChange={(val: string) => setForm({ ...form, status: val as Booking['status'] })}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -584,7 +656,7 @@ export function AdminBookings() {
             <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <label className="text-sm">Per page:</label>
-              <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
+              <Select value={perPage.toString()} onValueChange={(v: string) => setPerPage(Number(v))}>
                 <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="10">10</SelectItem>
@@ -595,7 +667,7 @@ export function AdminBookings() {
               </Select>
               <div className="ml-4 flex items-center gap-2">
                 <label className="text-sm">Sort:</label>
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                <Select value={sortBy} onValueChange={(v: string) => setSortBy(v as 'date' | 'passenger' | 'flight')}>
                   <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date">Date</SelectItem>

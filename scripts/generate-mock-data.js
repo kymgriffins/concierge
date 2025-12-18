@@ -1,10 +1,145 @@
-// Script to generate 10000 mock passenger bookings
+// Script to generate 200 mock passenger bookings
 // Run with: node scripts/generate-mock-data.js
 
 const fs = require('fs');
 const path = require('path');
 
-// Random name generator data
+// Import the dynamic name generator from the lib directory
+const { nameGenerator } = require('../lib/dynamic-name-generator.js');
+
+// Dynamic Random Name Generator
+class DynamicNameGenerator {
+  constructor() {
+    // Base name components for dynamic generation
+    this.firstNamePrefixes = [
+      'Alex', 'Chris', 'Pat', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley',
+      'Avery', 'Blake', 'Cameron', 'Dakota', 'Emerson', 'Finley', 'Gray', 'Hayden',
+      'Jamie', 'Kendall', 'Logan', 'Madison', 'Nico', 'Owen', 'Parker', 'Quinn',
+      'Reese', 'Sage', 'Tristan', 'Val', 'Willow', 'Xander', 'Yara', 'Zane'
+    ];
+
+    this.firstNameSuffixes = [
+      'ander', 'ton', 'son', 'ford', 'field', 'brook', 'ridge', 'wood', 'worth',
+      'ville', 'berg', 'burg', 'ville', 'port', 'mouth', 'shire', 'ham', 'ton',
+      'ley', 'ford', 'field', 'brook', 'ridge', 'wood', 'worth', 'ville', 'berg'
+    ];
+
+    this.lastNamePrefixes = [
+      'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
+      'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
+      'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson',
+      'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
+      'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
+      'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell',
+      'Carter', 'Roberts', 'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker',
+      'Cruz', 'Edwards', 'Collins', 'Reyes', 'Stewart', 'Morris', 'Morales', 'Murphy',
+      'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan', 'Cooper', 'Peterson', 'Bailey',
+      'Reed', 'Kelly', 'Howard', 'Ramos', 'Kim', 'Cox', 'Ward', 'Richardson', 'Watson',
+      'Brooks', 'Chavez', 'Wood', 'James', 'Bennett', 'Gray', 'Mendoza', 'Ruiz',
+      'Hughes', 'Price', 'Alvarez', 'Castillo', 'Sanders', 'Patel', 'Myers', 'Long',
+      'Ross', 'Foster', 'Jimenez', 'Powell', 'Jenkins', 'Perry', 'Russell', 'Sullivan'
+    ];
+
+    this.lastNameSuffixes = [
+      'son', 'sen', 'man', 'berg', 'burg', 'ville', 'ford', 'field', 'brook',
+      'ridge', 'wood', 'worth', 'ville', 'port', 'mouth', 'shire', 'ham', 'ton',
+      'ley', 'ford', 'field', 'brook', 'ridge', 'wood', 'worth', 'ville', 'berg',
+      'ski', 'ski', 'wicz', 'vicz', 'enko', 'chuk', 'enko', 'chuk', 'yan', 'yan'
+    ];
+
+    // International names for diversity
+    this.internationalFirstNames = [
+      'Ahmed', 'Maria', 'Juan', 'Li', 'Anna', 'Mohammed', 'Fatima', 'Carlos',
+      'Wei', 'Elena', 'Pedro', 'Mei', 'Luca', 'Sara', 'Diego', 'Yuki', 'Marco',
+      'Aisha', 'Antonio', 'Hana', 'Luis', 'Chen', 'Sofia', 'Raj', 'Isabella',
+      'Miguel', 'Priya', 'Gabriel', 'Zara', 'Lucas', 'Amir', 'Olivia', 'Hassan',
+      'Emma', 'Omar', 'Sophia', 'Ali', 'Mia', 'Fatma', 'Noah', 'Layla', 'David'
+    ];
+
+    this.internationalLastNames = [
+      'Garcia', 'Rodriguez', 'Gonzalez', 'Hernandez', 'Lopez', 'Martinez', 'Sanchez',
+      'Perez', 'Torres', 'Ramirez', 'Flores', 'Rivera', 'Gomez', 'Diaz', 'Morales',
+      'Ortiz', 'Gutierrez', 'Chavez', 'Ramos', 'Hernandez', 'Jimenez', 'Ruiz',
+      'Fernandez', 'Moreno', 'Alvarez', 'Romero', 'Vargas', 'Castillo', 'Guerrero',
+      'Santos', 'Aguilar', 'Vega', 'Santiago', 'Dominguez', 'Herrera', 'Medina',
+      'Castro', 'Vazquez', 'Soto', 'Delgado', 'Pena', 'Reyes', 'Guillen', 'Guerra'
+    ];
+
+    // Predefined names for consistency
+    this.commonFirstNames = [
+      'John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Jennifer',
+      'James', 'Mary', 'William', 'Patricia', 'Christopher', 'Linda', 'Daniel',
+      'Barbara', 'Matthew', 'Elizabeth', 'Anthony', 'Susan', 'Joseph', 'Margaret',
+      'Charles', 'Dorothy', 'Thomas', 'Andrew', 'Nancy', 'Mark', 'Karen', 'Steven',
+      'Betty', 'Paul', 'Helen', 'Kevin', 'Sandra', 'Brian', 'Donna', 'George',
+      'Carol', 'Edward', 'Ruth', 'Ronald', 'Sharon', 'Timothy', 'Michelle', 'Jason'
+    ];
+
+    this.commonLastNames = [
+      'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia',
+      'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee',
+      'Thompson', 'White', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker', 'Hall',
+      'Allen', 'Young', 'King', 'Wright', 'Scott', 'Green', 'Adams', 'Baker', 'Nelson'
+    ];
+
+    // Cache for generated names to ensure uniqueness
+    this.generatedNames = new Set();
+  }
+
+  generateFirstName() {
+    // 40% chance of common name, 30% international, 30% dynamically generated
+    const rand = Math.random();
+    if (rand < 0.4) {
+      return randomChoice(this.commonFirstNames);
+    } else if (rand < 0.7) {
+      return randomChoice(this.internationalFirstNames);
+    } else {
+      // Generate dynamic name
+      const prefix = randomChoice(this.firstNamePrefixes);
+      const suffix = randomChoice(this.firstNameSuffixes);
+      return prefix + suffix;
+    }
+  }
+
+  generateLastName() {
+    // 50% chance of common name, 30% international, 20% dynamically generated
+    const rand = Math.random();
+    if (rand < 0.5) {
+      return randomChoice(this.commonLastNames);
+    } else if (rand < 0.8) {
+      return randomChoice(this.internationalLastNames);
+    } else {
+      // Generate dynamic name
+      const prefix = randomChoice(this.lastNamePrefixes);
+      const suffix = randomChoice(this.lastNameSuffixes);
+      return prefix + suffix;
+    }
+  }
+
+  generateFullName() {
+    let attempts = 0;
+    let firstName, lastName, fullName;
+
+    do {
+      firstName = this.generateFirstName();
+      lastName = this.generateLastName();
+      fullName = `${firstName} ${lastName}`;
+      attempts++;
+    } while (this.generatedNames.has(fullName) && attempts < 50);
+
+    // If we can't find a unique name after 50 attempts, just use it anyway
+    this.generatedNames.add(fullName);
+    return { firstName, lastName, fullName };
+  }
+
+  reset() {
+    this.generatedNames.clear();
+  }
+}
+
+// Use imported nameGenerator instance
+
+// Legacy arrays for backward compatibility
 const firstNames = [
   'John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Jennifer',
   'James', 'Mary', 'William', 'Patricia', 'Christopher', 'Linda', 'Daniel',
@@ -151,9 +286,8 @@ function generateSpecialRequests() {
 }
 
 function generateBooking(id) {
-  const firstName = randomChoice(firstNames);
-  const lastName = randomChoice(lastNames);
-  const passengerName = `${firstName} ${lastName}`;
+  // Use dynamic name generator for more variety
+  const { firstName, lastName, fullName: passengerName } = nameGenerator.generateFullName();
   const company = randomChoice(companies);
   const airline = randomChoice(airlines);
   const date = generateDate();
@@ -176,6 +310,87 @@ function generateBooking(id) {
   const createdDaysBefore = randomInt(1, 30);
   const createdAt = new Date(flightDateTime.getTime() - (createdDaysBefore * 24 * 60 * 60 * 1000));
 
+  // Generate passenger count first
+  const passengerCount = randomInt(1, 4);
+
+  // Enhanced admin data
+  const serviceId = randomChoice(serviceIds);
+  const servicePrices = { arrival: 150, departure: 175, transit: 200 };
+  const serviceFee = servicePrices[serviceId] || 150;
+  const additionalCharges = Math.random() < 0.6 ? randomInt(0, 100) : 0;
+  const totalRevenue = serviceFee + additionalCharges;
+
+  // Priority based on company type and special requests
+  let priority = 'normal';
+  if (company.toLowerCase().includes('vip') || company.toLowerCase().includes('private')) {
+    priority = 'vip';
+  } else if (company.toLowerCase().includes('corporate') || passengerCount > 2) {
+    priority = Math.random() < 0.3 ? 'high' : 'normal';
+  }
+
+  // Customer type
+  let customerType = 'individual';
+  if (company.toLowerCase().includes('vip') || company.toLowerCase().includes('private')) {
+    customerType = 'vip';
+  } else if (company.toLowerCase().includes('corporate') || company.toLowerCase().includes('inc') || company.toLowerCase().includes('ltd')) {
+    customerType = 'corporate';
+  } else if (Math.random() < 0.1) {
+    customerType = 'frequent_flyer';
+  }
+
+  // Equipment needed based on special requests
+  const equipmentOptions = ['wheelchair', 'stroller', 'porter', 'electric_cart'];
+  const equipmentNeeded = Math.random() < 0.3 ? [randomChoice(equipmentOptions)] : [];
+
+  // Special handling
+  const specialHandlingOptions = ['vip', 'medical', 'diplomatic', 'family', 'business', 'group'];
+  const specialHandling = Math.random() < 0.4 ? [randomChoice(specialHandlingOptions)] : [];
+
+  // Processing time for completed bookings
+  const processingTime = status === 'completed' ? randomInt(60, 2880) : undefined; // 1 hour to 2 days
+  const actualDuration = status === 'completed' ? randomInt(20, 120) : undefined; // 20-120 minutes
+
+  // Customer satisfaction for completed bookings
+  const customerSatisfaction = status === 'completed' ? randomInt(3, 5) : undefined;
+
+  // Tags for filtering
+  const tagOptions = ['vip', 'corporate', 'family', 'business', 'group', 'medical', 'wheelchair', 'porter', 'lounge'];
+  const tags = [];
+  if (priority === 'vip') tags.push('vip');
+  if (customerType === 'corporate') tags.push('corporate');
+  if (equipmentNeeded.includes('wheelchair')) tags.push('wheelchair');
+  if (equipmentNeeded.includes('porter')) tags.push('porter');
+  if (specialHandling.includes('family')) tags.push('family');
+  if (specialHandling.includes('group')) tags.push('group');
+  if (Math.random() < 0.2) tags.push(randomChoice(tagOptions.filter(t => !tags.includes(t))));
+
+  // Loyalty programs
+  const loyaltyPrograms = ['Mileage Plus', 'SkyMiles', 'Executive Club', 'Aer Lingus', 'Flying Blue'];
+  const loyaltyProgram = Math.random() < 0.4 ? randomChoice(loyaltyPrograms) : undefined;
+  const frequentFlyerNumber = loyaltyProgram ? `${loyaltyProgram.substring(0, 2).toUpperCase()}${randomInt(100000, 999999)}` : undefined;
+
+  // Follow-up requirements
+  const followUpRequired = Math.random() < 0.3;
+  const followUpDate = followUpRequired ? new Date(flightDateTime.getTime() + (randomInt(1, 7) * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : undefined;
+
+  // Internal notes
+  const internalNotesOptions = [
+    'High-value client, ensure premium service',
+    'Frequent business traveler',
+    'New client, monitor satisfaction',
+    'Requires special coordination',
+    'VIP treatment requested',
+    'Medical assistance may be needed',
+    'Large corporate group, ensure coordination',
+    'Family travel, prioritize comfort'
+  ];
+  const internalNotes = Math.random() < 0.4 ? randomChoice(internalNotesOptions) : undefined;
+
+  // Agent assignments (random from available agents)
+  const agentIds = ['a1', 'a2', 'a3', 'a4', 's1'];
+  const createdBy = randomChoice(agentIds);
+  const lastModifiedBy = Math.random() < 0.7 ? randomChoice(agentIds) : undefined;
+
   const booking = {
     id: id.toString(),
     passengerName,
@@ -187,14 +402,34 @@ function generateBooking(id) {
     date,
     time,
     terminal: randomChoice(terminals),
-    passengerCount: randomInt(1, 4),
-    serviceId: randomChoice(serviceIds),
+    passengerCount,
+    serviceId,
     specialRequests: Math.random() < 0.7 ? generateSpecialRequests() : '',
     status,
     source,
     createdAt: createdAt.toISOString(),
     updatedAt: createdAt.toISOString(),
-    notes: []
+    notes: [],
+    // Enhanced admin fields
+    priority,
+    customerType,
+    estimatedDuration: randomInt(30, 90), // 30-90 minutes
+    actualDuration,
+    serviceFee,
+    additionalCharges,
+    totalRevenue,
+    customerSatisfaction,
+    processingTime,
+    equipmentNeeded,
+    specialHandling,
+    createdBy,
+    lastModifiedBy,
+    tags,
+    internalNotes,
+    followUpRequired,
+    followUpDate,
+    loyaltyProgram,
+    frequentFlyerNumber
   };
 
   return booking;
@@ -263,7 +498,7 @@ function analyzeCapacity(bookings) {
 }
 
 // Main execution
-const bookings = generateBookings(10000);
+const bookings = generateBookings(200);
 
 // Load existing mockdb.json
 const mockdbPath = path.join(__dirname, '..', 'data', 'mockdb.json');

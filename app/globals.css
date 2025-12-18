@@ -125,4 +125,57 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Scrollbar utilities */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    /* Improve touch targets */
+    button, .touch-manipulation {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Better text readability */
+    body {
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* Prevent horizontal scroll */
+    html, body {
+      overflow-x: hidden;
+    }
+
+    /* Improve table readability on mobile */
+    table {
+      font-size: 14px;
+    }
+
+    /* Better spacing for mobile cards */
+    .card-padding-mobile {
+      padding: 1rem;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    .hover\:bg-muted:hover {
+      background-color: transparent;
+    }
+
+    /* Ensure buttons are properly sized for touch */
+    button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
 }

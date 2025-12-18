@@ -97,6 +97,10 @@ export async function POST(req: NextRequest) {
 
     // Auto-create the booking
     try {
+      const serviceId = parsedData.services && parsedData.services.length > 0 ? parsedData.services[0] : 'arrival';
+      const servicePrices = { arrival: 150, departure: 175, transit: 200 };
+      const serviceFee = servicePrices[serviceId as keyof typeof servicePrices] || 150;
+
       const bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'notes'> = {
         passengerName: parsedData.passengerName || 'Unknown Passenger',
         company: parsedData.company || '',
@@ -108,10 +112,17 @@ export async function POST(req: NextRequest) {
         time: parsedData.time || '00:00',
         terminal: parsedData.terminal || '',
         passengerCount: parsedData.passengerCount || 1,
-        serviceId: parsedData.services && parsedData.services.length > 0 ? parsedData.services[0] : 'arrival', // Default to arrival if no services parsed
+        serviceId,
         specialRequests: parsedData.specialRequests || '',
         status: 'new' as const,
-        source: mapMessageSource(message.source)
+        source: mapMessageSource(message.source),
+        // Required admin fields
+        priority: 'normal' as const,
+        customerType: 'individual' as const,
+        estimatedDuration: 60,
+        serviceFee,
+        additionalCharges: 0,
+        totalRevenue: serviceFee
       };
 
       const booking = await MockAPI.createBooking(bookingData);

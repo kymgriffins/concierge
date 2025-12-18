@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   BarChart3,
   Bell,
@@ -29,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { MockAPI, Agent, Booking, Customer } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { AutoBookingSidebar } from "@/components/auto-booking-sidebar";
+import { useResponsiveBreakpoints } from "@/lib/hooks";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -51,6 +53,7 @@ const navigation = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
+  const { isMobile, isTablet, isDesktop } = useResponsiveBreakpoints();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoBookingSidebarOpen, setAutoBookingSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -115,104 +118,179 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="flex items-center justify-between p-6 border-b">
+        <h1 className="text-xl font-bold">Airport Concierge</h1>
+        {(isMobile || isTablet) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(false)}
+            className="touch-manipulation min-h-[44px] min-w-[44px]"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h1 className="text-xl font-bold">Airport Concierge</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.id} href={`/admin/${item.id}`}>
+              <Button
+                variant={currentPage === item.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Icon className="mr-2 h-4 w-4" />
+                {item.name}
+              </Button>
+            </Link>
+          );
+        })}
+      </nav>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.id} href={`/admin/${item.id}`}>
-                  <Button
-                    variant={currentPage === item.id ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Button>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User section */}
-          <div className="p-4 border-t">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>SM</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Waithera</p>
-                <p className="text-xs text-muted-foreground truncate">waithera@airport.com</p>
-              </div>
-            </div>
+      {/* User section */}
+      <div className="p-4 border-t">
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>SM</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">Waithera</p>
+            <p className="text-xs text-muted-foreground truncate">waithera@airport.com</p>
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Desktop/Tablet Sidebar */}
+      {isDesktop && (
+        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r">
+          <SidebarContent />
+        </div>
+      )}
+
+      {isTablet && (
+        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <SidebarContent />
+        </div>
+      )}
+
+      {/* Mobile Sidebar Sheet */}
+      {isMobile && (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0 w-64">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className={`${isDesktop ? 'ml-64' : ''} ${isTablet && sidebarOpen ? 'ml-64' : ''}`}>
         {/* Header */}
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
+              {/* Mobile/Tablet Menu Button */}
+              {!isDesktop && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="touch-manipulation min-h-[44px] min-w-[44px]"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
 
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-semibold capitalize">{currentPage}</h1>
+              {/* Logo - Compact on mobile */}
+              <div className="flex items-center">
+                {isMobile ? (
+                  <h1 className="text-lg font-bold">AC</h1>
+                ) : (
+                  <h1 className="text-lg font-semibold capitalize">{currentPage}</h1>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Search - Icon on mobile, full input on larger screens */}
+              {isMobile ? (
+                <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm" className="touch-manipulation min-h-[44px] min-w-[44px]">
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="top" className="h-auto">
+                    <div className="flex items-center space-x-2 py-4">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search bookings, customers..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+                        className="flex-1"
+                        autoFocus
+                      />
+                      <Button onClick={doSearch} size="sm">Search</Button>
+                    </div>
+                    {results.bookings.length > 0 || results.customers.length > 0 ? (
+                      <div className="space-y-4">
+                        {results.bookings.slice(0, 3).map(booking => (
+                          <div key={booking.id} className="p-3 border rounded-lg">
+                            <p className="font-medium">{booking.passengerName}</p>
+                            <p className="text-sm text-muted-foreground">{booking.flightNumber} - {booking.airline}</p>
+                          </div>
+                        ))}
+                        {results.customers.slice(0, 2).map(customer => (
+                          <div key={customer.id} className="p-3 border rounded-lg">
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-sm text-muted-foreground">{customer.email}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : query && (
+                      <p className="text-center text-muted-foreground py-4">No results found</p>
+                    )}
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <div className="relative hidden md:block">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+                    className="pl-9 w-64"
+                  />
+                </div>
+              )}
+
               {/* Auto-Booking Sidebar Toggle */}
               <Button
                 variant={autoBookingSidebarOpen ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setAutoBookingSidebarOpen(!autoBookingSidebarOpen)}
                 title="Toggle Auto-Booking"
+                className="touch-manipulation min-h-[44px] min-w-[44px]"
               >
                 <Zap className="h-4 w-4" />
               </Button>
 
-
-
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative">
+                  <Button variant="ghost" size="sm" className="relative touch-manipulation min-h-[44px] min-w-[44px]">
                     <Bell className="h-4 w-4" />
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
                       3
@@ -241,10 +319,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* User menu */}
+              {/* User menu - Avatar only on mobile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full touch-manipulation min-h-[44px] min-w-[44px]">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{currentUser?.name ? currentUser.name.split(' ').map((n: string) => n[0]).slice(0,2).join('') : 'SM'}</AvatarFallback>
                     </Avatar>

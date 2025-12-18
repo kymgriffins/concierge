@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/toast";
 import { formatDateUTC, formatDateTimeUTC } from '@/lib/utils';
 import { ArrowLeft, Edit, Save, X, Trash2, UserCheck, Calendar, Activity, CheckCircle2 } from 'lucide-react';
 import Link from "next/link";
+import { ServiceLifecycleManager } from "@/components/service-lifecycle-manager";
 
 export default function BookingDetailPage() {
   const params = useParams();
@@ -382,6 +383,18 @@ export default function BookingDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Service Lifecycle Manager */}
+      {booking && (
+        <ServiceLifecycleManager
+          booking={booking}
+          onStatusChange={(updatedBooking) => {
+            setBooking(updatedBooking);
+            // Reload activity logs to show new status change
+            loadData();
+          }}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Details */}

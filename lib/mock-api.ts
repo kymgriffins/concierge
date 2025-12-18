@@ -15,7 +15,7 @@ export interface Booking {
   passengerCount: number;
   serviceId: string; // Single service per booking
   specialRequests: string;
-  status: 'new' | 'contacted' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'new' | 'contacted' | 'confirmed' | 'in_progress' | 'completed' | 'pending_review' | 'cancelled';
   source: 'manual' | 'whatsapp' | 'email';
   createdAt: string;
   updatedAt: string;
@@ -23,6 +23,33 @@ export interface Booking {
   // Booking 2.0 fields - assignment to shifts and specific agents
   shiftId?: string; // Reference to RosterShift.id
   assignedAgentId?: string; // Reference to Agent.id
+  // Enhanced admin data fields
+  priority: 'low' | 'normal' | 'high' | 'vip';
+  customerType: 'individual' | 'corporate' | 'vip' | 'frequent_flyer';
+  estimatedDuration: number; // minutes
+  actualDuration?: number; // minutes
+  serviceFee: number;
+  additionalCharges?: number;
+  totalRevenue: number;
+  customerSatisfaction?: number; // 1-5 rating
+  processingTime?: number; // minutes from creation to completion
+  equipmentNeeded?: string[]; // wheelchair, stroller, etc.
+  specialHandling?: string[]; // vip, medical, diplomatic, etc.
+  createdBy?: string; // agent ID who created
+  lastModifiedBy?: string; // agent ID who last modified
+  modificationHistory?: Array<{
+    timestamp: string;
+    agentId: string;
+    action: string;
+    details: string;
+  }>;
+  tags?: string[]; // custom tags for filtering
+  internalNotes?: string; // admin-only notes
+  followUpRequired?: boolean;
+  followUpDate?: string;
+  referralSource?: string;
+  loyaltyProgram?: string;
+  frequentFlyerNumber?: string;
 }
 
 export interface ActivityLog {
@@ -54,109 +81,197 @@ export interface ServiceOption {
   active: boolean; // Whether the service is active/available
 }
 
-// Mock Data
-const mockBookings: Booking[] = [
-  {
-    id: '1',
-    passengerName: 'John Smith',
-    company: 'TechCorp Inc.',
-    phone: '+1-555-0123',
-    email: 'john.smith@techcorp.com',
-    flightNumber: 'UA 457',
-    airline: 'United Airlines',
-    date: '2025-01-15',
-    time: '14:30',
-    terminal: 'T1',
-    passengerCount: 2,
-    serviceId: 'arrival',
-    specialRequests: 'VIP passenger, prefers quiet lounge',
-    status: 'confirmed',
-    source: 'whatsapp',
-    createdAt: '2025-01-10T10:00:00Z',
-    updatedAt: '2025-01-14T16:30:00Z',
-    notes: ['Confirmed VIP status', 'Met at Gate B12 at 14:25']
-  },
-  {
-    id: '2',
-    passengerName: 'Sarah Johnson',
-    company: 'Global Solutions',
-    phone: '+1-555-0456',
-    email: 'sarah.j@globalsolutions.com',
-    flightNumber: 'DL 892',
-    airline: 'Delta Airlines',
-    date: '2025-01-15',
-    time: '16:15',
-    terminal: 'T2',
-    passengerCount: 1,
-    serviceId: 'departure',
-    specialRequests: 'Business class, needs assistance with 2 suitcases',
-    status: 'confirmed',
-    source: 'email',
-    createdAt: '2025-01-12T08:15:00Z',
-    updatedAt: '2025-01-14T14:20:00Z',
-    notes: ['Porter assigned - 2 large suitcases', 'Lounge access granted']
-  },
-  {
-    id: '3',
-    passengerName: 'Michael Chen',
-    company: 'Private Client',
-    phone: '+1-555-0789',
-    email: 'mchen@email.com',
-    flightNumber: 'AA 234',
-    airline: 'American Airlines',
-    date: '2025-01-15',
-    time: '18:45',
-    terminal: 'T3',
-    passengerCount: 3,
-    serviceId: 'arrival',
-    specialRequests: 'Family with children, need stroller assistance',
-    status: 'new',
-    source: 'manual',
-    createdAt: '2025-01-14T20:00:00Z',
-    updatedAt: '2025-01-14T20:00:00Z',
-    notes: []
-  },
-  {
-    id: '4',
-    passengerName: 'Emma Rodriguez',
-    company: 'TechStart Ltd',
-    phone: '+1-555-0321',
-    email: 'emma@techstart.com',
-    flightNumber: 'SW 567',
-    airline: 'Southwest Airlines',
-    date: '2025-01-16',
-    time: '09:20',
-    terminal: 'T4',
-    passengerCount: 1,
-    serviceId: 'departure',
-    specialRequests: 'Early morning flight, coffee preferred',
-    status: 'contacted',
-    source: 'whatsapp',
-    createdAt: '2025-01-13T11:30:00Z',
-    updatedAt: '2025-01-15T07:45:00Z',
-    notes: ['Confirmed coffee preference', 'Fast track arranged']
-  },
-  {
-    id: '5',
-    passengerName: 'David Wilson',
-    company: 'Enterprise Corp',
-    phone: '+1-555-0654',
-    email: 'dwilson@enterprise.com',
-    flightNumber: 'UA 789',
-    airline: 'United Airlines',
-    date: '2025-01-16',
-    time: '12:10',
-    terminal: 'T1',
-    passengerCount: 4,
-    serviceId: 'transit',
-    specialRequests: 'Group booking, separate lounge reservations needed',
-    status: 'in_progress',
-    source: 'email',
-    createdAt: '2025-01-11T14:20:00Z',
-    updatedAt: '2025-01-15T10:15:00Z',
-    notes: ['Group of 4 confirmed', 'Separate lounge access arranged', 'Porter meeting at baggage claim']
-  }
-];
+// Mock Data - Import JSON file directly (works in Next.js)
+import mockdbData from '../data/mockdb.json';
+let mockBookings: Booking[] = (mockdbData.bookings || []) as Booking[];
+
+// Fallback hardcoded bookings if JSON loading fails
+if (mockBookings.length === 0) {
+  mockBookings = [
+    {
+      id: '1',
+      passengerName: 'John Smith',
+      company: 'TechCorp Inc.',
+      phone: '+1-555-0123',
+      email: 'john.smith@techcorp.com',
+      flightNumber: 'UA 457',
+      airline: 'United Airlines',
+      date: '2025-01-15',
+      time: '14:30',
+      terminal: 'T1',
+      passengerCount: 2,
+      serviceId: 'arrival',
+      specialRequests: 'VIP passenger, prefers quiet lounge',
+      status: 'confirmed',
+      source: 'whatsapp',
+      createdAt: '2025-01-10T10:00:00Z',
+      updatedAt: '2025-01-14T16:30:00Z',
+      notes: ['Confirmed VIP status', 'Met at Gate B12 at 14:25'],
+      priority: 'vip',
+      customerType: 'corporate',
+      estimatedDuration: 45,
+      actualDuration: 42,
+      serviceFee: 150,
+      additionalCharges: 25,
+      totalRevenue: 175,
+      customerSatisfaction: 5,
+      processingTime: 2880,
+      equipmentNeeded: ['wheelchair'],
+      specialHandling: ['vip'],
+      createdBy: 'a4',
+      lastModifiedBy: 'a1',
+      tags: ['vip', 'corporate'],
+      internalNotes: 'High-value client, ensure premium service',
+      followUpRequired: false,
+      loyaltyProgram: 'Executive Club',
+      frequentFlyerNumber: 'EC123456'
+    },
+    {
+      id: '2',
+      passengerName: 'Sarah Johnson',
+      company: 'Global Solutions',
+      phone: '+1-555-0456',
+      email: 'sarah.j@globalsolutions.com',
+      flightNumber: 'DL 892',
+      airline: 'Delta Airlines',
+      date: '2025-01-15',
+      time: '16:15',
+      terminal: 'T2',
+      passengerCount: 1,
+      serviceId: 'departure',
+      specialRequests: 'Business class, needs assistance with 2 suitcases',
+      status: 'confirmed',
+      source: 'email',
+      createdAt: '2025-01-12T08:15:00Z',
+      updatedAt: '2025-01-14T14:20:00Z',
+      notes: ['Porter assigned - 2 large suitcases', 'Lounge access granted'],
+      priority: 'high',
+      customerType: 'corporate',
+      estimatedDuration: 60,
+      actualDuration: 58,
+      serviceFee: 175,
+      additionalCharges: 50,
+      totalRevenue: 225,
+      customerSatisfaction: 4,
+      processingTime: 1800,
+      equipmentNeeded: ['porter'],
+      specialHandling: ['business'],
+      createdBy: 'a4',
+      lastModifiedBy: 'a2',
+      tags: ['business', 'porter'],
+      internalNotes: 'Frequent business traveler',
+      followUpRequired: true,
+      followUpDate: '2025-01-16',
+      loyaltyProgram: 'SkyMiles',
+      frequentFlyerNumber: 'SM789012'
+    },
+    {
+      id: '3',
+      passengerName: 'Michael Chen',
+      company: 'Private Client',
+      phone: '+1-555-0789',
+      email: 'mchen@email.com',
+      flightNumber: 'AA 234',
+      airline: 'American Airlines',
+      date: '2025-01-15',
+      time: '18:45',
+      terminal: 'T3',
+      passengerCount: 3,
+      serviceId: 'arrival',
+      specialRequests: 'Family with children, need stroller assistance',
+      status: 'new',
+      source: 'manual',
+      createdAt: '2025-01-14T20:00:00Z',
+      updatedAt: '2025-01-14T20:00:00Z',
+      notes: [],
+      priority: 'normal',
+      customerType: 'individual',
+      estimatedDuration: 30,
+      serviceFee: 150,
+      additionalCharges: 0,
+      totalRevenue: 150,
+      equipmentNeeded: ['stroller'],
+      specialHandling: ['family'],
+      createdBy: 'a4',
+      tags: ['family', 'children'],
+      internalNotes: 'New client, monitor satisfaction',
+      followUpRequired: true,
+      followUpDate: '2025-01-16'
+    },
+    {
+      id: '4',
+      passengerName: 'Emma Rodriguez',
+      company: 'TechStart Ltd',
+      phone: '+1-555-0321',
+      email: 'emma@techstart.com',
+      flightNumber: 'SW 567',
+      airline: 'Southwest Airlines',
+      date: '2025-01-16',
+      time: '09:20',
+      terminal: 'T4',
+      passengerCount: 1,
+      serviceId: 'departure',
+      specialRequests: 'Early morning flight, coffee preferred',
+      status: 'contacted',
+      source: 'whatsapp',
+      createdAt: '2025-01-13T11:30:00Z',
+      updatedAt: '2025-01-15T07:45:00Z',
+      notes: ['Confirmed coffee preference', 'Fast track arranged'],
+      priority: 'normal',
+      customerType: 'corporate',
+      estimatedDuration: 45,
+      serviceFee: 175,
+      additionalCharges: 15,
+      totalRevenue: 190,
+      equipmentNeeded: [],
+      specialHandling: [],
+      createdBy: 'a4',
+      lastModifiedBy: 'a1',
+      tags: ['early-morning', 'coffee'],
+      internalNotes: 'Requested coffee service',
+      followUpRequired: false
+    },
+    {
+      id: '5',
+      passengerName: 'David Wilson',
+      company: 'Enterprise Corp',
+      phone: '+1-555-0654',
+      email: 'dwilson@enterprise.com',
+      flightNumber: 'UA 789',
+      airline: 'United Airlines',
+      date: '2025-01-16',
+      time: '12:10',
+      terminal: 'T1',
+      passengerCount: 4,
+      serviceId: 'transit',
+      specialRequests: 'Group booking, separate lounge reservations needed',
+      status: 'in_progress',
+      source: 'email',
+      createdAt: '2025-01-11T14:20:00Z',
+      updatedAt: '2025-01-15T10:15:00Z',
+      notes: ['Group of 4 confirmed', 'Separate lounge access arranged', 'Porter meeting at baggage claim'],
+      priority: 'high',
+      customerType: 'corporate',
+      estimatedDuration: 90,
+      actualDuration: 85,
+      serviceFee: 200,
+      additionalCharges: 75,
+      totalRevenue: 275,
+      customerSatisfaction: 5,
+      processingTime: 2340,
+      equipmentNeeded: ['porter'],
+      specialHandling: ['group'],
+      createdBy: 'a4',
+      lastModifiedBy: 'a3',
+      tags: ['group', 'corporate', 'lounge'],
+      internalNotes: 'Large corporate group, ensure coordination',
+      followUpRequired: true,
+      followUpDate: '2025-01-17',
+      loyaltyProgram: 'Mileage Plus',
+      frequentFlyerNumber: 'MP345678'
+    }
+  ];
+}
 
 const mockActivityLogs: ActivityLog[] = [
   {
@@ -524,6 +639,8 @@ const mockTasks: TaskItem[] = [
   { id: 't1', title: 'Meet John Smith at Gate', description: 'Gate B12 at 14:25', assignedTo: 'a1', dueDate: '2025-01-15T14:25:00Z', status: 'open', relatedBookingId: '1', createdAt: '2025-01-14T10:00:00Z' }
 ];
 
+
+
 // Mock API Functions
 export class MockAPI {
   private static delay(ms: number = 500): Promise<void> {
@@ -576,12 +693,12 @@ export class MockAPI {
   }
 
   // Bookings
-  static async getBookings(status?: string, limit: number = 50): Promise<Booking[]> {
+  static async getBookings(status?: string, limit: number = 1000): Promise<Booking[]> {
     await this.delay();
 
     let filtered = mockBookings;
     if (status && status !== 'all') {
-      filtered = mockBookings.filter(booking => booking.status === status);
+      filtered = filtered.filter(booking => booking.status === status);
     }
 
     return filtered.slice(0, limit);
@@ -1021,6 +1138,214 @@ export class MockAPI {
       bookings = bookings.filter(b => b.date === date);
     }
     return bookings;
+  }
+
+  // Service Lifecycle Management
+  static async checkAndUpdateServiceLifecycles(): Promise<{ updatedBookings: number }> {
+    await this.delay(100);
+    const now = new Date();
+    let updatedCount = 0;
+
+    for (let i = 0; i < mockBookings.length; i++) {
+      const booking = mockBookings[i];
+
+      // Skip if already completed, cancelled, or pending review
+      if (['completed', 'cancelled', 'pending_review'].includes(booking.status)) {
+        continue;
+      }
+
+      const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
+
+      // Auto-transition to in_progress when flight time is reached or passed
+      if ((booking.status === 'confirmed' || booking.status === 'contacted') && bookingDateTime <= now) {
+        mockBookings[i] = {
+          ...booking,
+          status: 'in_progress',
+          updatedAt: new Date().toISOString()
+        };
+        await this.createActivityLog({
+          bookingId: booking.id,
+          action: 'Auto Status Update',
+          user: 'System',
+          details: `Status automatically changed to 'in_progress' as flight time ${booking.time} has been reached`
+        });
+        updatedCount++;
+      }
+    }
+
+    return { updatedBookings: updatedCount };
+  }
+
+  static async submitForSupervisorReview(bookingId: string, agentNotes?: string): Promise<Booking | null> {
+    await this.delay();
+
+    if (!mockCurrentUser) throw new Error('Not authenticated');
+
+    const index = mockBookings.findIndex(booking => booking.id === bookingId);
+    if (index === -1) return null;
+
+    const booking = mockBookings[index];
+
+    // Only allow transition from completed to pending_review
+    if (booking.status !== 'completed') {
+      throw new Error('Only completed bookings can be submitted for supervisor review');
+    }
+
+    mockBookings[index] = {
+      ...booking,
+      status: 'pending_review',
+      updatedAt: new Date().toISOString(),
+      internalNotes: agentNotes || booking.internalNotes
+    };
+
+    await this.createActivityLog({
+      bookingId: booking.id,
+      action: 'Submitted for Review',
+      user: mockCurrentUser.name,
+      details: `Booking submitted for supervisor review${agentNotes ? `: ${agentNotes}` : ''}`
+    });
+
+    return mockBookings[index];
+  }
+
+  static async approveSupervisorReview(bookingId: string, supervisorNotes?: string): Promise<Booking | null> {
+    await this.delay();
+
+    if (!mockCurrentUser) throw new Error('Not authenticated');
+    if (mockCurrentUser.role !== 'supervisor') {
+      throw new Error('Only supervisors can approve reviews');
+    }
+
+    const index = mockBookings.findIndex(booking => booking.id === bookingId);
+    if (index === -1) return null;
+
+    const booking = mockBookings[index];
+
+    // Only allow transition from pending_review to completed
+    if (booking.status !== 'pending_review') {
+      throw new Error('Only bookings pending review can be approved');
+    }
+
+    mockBookings[index] = {
+      ...booking,
+      status: 'completed',
+      updatedAt: new Date().toISOString(),
+      internalNotes: supervisorNotes || booking.internalNotes
+    };
+
+    await this.createActivityLog({
+      bookingId: booking.id,
+      action: 'Review Approved',
+      user: mockCurrentUser.name,
+      details: `Supervisor review completed${supervisorNotes ? `: ${supervisorNotes}` : ''}`
+    });
+
+    return mockBookings[index];
+  }
+
+  static async getBookingsPendingReview(): Promise<Booking[]> {
+    await this.delay();
+    return mockBookings.filter(booking => booking.status === 'pending_review');
+  }
+
+  static async getServiceLifecycleStatus(bookingId: string): Promise<{
+    currentStatus: Booking['status'];
+    nextPossibleStatuses: Booking['status'][];
+    canAutoTransition: boolean;
+    timeUntilAutoTransition?: number; // minutes
+    requiresSupervisorApproval: boolean;
+  } | null> {
+    await this.delay();
+
+    const booking = mockBookings.find(b => b.id === bookingId);
+    if (!booking) return null;
+
+    const now = new Date();
+    const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
+    const timeDiff = bookingDateTime.getTime() - now.getTime();
+    const minutesUntilFlight = Math.ceil(timeDiff / (1000 * 60));
+
+    let nextPossibleStatuses: Booking['status'][] = [];
+    let canAutoTransition = false;
+    let timeUntilAutoTransition: number | undefined;
+    let requiresSupervisorApproval = false;
+
+    switch (booking.status) {
+      case 'new':
+        nextPossibleStatuses = ['contacted', 'confirmed', 'cancelled'];
+        break;
+      case 'contacted':
+        nextPossibleStatuses = ['confirmed', 'cancelled'];
+        canAutoTransition = bookingDateTime <= now;
+        if (canAutoTransition) timeUntilAutoTransition = 0;
+        break;
+      case 'confirmed':
+        nextPossibleStatuses = ['in_progress', 'cancelled'];
+        canAutoTransition = bookingDateTime <= now;
+        if (bookingDateTime > now) timeUntilAutoTransition = minutesUntilFlight;
+        break;
+      case 'in_progress':
+        nextPossibleStatuses = ['completed', 'cancelled'];
+        break;
+      case 'completed':
+        nextPossibleStatuses = ['pending_review'];
+        requiresSupervisorApproval = true;
+        break;
+      case 'pending_review':
+        nextPossibleStatuses = ['completed'];
+        requiresSupervisorApproval = true;
+        break;
+      case 'cancelled':
+        nextPossibleStatuses = []; // Terminal state
+        break;
+    }
+
+    return {
+      currentStatus: booking.status,
+      nextPossibleStatuses,
+      canAutoTransition,
+      timeUntilAutoTransition,
+      requiresSupervisorApproval
+    };
+  }
+
+  static async getServiceLifecycleStats(): Promise<{
+    totalBookings: number;
+    autoTransitionedToday: number;
+    pendingSupervisorReview: number;
+    completedWithReview: number;
+    averageProcessingTime: number;
+  }> {
+    await this.delay();
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayBookings = mockBookings.filter(b => b.date === today);
+
+    const autoTransitionedToday = todayBookings.filter(b =>
+      b.status === 'in_progress' &&
+      b.updatedAt.startsWith(today) &&
+      b.notes.some(note => note.includes('automatically changed'))
+    ).length;
+
+    const pendingSupervisorReview = mockBookings.filter(b => b.status === 'pending_review').length;
+
+    const completedWithReview = mockBookings.filter(b =>
+      b.status === 'completed' &&
+      b.modificationHistory?.some(h => h.action.includes('Review Approved'))
+    ).length;
+
+    const completedBookings = mockBookings.filter(b => b.status === 'completed' && b.processingTime);
+    const averageProcessingTime = completedBookings.length > 0
+      ? completedBookings.reduce((sum, b) => sum + (b.processingTime || 0), 0) / completedBookings.length
+      : 0;
+
+    return {
+      totalBookings: mockBookings.length,
+      autoTransitionedToday,
+      pendingSupervisorReview,
+      completedWithReview,
+      averageProcessingTime: Math.round(averageProcessingTime)
+    };
   }
 }
 

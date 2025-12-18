@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
+import { SupervisorReviewPanel } from "@/components/supervisor-review-panel";
 
 export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -162,6 +163,9 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
         </Card>
       </div>
 
+      {/* Supervisor Reviews */}
+      <SupervisorReviewPanel />
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -169,22 +173,22 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button className="h-20 flex-col" onClick={() => onNavigate?.('bookings')}>
-              <span className="text-2xl mb-2">✈️</span>
-              New Booking
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+            <Button className="h-16 sm:h-20 flex-col touch-manipulation" onClick={() => onNavigate?.('bookings')}>
+              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">✈️</span>
+              <span className="text-xs sm:text-sm">New Booking</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <span className="text-2xl mb-2">🔍</span>
-              Search Flights
+            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🔍</span>
+              <span className="text-xs sm:text-sm">Search Flights</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <span className="text-2xl mb-2">📋</span>
-              View Reports
+            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">📋</span>
+              <span className="text-xs sm:text-sm">View Reports</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <span className="text-2xl mb-2">⚙️</span>
-              Settings
+            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">⚙️</span>
+              <span className="text-xs sm:text-sm">Settings</span>
             </Button>
           </div>
         </CardContent>
