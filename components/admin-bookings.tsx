@@ -13,7 +13,8 @@ import { MockAPI, Booking, RosterShift, Agent } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from '@/lib/utils';
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
-import { List, Plus, Clock, CheckCircle } from 'lucide-react';
+import { Tooltip } from '@/components/ui/tooltip';
+import { List, Plus, Clock, CheckCircle, Eye } from 'lucide-react';
 
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -269,9 +270,11 @@ export function AdminBookings() {
       { key: 'source', header: 'Source', accessor: (r) => r.source },
       { key: 'actions', header: '', cell: (r) => (
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(r)}>Edit</Button>
-          <Button variant="outline" size="sm" onClick={() => setSelectedBooking(r)}>View</Button>
-          <Button variant="destructive" size="sm" onClick={() => handleDelete(r.id)}>Delete</Button>
+          <Tooltip content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company} - Status: ${r.status.replace('_', ' ')}`}>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(r)}>
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Tooltip>
         </div>
       ) }
     ];

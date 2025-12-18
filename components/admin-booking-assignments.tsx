@@ -26,7 +26,7 @@ export function AdminBookingAssignments() {
   const [availableShifts, setAvailableShifts] = useState<RosterShift[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedBookingId, setSelectedBookingId] = useState<string>("");
+  const [selectedBookingIds, setSelectedBookingIds] = useState<string[]>([]);
   const [selectedShiftId, setSelectedShiftId] = useState<string>("");
   const [assignmentResult, setAssignmentResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -78,21 +78,32 @@ export function AdminBookingAssignments() {
     }
   };
 
-  const assignBookingToShift = async () => {
-    if (!selectedBookingId || !selectedShiftId) return;
+  const assignBookingsToShift = async () => {
+    if (selectedBookingIds.length === 0 || !selectedShiftId) return;
 
     setProcessing(true);
     try {
-      const result = await MockAPI.assignBookingToShift(selectedBookingId, selectedShiftId);
-      setAssignmentResult({ success: true, message: 'Booking assigned successfully!' });
-      setSelectedBookingId("");
+      // Assign each selected booking to the shift
+      const results = await Promise.allSettled(
+        selectedBookingIds.map(bookingId => MockAPI.assignBookingToShift(bookingId, selectedShiftId))
+      );
+
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      setAssignmentResult({
+        success: failed === 0,
+        message: `Assigned ${successful} booking${successful !== 1 ? 's' : ''} successfully${failed > 0 ? `, ${failed} failed` : ''}!`
+      });
+
+      setSelectedBookingIds([]);
       setSelectedShiftId("");
       await loadData(); // Refresh data
 
       toast.showToast({
-        title: 'Assignment Successful',
-        description: 'Booking has been assigned to the selected shift',
-        type: 'success'
+        title: 'Assignment Complete',
+        description: `Assigned ${successful} booking${successful !== 1 ? 's' : ''} to shift${failed > 0 ? ` (${failed} failed)` : ''}`,
+        type: successful > 0 ? 'success' : 'error'
       });
     } catch (error) {
       console.error('Assignment error:', error);
@@ -261,11 +272,34 @@ export function AdminBookingAssignments() {
           <CardContent>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {unassignedBookings.map((booking) => (
-                <div key={booking.id} className="p-3 border rounded-lg">
+                <div key={booking.id} className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                  selectedBookingIds.includes(booking.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+                }`} onClick={() => {
+                  setSelectedBookingIds(prev =>
+                    prev.includes(booking.id)
+                      ? prev.filter(id => id !== booking.id)
+                      : [...prev, booking.id]
+                  );
+                }}>
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{booking.passengerName}</p>
-                      <p className="text-xs text-muted-foreground">{booking.company}</p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedBookingIds.includes(booking.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedBookingIds(prev =>
+                            prev.includes(booking.id)
+                              ? prev.filter(id => id !== booking.id)
+                              : [...prev, booking.id]
+                          );
+                        }}
+                        className="rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{booking.passengerName}</p>
+                        <p className="text-xs text-muted-foreground">{booking.company}</p>
+                      </div>
                     </div>
                     <Badge variant="outline" className="text-xs">{booking.id}</Badge>
                   </div>
@@ -310,30 +344,40 @@ export function AdminBookingAssignments() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5" />
-              Assign Booking to Shift
+              Assign Bookings to Shift
             </CardTitle>
-            <CardDescription>Link unassigned bookings to available shifts and agents</CardDescription>
+            <CardDescription>Select multiple bookings and assign them to a shift</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {selectedBookingIds.length > 0 && (
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                <p className="text-sm font-medium">
+                  {selectedBookingIds.length} booking{selectedBookingIds.length !== 1 ? 's' : ''} selected
+                </p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {selectedBookingIds.map(id => {
+                    const booking = unassignedBookings.find(b => b.id === id);
+                    return booking ? (
+                      <Badge key={id} variant="secondary" className="text-xs">
+                        {booking.passengerName}
+                        <button
+                          onClick={() => setSelectedBookingIds(prev => prev.filter(bid => bid !== id))}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Select Booking</label>
-                <Select value={selectedBookingId} onValueChange={setSelectedBookingId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a booking..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {unassignedBookings.map((booking) => (
-                      <SelectItem key={booking.id} value={booking.id}>
-                        {booking.passengerName} - {booking.flightNumber} ({booking.time})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Select Shift</label>
+                <label className="block text-sm font-medium mb-2">
+                  Select Shift ({selectedBookingIds.length > 0 ? `${selectedBookingIds.length} booking${selectedBookingIds.length !== 1 ? 's' : ''} ready` : 'Select bookings first'})
+                </label>
                 <Select value={selectedShiftId} onValueChange={setSelectedShiftId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a shift..." />
@@ -351,31 +395,34 @@ export function AdminBookingAssignments() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={assignBookingToShift}
-                disabled={!selectedBookingId || !selectedShiftId || processing}
-                className="flex-1 max-w-xs"
-              >
-                {processing ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <UserCheck className="h-4 w-4 mr-2" />
-                )}
-                Assign Booking
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedBookingId("");
-                  setSelectedShiftId("");
-                  setAssignmentResult(null);
-                }}
-              >
-                Clear Selection
-              </Button>
+              <div className="flex items-end">
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={assignBookingsToShift}
+                    disabled={selectedBookingIds.length === 0 || !selectedShiftId || processing}
+                    className="flex-1"
+                  >
+                    {processing ? (
+                      <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <UserCheck className="h-4 w-4 mr-2" />
+                    )}
+                    Assign {selectedBookingIds.length > 0 ? `${selectedBookingIds.length} Booking${selectedBookingIds.length !== 1 ? 's' : ''}` : 'Bookings'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedBookingIds([]);
+                      setSelectedShiftId("");
+                      setAssignmentResult(null);
+                    }}
+                    disabled={selectedBookingIds.length === 0 && !selectedShiftId}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

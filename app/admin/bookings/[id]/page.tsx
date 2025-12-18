@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MockAPI, Booking, RosterShift, Agent, ActivityLog } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC, formatDateTimeUTC } from '@/lib/utils';
-import { ArrowLeft, Edit, Save, X, Trash2, UserCheck, Calendar, Activity } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Trash2, UserCheck, Calendar, Activity, CheckCircle2 } from 'lucide-react';
 import Link from "next/link";
 
 export default function BookingDetailPage() {
@@ -213,6 +213,30 @@ export default function BookingDetailPage() {
     }
   };
 
+  // Alert for upcoming bookings
+  useEffect(() => {
+    if (booking && booking.status !== 'completed' && booking.status !== 'cancelled') {
+      const bookingTime = new Date(`${booking.date}T${booking.time}`);
+      const now = new Date();
+      const timeDiff = bookingTime.getTime() - now.getTime();
+      const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+
+      if (daysDiff <= 1 && daysDiff > 0) {
+        toast.showToast({
+          title: 'Upcoming Booking Alert',
+          description: `Booking for ${booking.passengerName} (${booking.flightNumber}) is in ${Math.ceil(daysDiff * 24)} hours`,
+          type: 'info'
+        });
+      } else if (daysDiff <= 0 && booking.status === 'new') {
+        toast.showToast({
+          title: 'Overdue Booking',
+          description: `Booking for ${booking.passengerName} (${booking.flightNumber}) has passed scheduled time`,
+          type: 'error'
+        });
+      }
+    }
+  }, [booking, toast]);
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -279,6 +303,85 @@ export default function BookingDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Booking Progress Tracker */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Booking Progress
+          </CardTitle>
+          <CardDescription>Track the booking lifecycle from creation to completion</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>Booking Date: {formatDateUTC(booking.date)} at {booking.time}</span>
+              <span className={`font-medium ${
+                new Date(`${booking.date}T${booking.time}`) > new Date()
+                  ? 'text-green-600'
+                  : booking.status === 'completed'
+                  ? 'text-blue-600'
+                  : 'text-orange-600'
+              }`}>
+                {new Date(`${booking.date}T${booking.time}`) > new Date()
+                  ? `${Math.ceil((new Date(`${booking.date}T${booking.time}`).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days until booking`
+                  : booking.status === 'completed'
+                  ? 'Service completed'
+                  : 'Booking date has passed'
+                }
+              </span>
+            </div>
+          </div>
+          <div className="relative">
+            {/* Progress line */}
+            <div className="absolute top-6 left-0 right-0 h-0.5 bg-muted"></div>
+            <div
+              className="absolute top-6 left-0 h-0.5 bg-primary transition-all duration-500"
+              style={{
+                width: `${Math.min(100, (['new', 'contacted', 'confirmed', 'in_progress', 'completed'].indexOf(booking.status) + 1) / 5 * 100)}%`
+              }}
+            ></div>
+
+            {/* Steps */}
+            <div className="relative flex justify-between">
+              {[
+                { key: 'new', label: 'New', desc: 'Booking created' },
+                { key: 'contacted', label: 'Contacted', desc: 'Passenger contacted' },
+                { key: 'confirmed', label: 'Confirmed', desc: 'Booking confirmed' },
+                { key: 'in_progress', label: 'In Progress', desc: 'Service active' },
+                { key: 'completed', label: 'Completed', desc: 'Service finished' }
+              ].map((step, index) => {
+                const isCompleted = ['new', 'contacted', 'confirmed', 'in_progress', 'completed'].indexOf(booking.status) >= index;
+                const isCurrent = booking.status === step.key;
+                return (
+                  <div key={step.key} className="flex flex-col items-center text-center">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                      isCompleted
+                        ? 'bg-primary border-primary text-primary-foreground'
+                        : isCurrent
+                        ? 'border-primary text-primary'
+                        : 'border-muted-foreground/30 text-muted-foreground'
+                    }`}>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <span className="text-sm font-medium">{index + 1}</span>
+                      )}
+                    </div>
+                    <div className="mt-3 max-w-20">
+                      <p className={`text-sm font-medium ${isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {step.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Details */}
