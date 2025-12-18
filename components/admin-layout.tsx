@@ -207,33 +207,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <Zap className="h-4 w-4" />
               </Button>
 
-              {/* Search */}
-              <div>
-                <Button variant="ghost" size="sm" className="hidden sm:flex" onClick={() => setSearchOpen(true)}>
-                  <Search className="h-4 w-4" />
-                </Button>
-                {searchOpen && (
-                  <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[90%] sm:w-96 z-50">
-                    <Card>
-                      <CardContent>
-                        <div className="flex gap-2">
-                          <Input placeholder="Search bookings or customers..." value={query} onChange={(e) => setQuery(e.target.value)} />
-                          <Button onClick={doSearch}>Search</Button>
-                          <Button variant="ghost" onClick={() => { setSearchOpen(false); setQuery(''); setResults({ bookings: [], customers: [] }); }}>Close</Button>
-                        </div>
-                        <div className="mt-3 space-y-2 max-h-64 overflow-auto">
-                          {results.bookings.map(b => (
-                            <div key={b.id} className="p-2 hover:bg-muted rounded">{b.passengerName} • {b.flightNumber}</div>
-                          ))}
-                          {results.customers.map(c => (
-                            <div key={c.id} className="p-2 hover:bg-muted rounded">{c.name} • {c.company}</div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
+
 
               {/* Notifications */}
               <DropdownMenu>

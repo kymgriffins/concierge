@@ -30,6 +30,9 @@ export default function BookingDetailPage() {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string; description: string; icon: string; price?: number; active: boolean }[]>([]);
   const [permissions, setPermissions] = useState<{ canCreateBooking?: boolean; canDeleteBooking?: boolean; canUpdateBooking?: boolean } | null>(null);
+  const [showAddActivity, setShowAddActivity] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<ActivityLog | null>(null);
+  const [activityForm, setActivityForm] = useState({ action: '', user: '', details: '' });
   const toast = useToast();
 
   useEffect(() => {
@@ -129,6 +132,73 @@ export default function BookingDetailPage() {
       console.error('Error deleting booking:', error);
       toast.showToast({ title: 'Delete failed', description: String(error), type: 'error' });
     }
+  };
+
+  const handleAddActivity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!booking) return;
+    try {
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: activityForm.action,
+        user: activityForm.user || 'Staff',
+        details: activityForm.details
+      });
+      setActivityForm({ action: '', user: '', details: '' });
+      setShowAddActivity(false);
+      await loadData(); // Reload to get updated logs
+      toast.showToast({ title: 'Added', description: 'Activity log added successfully', type: 'success' });
+    } catch (error) {
+      console.error('Error adding activity log:', error);
+      toast.showToast({ title: 'Add failed', description: String(error), type: 'error' });
+    }
+  };
+
+  const handleEditActivity = (log: ActivityLog) => {
+    setEditingActivity(log);
+    setActivityForm({ action: log.action, user: log.user, details: log.details });
+    setShowAddActivity(true);
+  };
+
+  const handleUpdateActivity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingActivity || !booking) return;
+    try {
+      // Note: MockAPI might not have updateActivityLog, so we'll delete and create new
+      await MockAPI.deleteActivityLog(editingActivity.id);
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: activityForm.action,
+        user: activityForm.user,
+        details: activityForm.details
+      });
+      setActivityForm({ action: '', user: '', details: '' });
+      setEditingActivity(null);
+      setShowAddActivity(false);
+      await loadData();
+      toast.showToast({ title: 'Updated', description: 'Activity log updated successfully', type: 'success' });
+    } catch (error) {
+      console.error('Error updating activity log:', error);
+      toast.showToast({ title: 'Update failed', description: String(error), type: 'error' });
+    }
+  };
+
+  const handleDeleteActivity = async (logId: string) => {
+    if (!confirm('Are you sure you want to delete this activity log?')) return;
+    try {
+      await MockAPI.deleteActivityLog(logId);
+      await loadData();
+      toast.showToast({ title: 'Deleted', description: 'Activity log deleted successfully', type: 'success' });
+    } catch (error) {
+      console.error('Error deleting activity log:', error);
+      toast.showToast({ title: 'Delete failed', description: String(error), type: 'error' });
+    }
+  };
+
+  const resetActivityForm = () => {
+    setActivityForm({ action: '', user: '', details: '' });
+    setEditingActivity(null);
+    setShowAddActivity(false);
   };
 
   const getStatusColor = (status: Booking['status']) => {
@@ -358,11 +428,63 @@ export default function BookingDetailPage() {
                 <Activity className="h-5 w-5" />
                 Activity History
               </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddActivity(true)}
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Add Activity
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
+              {/* Add/Edit Activity Form */}
+              {(showAddActivity || editingActivity) && (
+                <Card className="mb-4">
+                  <CardContent className="pt-4">
+                    <form onSubmit={editingActivity ? handleUpdateActivity : handleAddActivity} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Action (e.g., 'Passenger Met', 'Status Updated')"
+                          value={activityForm.action}
+                          onChange={(e) => setActivityForm({ ...activityForm, action: e.target.value })}
+                          required
+                        />
+                        <Input
+                          placeholder="User (e.g., 'Staff Member A')"
+                          value={activityForm.user}
+                          onChange={(e) => setActivityForm({ ...activityForm, user: e.target.value })}
+                        />
+                      </div>
+                      <Textarea
+                        placeholder="Details"
+                        value={activityForm.details}
+                        onChange={(e) => setActivityForm({ ...activityForm, details: e.target.value })}
+                        required
+                      />
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm">
+                          {editingActivity ? 'Update Activity' : 'Add Activity'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={resetActivityForm}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="space-y-3">
                 {activityLogs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                  <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg group hover:bg-muted/50">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{log.action}</span>
@@ -370,7 +492,27 @@ export default function BookingDetailPage() {
                       </div>
                       <p className="text-sm text-muted-foreground">{log.details}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">{formatDateTimeUTC(log.timestamp)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{formatDateTimeUTC(log.timestamp)}</span>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleEditActivity(log)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteActivity(log.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ))}
                 {activityLogs.length === 0 && (

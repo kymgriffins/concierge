@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Customer, MockAPI } from "@/lib/mock-api";
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
 import { formatDateUTC } from '@/lib/utils';
-import { Building, Calendar, Mail, MoreHorizontal, Phone } from "lucide-react";
+import { Building, Calendar, Mail, MoreHorizontal, Phone, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function AdminCustomers() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,8 @@ export function AdminCustomers() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Customer>>({});
+  const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   useEffect(() => {
     loadCustomers();
@@ -30,7 +34,12 @@ export function AdminCustomers() {
 
   useEffect(() => {
     filterCustomers();
+    searchCustomers();
   }, [customers, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    searchCustomers();
+  }, [searchTerm]);
 
   const loadCustomers = async () => {
     try {
@@ -60,6 +69,24 @@ export function AdminCustomers() {
     }
 
     setFilteredCustomers(filtered);
+  };
+
+  const searchCustomers = () => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    const lowerTerm = searchTerm.toLowerCase();
+    const results = customers.filter(customer =>
+      customer.name.toLowerCase().includes(lowerTerm) ||
+      customer.email.toLowerCase().includes(lowerTerm) ||
+      customer.company.toLowerCase().includes(lowerTerm)
+    ).slice(0, 5); // Limit to 5 results
+
+    setSearchResults(results);
+    setShowSearchDropdown(results.length > 0);
   };
 
   const getInitials = (name: string) => {
@@ -185,13 +212,53 @@ export function AdminCustomers() {
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <Input
-                placeholder="Search by name, email, or company..."
+                placeholder="Search customers to view details..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => searchTerm && searchResults.length > 0 && setShowSearchDropdown(true)}
+                onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
                 className="w-full"
               />
+              {/* Search Results Dropdown */}
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {searchResults.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
+                      onClick={() => {
+                        console.log('Clicked customer:', customer.id, customer.name);
+                        console.log('Navigating to:', `/admin/customers/${customer.id}`);
+                        try {
+                          router.push(`/admin/customers/${customer.id}`);
+                          console.log('Router push executed successfully');
+                        } catch (error) {
+                          console.error('Error during navigation:', error);
+                        }
+                        setSearchTerm('');
+                        setShowSearchDropdown(false);
+                      }}
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">
+                          {getInitials(customer.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{customer.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {customer.email} • {customer.company}
+                        </div>
+                      </div>
+                      <Badge variant={customer.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                        {customer.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
@@ -248,6 +315,10 @@ export function AdminCustomers() {
             { key: 'last', header: 'Last Booking', accessor: (c) => c.lastBookingDate, cell: (c) => c.lastBookingDate ? formatDateUTC(c.lastBookingDate) : '-' },
             { key: 'actions', header: '', cell: (c) => (
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push(`/admin/customers/${c.id}`)}>
+                  <Eye className="h-4 w-4 mr-1" />
+                  View
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(c)}>Edit</Button>
                 <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)}>Delete</Button>
                 <Button variant="outline" size="sm" onClick={() => handleStatusChange(c.id, c.status === 'active' ? 'inactive' : 'active')}>{c.status === 'active' ? 'Deactivate' : 'Activate'}</Button>

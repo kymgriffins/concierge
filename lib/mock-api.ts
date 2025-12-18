@@ -711,6 +711,16 @@ export class MockAPI {
     return newLog;
   }
 
+  static async deleteActivityLog(id: string): Promise<boolean> {
+    await this.delay();
+    const index = mockActivityLogs.findIndex(log => log.id === id);
+    if (index !== -1) {
+      mockActivityLogs.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
   static async createServiceOption(optionData: Omit<ServiceOption, 'id'>): Promise<ServiceOption> {
     await this.delay();
     const newOption: ServiceOption = {
