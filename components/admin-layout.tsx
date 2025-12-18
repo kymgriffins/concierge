@@ -22,6 +22,8 @@ import {
   Target
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MockAPI, Agent, Booking, Customer } from "@/lib/mock-api";
@@ -30,8 +32,6 @@ import { AutoBookingSidebar } from "@/components/auto-booking-sidebar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentPage: string;
-  onPageChange: (page: string) => void;
 }
 
 const navigation = [
@@ -49,7 +49,8 @@ const navigation = [
   { name: "Settings", id: "settings", icon: Settings },
 ];
 
-export function AdminLayout({ children, currentPage, onPageChange }: AdminLayoutProps) {
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoBookingSidebarOpen, setAutoBookingSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -58,6 +59,22 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
   const [agents, setAgents] = useState<Agent[]>([]);
   const [currentUser, setCurrentUser] = useState<Agent | null>(null);
   const toast = useToast();
+
+  const getCurrentPage = (pathname: string) => {
+    const segments = pathname.split('/').filter(Boolean);
+    // Handle dynamic routes like /admin/bookings/[id] -> bookings
+    if (segments.length >= 2 && segments[0] === 'admin') {
+      const lastSegment = segments[segments.length - 1];
+      // If the last segment is not in navigation (dynamic ID), return the parent
+      if (!navigation.some(nav => nav.id === lastSegment)) {
+        return segments[1]; // Return the parent page like 'bookings'
+      }
+      return lastSegment;
+    }
+    return segments.pop() || 'dashboard';
+  };
+
+  const currentPage = getCurrentPage(pathname);
 
   const doSearch = async () => {
     try {
@@ -130,18 +147,16 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
-                <Button
-                  key={item.id}
-                  variant={currentPage === item.id ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onPageChange(item.id);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.name}
-                </Button>
+                <Link key={item.id} href={`/admin/${item.id}`}>
+                  <Button
+                    variant={currentPage === item.id ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </Button>
+                </Link>
               );
             })}
           </nav>
