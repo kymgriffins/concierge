@@ -242,34 +242,83 @@ export function AdminBookings() {
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / perPage));
   const paginated = filteredBookings.slice((page - 1) * perPage, page * perPage);
 
-  // DataTable columns
-  const columns: Column<Booking>[] = [
-    {
-      key: 'passenger',
-      header: 'Passenger',
-      accessor: (r) => r.passengerName,
-      cell: (r) => (
-        <div>
-          <div className="font-medium">{r.passengerName}</div>
-          <div className="text-sm text-muted-foreground">{r.phone} • {r.email}</div>
+  // Custom DataTable with filters
+  const BookingsDataTable = () => {
+    const [tableFilters, setTableFilters] = useState<{ [key: string]: string }>({});
+
+    const columns: Column<Booking>[] = [
+      {
+        key: 'passenger',
+        header: 'Passenger',
+        accessor: (r) => r.passengerName,
+        cell: (r) => (
+          <div>
+            <div className="font-medium">{r.passengerName}</div>
+            <div className="text-sm text-muted-foreground">{r.phone} • {r.email}</div>
+          </div>
+        ),
+        sortable: true,
+        filterable: true
+      },
+      { key: 'flight', header: 'Flight', accessor: (r) => r.flightNumber, cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>), sortable: true, filterable: true },
+      { key: 'date', header: 'Date', accessor: (r) => r.date, cell: (r) => formatDateUTC(r.date), sortable: true },
+      { key: 'company', header: 'Company', accessor: (r) => r.company, filterable: true },
+      { key: 'service', header: 'Service', cell: (r) => (<Badge variant="outline" className="text-xs">{serviceOptions.find(s => s.id === r.serviceId)?.name || r.serviceId}</Badge>) },
+      { key: 'status', header: 'Status', cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>), sortable: true, filterable: true },
+      { key: 'source', header: 'Source', accessor: (r) => r.source },
+      { key: 'actions', header: '', cell: (r) => (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(r)}>Edit</Button>
+          <Button variant="outline" size="sm" onClick={() => setSelectedBooking(r)}>View</Button>
+          <Button variant="destructive" size="sm" onClick={() => handleDelete(r.id)}>Delete</Button>
         </div>
-      ),
-      sortable: true
-    },
-    { key: 'flight', header: 'Flight', accessor: (r) => r.flightNumber, cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>), sortable: true },
-    { key: 'date', header: 'Date', accessor: (r) => r.date, cell: (r) => formatDateUTC(r.date), sortable: true },
-    { key: 'company', header: 'Company', accessor: (r) => r.company },
-    { key: 'service', header: 'Service', cell: (r) => (<Badge variant="outline" className="text-xs">{serviceOptions.find(s => s.id === r.serviceId)?.name || r.serviceId}</Badge>) },
-    { key: 'status', header: 'Status', cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>), sortable: true },
-    { key: 'source', header: 'Source', accessor: (r) => r.source },
-    { key: 'actions', header: '', cell: (r) => (
-      <div className="flex gap-2">
-        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(r)}>Edit</Button>
-        <Button variant="outline" size="sm" onClick={() => setSelectedBooking(r)}>View</Button>
-        <Button variant="destructive" size="sm" onClick={() => handleDelete(r.id)}>Delete</Button>
+      ) }
+    ];
+
+    return (
+      <div className="space-y-4">
+        {/* Custom toolbar with date filters */}
+        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Date Range:</label>
+            <DatePicker
+              value={startDate}
+              onChange={setStartDate}
+              placeholder="From"
+              className="w-32"
+            />
+            <span className="text-muted-foreground">-</span>
+            <DatePicker
+              value={endDate}
+              onChange={setEndDate}
+              placeholder="To"
+              className="w-32"
+            />
+          </div>
+          {(startDate || endDate) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setStartDate(null); setEndDate(null); }}
+            >
+              Clear dates
+            </Button>
+          )}
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredBookings}
+          defaultPageSize={perPage}
+          pageSizeOptions={[10,25,50,100]}
+          onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
+          searchable={true}
+          exportable={true}
+          emptyMessage="No bookings found matching your criteria"
+        />
       </div>
-    ) }
-  ];
+    );
+  };
 
   if (loading) {
     return (
@@ -328,119 +377,7 @@ export function AdminBookings() {
         ))}
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter bookings by date range, status, and search terms</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Search</label>
-              <Input
-                placeholder="Passenger name, flight, company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Start Date</label>
-              <DatePicker
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="From date"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">End Date</label>
-              <DatePicker
-                value={endDate}
-                onChange={setEndDate}
-                placeholder="To date"
-              />
-            </div>
-          </div>
-          {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
-              {searchTerm && (
-                <Badge variant="secondary" className="text-xs">
-                  Search: {searchTerm}
-                  <button
-                    className="ml-2 hover:text-destructive"
-                    onClick={() => setSearchTerm('')}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {statusFilter !== 'all' && (
-                <Badge variant="secondary" className="text-xs">
-                  Status: {statusFilter.replace('_', ' ')}
-                  <button
-                    className="ml-2 hover:text-destructive"
-                    onClick={() => setStatusFilter('all')}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {startDate && (
-                <Badge variant="secondary" className="text-xs">
-                  From: {formatDateUTC(startDate)}
-                  <button
-                    className="ml-2 hover:text-destructive"
-                    onClick={() => setStartDate(null)}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {endDate && (
-                <Badge variant="secondary" className="text-xs">
-                  To: {formatDateUTC(endDate)}
-                  <button
-                    className="ml-2 hover:text-destructive"
-                    onClick={() => setEndDate(null)}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                  setStartDate(null);
-                  setEndDate(null);
-                }}
-              >
-                Clear all
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
 
       
 
@@ -572,18 +509,7 @@ export function AdminBookings() {
             </div>
           </div>
 
-          <div>
-            <DataTable
-        columns={columns}
-        data={filteredBookings}
-        defaultPageSize={perPage}
-        pageSizeOptions={[10,25,50,100]}
-        onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
-        searchable={true}
-        exportable={true}
-        emptyMessage="No bookings found matching your criteria"
-      />
-          </div>
+          <BookingsDataTable />
         </CardContent>
       </Card>
 
