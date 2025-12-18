@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import DateTimePicker from "@/components/ui/date-time-picker";
 import DatePicker from "@/components/ui/date-picker";
+import TimePicker from "@/components/ui/time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
@@ -357,9 +357,8 @@ export function AdminBookings() {
                     <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                     <Input placeholder="Flight number" value={form.flightNumber || ''} onChange={(e) => setForm({ ...form, flightNumber: e.target.value })} />
                     <Input placeholder="Airline" value={form.airline || ''} onChange={(e) => setForm({ ...form, airline: e.target.value })} />
-                    <div className="md:col-span-2 lg:col-span-1">
-                      <DateTimePicker date={form.date || null} time={form.time || null} onChange={(d, t) => setForm({ ...form, date: d || '', time: t || '' })} />
-                    </div>
+                    <DatePicker value={form.date || null} onChange={(d) => setForm({ ...form, date: d || '' })} placeholder="Select date" />
+                    <TimePicker value={form.time || null} onChange={(t) => setForm({ ...form, time: t || '' })} placeholder="Select time" />
                     <Input placeholder="Terminal" value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
                     <Input type="number" min={1} placeholder="Passengers" value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
                     <Select value={form.status || 'new'} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
