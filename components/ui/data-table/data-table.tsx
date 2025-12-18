@@ -297,49 +297,52 @@ export function DataTable<T extends Record<string, any>>(
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {/* Primary info - first column or specially marked */}
-                    {(() => {
-                      const primaryCol =
-                        columns.find((col) => col.meta?.mobileCard) ||
-                        visibleColumns[0];
-                      if (primaryCol) {
-                        return (
-                          <div className="flex items-center justify-between">
-                            <div className="font-semibold text-lg">
-                              {primaryCol.cell
-                                ? primaryCol.cell(row)
-                                : String(
-                                    primaryCol.accessor
-                                      ? primaryCol.accessor(row)
-                                      : (row[primaryCol.key as keyof T] ?? ""),
-                                  )}
-                            </div>
-                            {/* Actions dropdown for mobile */}
-                            {visibleColumns.some(
-                              (col) => col.key === "actions",
-                            ) && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="touch-manipulation min-h-[44px] min-w-[44px]"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {visibleColumns
-                                    .find((col) => col.key === "actions")
-                                    ?.cell?.(row)}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
+          {/* Primary info - first column or specially marked */}
+          {(() => {
+            const primaryCol =
+              columns.find((col) => col.meta?.mobileCard) ||
+              visibleColumns[0];
+            if (primaryCol) {
+              const hasMobileCard = primaryCol.meta?.mobileCard;
+              return (
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 font-semibold text-lg">
+                    {hasMobileCard && primaryCol.meta?.mobileCard
+                      ? primaryCol.meta.mobileCard.value(row)
+                      : primaryCol.cell
+                        ? primaryCol.cell(row)
+                        : String(
+                            primaryCol.accessor
+                              ? primaryCol.accessor(row)
+                              : (row[primaryCol.key as keyof T] ?? ""),
+                          )}
+                  </div>
+                  {/* Actions dropdown for mobile */}
+                  {visibleColumns.some(
+                    (col) => col.key === "actions",
+                  ) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="touch-manipulation min-h-[44px] min-w-[44px] ml-2"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {visibleColumns
+                          .find((col) => col.key === "actions")
+                          ?.cell?.(row)}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
 
                     {/* Secondary info - other visible columns */}
                     <div className="space-y-2">

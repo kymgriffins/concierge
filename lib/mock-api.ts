@@ -91,7 +91,7 @@ export interface ServiceOption {
 
 // Mock Data - Import JSON file directly (works in Next.js)
 import mockdbData from "../data/mockdb.json";
-let mockBookings: Booking[] = (mockdbData.bookings || []) as Booking[];
+let mockBookings: Booking[] = (mockdbData.bookings || []) as unknown as Booking[];
 
 // Fallback hardcoded bookings if JSON loading fails
 if (mockBookings.length === 0) {

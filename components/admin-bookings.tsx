@@ -26,9 +26,394 @@ import { useToast } from "@/components/ui/toast";
 import { formatDateUTC, formatRelativeTime } from "@/lib/utils";
 import DataTable, { Column } from "@/components/ui/data-table/data-table";
 import { Tooltip } from "@/components/ui/tooltip";
-import { List, Plus, Clock, CheckCircle, Eye } from "lucide-react";
+import { List, Plus, Clock, CheckCircle, Eye, Phone, Mail, Plane, Calendar, Building, User, ChevronRight, Filter, Search as SearchIcon } from "lucide-react";
+import { useResponsiveBreakpoints } from "@/lib/hooks";
+
+// Mobile-specific bookings component
+function MobileBookingsView({
+  bookings,
+  filteredBookings,
+  onBookingClick,
+  onStatusChange,
+  serviceOptions,
+  agents,
+  getStatusColor,
+  formatDateUTC,
+  formatRelativeTime,
+  searchTerm,
+  setSearchTerm,
+  statusFilter,
+  setStatusFilter,
+  showDateFilters,
+  setShowDateFilters,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  serviceFilter,
+  setServiceFilter,
+  airlineFilter,
+  setAirlineFilter,
+  terminalFilter,
+  setTerminalFilter,
+  sourceFilter,
+  setSourceFilter,
+  airlineOptions,
+  terminalOptions,
+  sourceOptions,
+}: {
+  bookings: Booking[];
+  filteredBookings: Booking[];
+  onBookingClick: (booking: Booking) => void;
+  onStatusChange: (id: string, status: Booking["status"]) => Promise<void>;
+  serviceOptions: any[];
+  agents: Agent[];
+  getStatusColor: (status: Booking["status"]) => "default" | "secondary" | "outline" | "destructive";
+  formatDateUTC: (date: string) => string;
+  formatRelativeTime: (date: string, status: Booking["status"]) => { text: string; color: string };
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  statusFilter: string;
+  setStatusFilter: (filter: string) => void;
+  showDateFilters: boolean;
+  setShowDateFilters: (show: boolean) => void;
+  startDate: string | null;
+  setStartDate: (date: string | null) => void;
+  endDate: string | null;
+  setEndDate: (date: string | null) => void;
+  serviceFilter: string;
+  setServiceFilter: (filter: string) => void;
+  airlineFilter: string;
+  setAirlineFilter: (filter: string) => void;
+  terminalFilter: string;
+  setTerminalFilter: (filter: string) => void;
+  sourceFilter: string;
+  setSourceFilter: (filter: string) => void;
+  airlineOptions: string[];
+  terminalOptions: string[];
+  sourceOptions: string[];
+}) {
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  const statusOptions = [
+    { status: "all", label: "All", count: bookings.length, icon: List, color: "default" as const },
+    { status: "new", label: "New", count: bookings.filter((b) => b.status === "new").length, icon: Plus, color: "secondary" as const },
+    { status: "contacted", label: "Contacted", count: bookings.filter((b) => b.status === "contacted").length, icon: Plus, color: "secondary" as const },
+    { status: "confirmed", label: "Confirmed", count: bookings.filter((b) => b.status === "confirmed").length, icon: Plus, color: "secondary" as const },
+    { status: "in_progress", label: "In Progress", count: bookings.filter((b) => b.status === "in_progress").length, icon: Clock, color: "destructive" as const },
+    { status: "pending_review", label: "Pending Review", count: bookings.filter((b) => b.status === "pending_review").length, icon: Clock, color: "secondary" as const },
+    { status: "completed", label: "Completed", count: bookings.filter((b) => b.status === "completed").length, icon: CheckCircle, color: "default" as const },
+  ];
+
+  const BookingCard = ({ booking }: { booking: Booking }) => {
+    const { text, color } = formatRelativeTime(booking.date, booking.status);
+    const service = serviceOptions.find((s) => s.id === booking.serviceId);
+
+    // Status-based styling
+    const getStatusBorderColor = (status: Booking["status"]) => {
+      switch (status) {
+        case "new": return "border-l-blue-500";
+        case "contacted": return "border-l-yellow-500";
+        case "confirmed": return "border-l-green-500";
+        case "in_progress": return "border-l-orange-500";
+        case "pending_review": return "border-l-purple-500";
+        case "completed": return "border-l-gray-500";
+        case "cancelled": return "border-l-red-500";
+        default: return "border-l-gray-300";
+      }
+    };
+
+    const getStatusIcon = (status: Booking["status"]) => {
+      switch (status) {
+        case "new": return "🆕";
+        case "contacted": return "📞";
+        case "confirmed": return "✅";
+        case "in_progress": return "⏳";
+        case "pending_review": return "👀";
+        case "completed": return "🎉";
+        case "cancelled": return "❌";
+        default: return "📋";
+      }
+    };
+
+    return (
+      <Card className={`mb-3 touch-manipulation active:scale-[0.98] transition-all duration-200 border-l-4 ${getStatusBorderColor(booking.status)} shadow-sm hover:shadow-md`}>
+        <CardContent className="p-4">
+          {/* Compact Header with Status Indicator */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="text-lg">{getStatusIcon(booking.status)}</div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base text-foreground truncate">
+                  {booking.passengerName}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant={getStatusColor(booking.status)} className="text-xs px-2 py-0.5">
+                    {booking.status.replace("_", " ")}
+                  </Badge>
+                  <span className={`text-xs font-medium ${color}`}>
+                    {text}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          </div>
+
+          {/* Flight Info - Compact Design */}
+          <div className="flex items-center gap-3 mb-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/10">
+            <div className="flex-shrink-0">
+              <Plane className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm text-primary">
+                {booking.flightNumber}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                {booking.airline} • Terminal {booking.terminal || "N/A"}
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="text-sm font-medium text-foreground">
+                {booking.time}
+              </div>
+            </div>
+          </div>
+
+          {/* Contact & Service - Horizontal Layout */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Phone className="h-3.5 w-3.5" />
+                <span className="text-xs truncate max-w-[80px]">{booking.phone}</span>
+              </div>
+              {booking.company && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Building className="h-3.5 w-3.5" />
+                  <span className="text-xs truncate max-w-[80px]">{booking.company}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant="outline" className="text-xs px-2 py-0.5 bg-background/50">
+                {service?.icon} {service?.name || booking.serviceId}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookingClick(booking);
+                }}
+                className="touch-manipulation min-h-[36px] min-w-[36px] p-0 hover:bg-primary/10"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Mobile Header */}
+      <div className="sticky top-0 z-10 bg-background border-b">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold">Bookings</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="touch-manipulation min-h-[44px] min-w-[44px]"
+            >
+              <Filter className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search passengers, flights..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 touch-manipulation min-h-[44px] w-full"
+            />
+          </div>
+
+        {/* Mobile Status Filter Dropdown */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-foreground">Filter by Status:</label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="flex-1 touch-manipulation min-h-[44px] bg-background">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map(({ status, label, count, icon: Icon }) => (
+                  <SelectItem key={status} value={status} className="touch-manipulation">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      <span>{label}</span>
+                      <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full ml-auto">
+                        {count}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="border-b bg-muted/20">
+          <div className="max-w-md mx-auto px-4 py-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Filters</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(false)}
+                  className="touch-manipulation min-h-[44px] min-w-[44px]"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Date Range</label>
+                <div className="flex gap-2">
+                  <DatePicker
+                    value={startDate}
+                    onChange={setStartDate}
+                    placeholder="From"
+                    className="flex-1 touch-manipulation min-h-[44px]"
+                  />
+                  <DatePicker
+                    value={endDate}
+                    onChange={setEndDate}
+                    placeholder="To"
+                    className="flex-1 touch-manipulation min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              {/* Service Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Service</label>
+                <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                  <SelectTrigger className="touch-manipulation min-h-[44px] w-full">
+                    <SelectValue placeholder="All Services" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Services</SelectItem>
+                    {serviceOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Airline Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Airline</label>
+                <Select value={airlineFilter} onValueChange={setAirlineFilter}>
+                  <SelectTrigger className="touch-manipulation min-h-[44px] w-full">
+                    <SelectValue placeholder="All Airlines" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Airlines</SelectItem>
+                    {airlineOptions.map((airline) => (
+                      <SelectItem key={airline} value={airline}>
+                        {airline}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Terminal Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Terminal</label>
+                <Select value={terminalFilter} onValueChange={setTerminalFilter}>
+                  <SelectTrigger className="touch-manipulation min-h-[44px] w-full">
+                    <SelectValue placeholder="All Terminals" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Terminals</SelectItem>
+                    {terminalOptions.map((terminal) => (
+                      <SelectItem key={terminal} value={terminal}>
+                        {terminal}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters */}
+              {(serviceFilter !== "all" || airlineFilter !== "all" || terminalFilter !== "all" || startDate || endDate) && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setServiceFilter("all");
+                    setAirlineFilter("all");
+                    setTerminalFilter("all");
+                    setStartDate(null);
+                    setEndDate(null);
+                  }}
+                  className="w-full touch-manipulation min-h-[44px]"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bookings List */}
+      <div className="flex-1">
+        <div className="max-w-md mx-auto px-4 py-4">
+          {filteredBookings.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground mb-2">No bookings found</div>
+              <div className="text-sm text-muted-foreground">
+                Try adjusting your filters or search terms
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  onClick={() => onBookingClick(booking)}
+                  className="cursor-pointer"
+                >
+                  <BookingCard booking={booking} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AdminBookings() {
+  const { isMobile } = useResponsiveBreakpoints();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [page, setPage] = useState(1);
@@ -245,7 +630,7 @@ export function AdminBookings() {
     }
   };
 
-  const getStatusColor = (status: Booking["status"]) => {
+  const getStatusColor = (status: Booking["status"]): "default" | "secondary" | "outline" | "destructive" => {
     switch (status) {
       case "new":
         return "default";
@@ -434,7 +819,36 @@ export function AdminBookings() {
         meta: {
           mobileCard: {
             label: "Passenger",
-            value: (r) => r.passengerName,
+            value: (r) => (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-lg">{r.passengerName}</div>
+                  <Badge variant={getStatusColor(r.status)} className="text-xs">
+                    {r.status.replace("_", " ")}
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {r.flightNumber} • {r.airline} • {r.terminal || "N/A"}
+                </div>
+                <div className="text-sm">
+                  {formatDateUTC(r.date)} at {r.time}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {r.phone} • {r.email}
+                </div>
+                {r.company && (
+                  <div className="text-sm text-muted-foreground">
+                    Company: {r.company}
+                  </div>
+                )}
+                <div className="text-sm">
+                  <Badge variant="outline" className="text-xs">
+                    {serviceOptions.find((s) => s.id === r.serviceId)?.name ||
+                      r.serviceId}
+                  </Badge>
+                </div>
+              </div>
+            ),
           },
         },
       },
@@ -468,7 +882,8 @@ export function AdminBookings() {
         },
         sortable: true,
         meta: {
-          hideOnMobile: true,
+          hideOnMobile: false,
+          hideOnTablet: false,
         },
       },
 
@@ -482,7 +897,8 @@ export function AdminBookings() {
           </Badge>
         ),
         meta: {
-          hideOnMobile: true,
+          hideOnMobile: false,
+          hideOnTablet: false,
         },
       },
       {
@@ -528,7 +944,7 @@ export function AdminBookings() {
         ),
         sortable: true,
         meta: {
-          hideOnMobile: false,
+          hideOnMobile: true,
           hideOnTablet: false,
         },
       },
@@ -617,10 +1033,10 @@ export function AdminBookings() {
         {/* Toggle button for date filters */}
         <div className="flex items-center gap-2">
           <button
-            className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+            className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
               showDateFilters
                 ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                : "bg-background hover:bg-muted/50 border-border text-foreground"
+                : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
             }`}
             onClick={() => setShowDateFilters(!showDateFilters)}
           >
@@ -766,6 +1182,44 @@ export function AdminBookings() {
     );
   }
 
+  // Use mobile component for smartphones
+  if (isMobile) {
+    return (
+      <MobileBookingsView
+        bookings={bookings}
+        filteredBookings={filteredBookings}
+        onBookingClick={(booking) => router.push(`/admin/bookings/${booking.id}`)}
+        onStatusChange={handleStatusChange}
+        serviceOptions={serviceOptions}
+        agents={agents}
+        getStatusColor={getStatusColor}
+        formatDateUTC={formatDateUTC}
+        formatRelativeTime={formatRelativeTime}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        showDateFilters={false}
+        setShowDateFilters={() => {}}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        serviceFilter={serviceFilter}
+        setServiceFilter={setServiceFilter}
+        airlineFilter={airlineFilter}
+        setAirlineFilter={setAirlineFilter}
+        terminalFilter={terminalFilter}
+        setTerminalFilter={setTerminalFilter}
+        sourceFilter={sourceFilter}
+        setSourceFilter={setSourceFilter}
+        airlineOptions={airlineOptions}
+        terminalOptions={terminalOptions}
+        sourceOptions={sourceOptions}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -846,10 +1300,10 @@ export function AdminBookings() {
             ].map(({ status, label, count, icon: Icon, color }) => (
               <button
                 key={status}
-                className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                   statusFilter === status
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-background hover:bg-muted/50 border-border text-foreground"
+                    : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
                 }`}
                 onClick={() => setStatusFilter(status)}
               >
@@ -1014,7 +1468,7 @@ export function AdminBookings() {
                         .map((opt) => (
                           <label
                             key={opt.id}
-                            className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                            className="flex items-center gap-3 p-3 border-0 sm:border rounded-lg hover:bg-muted/50 cursor-pointer"
                           >
                             <input
                               type="radio"
