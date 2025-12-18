@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { MockAPI, ServiceOption } from "@/lib/mock-api";
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
 import { useToast } from "@/components/ui/toast";
@@ -46,7 +48,9 @@ export function AdminServices() {
         name: form.name || '',
         description: form.description || '',
         icon: form.icon || '',
-        price: form.price
+        price: form.price,
+        availableDate: form.availableDate,
+        availableTime: form.availableTime
       });
       await load();
       setShowForm(false);
@@ -98,6 +102,8 @@ export function AdminServices() {
     { key: 'name', header: 'Name', accessor: (s) => s.name, cell: (s) => <div className="font-medium">{s.name}</div>, sortable: true },
     { key: 'description', header: 'Description', accessor: (s) => s.description },
     { key: 'price', header: 'Price', accessor: (s) => s.price, cell: (s) => s.price ? `$${s.price}` : '-' , sortable: true },
+    { key: 'availableDate', header: 'Available Date', accessor: (s) => s.availableDate, cell: (s) => s.availableDate || '-' },
+    { key: 'availableTime', header: 'Available Time', accessor: (s) => s.availableTime, cell: (s) => s.availableTime || '-' },
     { key: 'actions', header: '', cell: (s) => (
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
@@ -129,6 +135,21 @@ export function AdminServices() {
                 <Input placeholder="Icon" value={form.icon || ''} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
                 <Input placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 <Input type="number" placeholder="Price" value={form.price?.toString() || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Available Date</label>
+                  <DatePicker
+                    value={form.availableDate || null}
+                    onChange={(date) => setForm({ ...form, availableDate: date || undefined })}
+                    placeholder="Select available date"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Available Time</label>
+                  <TimePicker
+                    value={form.availableTime || null}
+                    onChange={(time) => setForm({ ...form, availableTime: time || undefined })}
+                  />
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="submit">{editing ? 'Save changes' : 'Create service'}</Button>
@@ -139,7 +160,16 @@ export function AdminServices() {
         </Card>
       )}
 
-      <DataTable columns={columns} data={services} defaultPageSize={9} pageSizeOptions={[9,18,36]} onRowClick={(s) => openEdit(s)} />
+      <DataTable
+        columns={columns}
+        data={services}
+        defaultPageSize={9}
+        pageSizeOptions={[9,18,36]}
+        onRowClick={(s) => openEdit(s)}
+        searchable={true}
+        exportable={true}
+        emptyMessage="No services found"
+      />
     </div>
   );
 }

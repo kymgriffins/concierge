@@ -12,6 +12,7 @@ import { MockAPI, Booking } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from '@/lib/utils';
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import { List, Plus, Clock, CheckCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -299,112 +300,121 @@ export function AdminBookings() {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search by passenger name, flight, or company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-2">
-              <DatePicker value={startDate} onChange={(v) => setStartDate(v)} />
-              <DatePicker value={endDate} onChange={(v) => setEndDate(v)} />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Status Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { status: 'all', label: 'All', count: bookings.length, icon: List, color: 'default' },
+          { status: 'new', label: 'New', count: bookings.filter(b => b.status === 'new').length, icon: Plus, color: 'secondary' },
+          { status: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length, icon: Clock, color: 'destructive' },
+          { status: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length, icon: CheckCircle, color: 'default' }
+        ].map(({ status, label, count, icon: Icon, color }) => (
+          <Card
+            key={status}
+            className={`cursor-pointer transition-all hover:shadow-md ${
+              statusFilter === status ? 'ring-2 ring-primary shadow-md' : ''
+            }`}
+            onClick={() => setStatusFilter(status)}
+          >
+            <CardContent className="p-4 text-center">
+              <div className="flex justify-center mb-2">
+                <Icon className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-2xl font-bold text-primary">{count}</div>
+              <div className="text-sm text-muted-foreground">{label}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      
 
       {/* Bookings Table */}
-      {/* Create / Edit form (modal) */}
-      <AlertDialog open={showCreate} onOpenChange={(open) => {
-        setShowCreate(open);
-        if (!open) {
-          setEditing(false);
-          setSelectedBooking(null);
-          resetForm();
-        }
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{editing ? 'Edit Booking' : 'Create Booking'}</AlertDialogTitle>
-            <AlertDialogDescription>{editing ? 'Update booking details' : 'Add a new booking to the system'}</AlertDialogDescription>
-          </AlertDialogHeader>
+      {/* Create / Edit form (full-screen modal) */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold">{editing ? 'Edit Booking' : 'Create Booking'}</h2>
+                    <p className="text-muted-foreground">{editing ? 'Update booking details' : 'Add a new booking to the system'}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setShowCreate(false); setEditing(false); setSelectedBooking(null); resetForm(); }}
+                  >
+                    ✕
+                  </Button>
+                </div>
 
-          <form onSubmit={editing ? handleSubmitEdit : handleSubmitCreate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input placeholder="Passenger name" value={form.passengerName || ''} onChange={(e) => setForm({ ...form, passengerName: e.target.value })} />
-              <Input placeholder="Company" value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
-              <Input placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <Input placeholder="Flight number" value={form.flightNumber || ''} onChange={(e) => setForm({ ...form, flightNumber: e.target.value })} />
-              <Input placeholder="Airline" value={form.airline || ''} onChange={(e) => setForm({ ...form, airline: e.target.value })} />
-              <DateTimePicker date={form.date || null} time={form.time || null} onChange={(d, t) => setForm({ ...form, date: d || '', time: t || '' })} />
-              <Input placeholder="Terminal" value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
-              <Input type="number" min={1} placeholder="Passengers" value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
-              <Select value={form.status || 'new'} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <form onSubmit={editing ? handleSubmitEdit : handleSubmitCreate} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Input placeholder="Passenger name" value={form.passengerName || ''} onChange={(e) => setForm({ ...form, passengerName: e.target.value })} />
+                    <Input placeholder="Company" value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                    <Input placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                    <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    <Input placeholder="Flight number" value={form.flightNumber || ''} onChange={(e) => setForm({ ...form, flightNumber: e.target.value })} />
+                    <Input placeholder="Airline" value={form.airline || ''} onChange={(e) => setForm({ ...form, airline: e.target.value })} />
+                    <div className="md:col-span-2 lg:col-span-1">
+                      <DateTimePicker date={form.date || null} time={form.time || null} onChange={(d, t) => setForm({ ...form, date: d || '', time: t || '' })} />
+                    </div>
+                    <Input placeholder="Terminal" value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
+                    <Input type="number" min={1} placeholder="Passengers" value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
+                    <Select value={form.status || 'new'} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="contacted">Contacted</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Services</label>
-              <div className="flex flex-wrap gap-2">
-                {serviceOptions.map(opt => {
-                  const checked = (form.services || []).includes(opt.id);
-                  return (
-                    <label key={opt.id} className="inline-flex items-center gap-2">
-                      <input type="checkbox" checked={checked} onChange={(e) => {
-                        const next = new Set(form.services || []);
-                        if (e.target.checked) next.add(opt.id); else next.delete(opt.id);
-                        setForm({ ...form, services: Array.from(next) });
-                      }} />
-                      <span className="text-sm">{opt.name}</span>
-                    </label>
-                  );
-                })}
+                  <div>
+                    <label className="block text-sm font-medium mb-3">Services</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {serviceOptions.map(opt => {
+                        const checked = (form.services || []).includes(opt.id);
+                        return (
+                          <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                            <input type="checkbox" checked={checked} onChange={(e) => {
+                              const next = new Set(form.services || []);
+                              if (e.target.checked) next.add(opt.id); else next.delete(opt.id);
+                              setForm({ ...form, services: Array.from(next) });
+                            }} className="rounded" />
+                            <span className="text-sm font-medium">{opt.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Special Requests</label>
+                    <Input placeholder="Special requests" value={form.specialRequests || ''} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} />
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button type="submit" disabled={creating} size="lg">
+                      {creating ? 'Saving...' : (editing ? 'Update booking' : 'Create booking')}
+                    </Button>
+                    <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditing(false); setSelectedBooking(null); resetForm(); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
-
-            <div>
-              <Input placeholder="Special requests" value={form.specialRequests || ''} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} />
-            </div>
-
-            <div className="flex gap-2">
-              <Button type="submit" disabled={creating}>{creating ? 'Saving...' : (editing ? 'Update booking' : 'Create booking')}</Button>
-              <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditing(false); setSelectedBooking(null); resetForm(); }}>Cancel</Button>
-            </div>
-          </form>
-        </AlertDialogContent>
-      </AlertDialog>
+          </div>
+        </div>
+      )}
       <Card>
           <CardContent>
             <div className="flex items-center justify-between mb-4">
@@ -441,7 +451,16 @@ export function AdminBookings() {
           </div>
 
           <div>
-            <DataTable columns={columns} data={filteredBookings} defaultPageSize={perPage} pageSizeOptions={[10,25,50,100]} onRowClick={(r) => setSelectedBooking(r)} />
+            <DataTable
+        columns={columns}
+        data={filteredBookings}
+        defaultPageSize={perPage}
+        pageSizeOptions={[10,25,50,100]}
+        onRowClick={(r) => setSelectedBooking(r)}
+        searchable={true}
+        exportable={true}
+        emptyMessage="No bookings found matching your criteria"
+      />
           </div>
         </CardContent>
       </Card>

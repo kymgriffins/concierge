@@ -46,6 +46,8 @@ export interface ServiceOption {
   description: string;
   icon: string;
   price?: number;
+  availableDate?: string; // ISO date string (YYYY-MM-DD)
+  availableTime?: string; // HH:MM format
 }
 
 // Mock Data
