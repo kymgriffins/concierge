@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
 import {
   MockAPI,
   Booking,
@@ -30,7 +31,7 @@ import {
   ActivityLog,
 } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
-import { formatDateUTC, formatDateTimeUTC } from "@/lib/utils";
+import { formatDateUTC, formatDateTimeUTC, formatRelativeTime } from "@/lib/utils";
 import {
   ArrowLeft,
   Edit,
@@ -41,6 +42,25 @@ import {
   Calendar,
   Activity,
   CheckCircle2,
+  Clock,
+  AlertTriangle,
+  TrendingUp,
+  Users,
+  Phone,
+  Mail,
+  Plane,
+  MapPin,
+  DollarSign,
+  Timer,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Info,
+  Star,
+  MessageSquare,
+  FileText,
+  BarChart3,
+  Target,
 } from "lucide-react";
 import Link from "next/link";
 import { ServiceLifecycleManager } from "@/components/service-lifecycle-manager";
@@ -433,6 +453,121 @@ export default function BookingDetailPage() {
   const assignedShift = shifts.find((s) => s.id === booking.shiftId);
   const assignedAgent = agents.find((a) => a.id === booking.assignedAgentId);
 
+  // Calculate insights based on dates
+  const createdAt = new Date(booking.createdAt);
+  const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
+  const now = new Date();
+
+  const daysSinceCreated = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntilBooking = Math.floor((bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const hoursUntilBooking = Math.floor((bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+
+  const isOverdue = bookingDateTime < now && booking.status !== "completed" && booking.status !== "cancelled";
+  const isUpcoming = daysUntilBooking <= 7 && daysUntilBooking >= 0;
+  const isToday = daysUntilBooking === 0;
+
+  // Status-based insights and UI
+  const getStatusInsights = () => {
+    switch (booking.status) {
+      case "new":
+        return {
+          title: "New Booking - Requires Attention",
+          icon: AlertCircle,
+          color: "text-orange-600",
+          bgColor: "bg-orange-50 border-orange-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            daysUntilBooking > 0 ? `${daysUntilBooking} days until service` : "Service date has passed",
+            "Passenger needs to be contacted",
+            "Assignment required"
+          ],
+          actions: ["Contact Passenger", "Assign to Agent", "Confirm Details"]
+        };
+      case "contacted":
+        return {
+          title: "Passenger Contacted - Awaiting Confirmation",
+          icon: Phone,
+          color: "text-blue-600",
+          bgColor: "bg-blue-50 border-blue-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            daysUntilBooking > 0 ? `${daysUntilBooking} days until service` : "Service date has passed",
+            "Initial contact made",
+            "Waiting for passenger confirmation"
+          ],
+          actions: ["Send Confirmation Reminder", "Update Contact Notes", "Assign Agent"]
+        };
+      case "confirmed":
+        return {
+          title: "Booking Confirmed - Ready for Service",
+          icon: CheckCircle,
+          color: "text-green-600",
+          bgColor: "bg-green-50 border-green-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            daysUntilBooking > 0 ? `${daysUntilBooking} days until service` : "Service date has passed",
+            "All details confirmed",
+            "Agent assignment recommended"
+          ],
+          actions: ["Assign to Shift", "Prepare Service Kit", "Send Pre-Service Info"]
+        };
+      case "in_progress":
+        return {
+          title: "Service In Progress - Active Support",
+          icon: Clock,
+          color: "text-purple-600",
+          bgColor: "bg-purple-50 border-purple-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            "Service currently active",
+            "Monitor service quality",
+            "Track completion status"
+          ],
+          actions: ["Update Progress", "Handle Issues", "Complete Service"]
+        };
+      case "completed":
+        return {
+          title: "Service Completed - Follow Up Required",
+          icon: CheckCircle2,
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50 border-emerald-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            `Service completed ${booking.actualDuration ? `${booking.actualDuration} minutes` : 'duration unknown'}`,
+            booking.customerSatisfaction ? `Customer satisfaction: ${booking.customerSatisfaction}/5` : "Satisfaction survey pending",
+            "Follow-up recommended"
+          ],
+          actions: ["Send Satisfaction Survey", "Process Payment", "Schedule Follow-up"]
+        };
+      case "cancelled":
+        return {
+          title: "Booking Cancelled",
+          icon: XCircle,
+          color: "text-red-600",
+          bgColor: "bg-red-50 border-red-200",
+          insights: [
+            `Created ${daysSinceCreated} days ago`,
+            "Booking was cancelled",
+            "Review cancellation reason",
+            "Consider rebooking opportunity"
+          ],
+          actions: ["Review Cancellation", "Contact for Rebooking", "Archive Record"]
+        };
+      default:
+        return {
+          title: "Booking Status",
+          icon: Info,
+          color: "text-gray-600",
+          bgColor: "bg-gray-50 border-gray-200",
+          insights: [`Created ${daysSinceCreated} days ago`],
+          actions: []
+        };
+    }
+  };
+
+  const statusInsights = getStatusInsights();
+  const StatusIcon = statusInsights.icon;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -443,9 +578,12 @@ export default function BookingDetailPage() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Booking Details</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Plane className="h-6 w-6" />
+              {booking.passengerName}
+            </h1>
             <p className="text-muted-foreground">
-              ID: {booking.id} • {booking.passengerName}
+              {booking.flightNumber} • {booking.airline} • Terminal {booking.terminal}
             </p>
           </div>
         </div>
@@ -478,117 +616,96 @@ export default function BookingDetailPage() {
         </div>
       </div>
 
-      {/* Booking Progress Tracker */}
-      <Card>
+      {/* Status-Based Insights Card */}
+      <Card className={statusInsights.bgColor}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5" />
-            Booking Progress
+          <CardTitle className={`flex items-center gap-2 ${statusInsights.color}`}>
+            <StatusIcon className="h-5 w-5" />
+            {statusInsights.title}
           </CardTitle>
           <CardDescription>
-            Track the booking lifecycle from creation to completion
+            Booking ID: {booking.id} • Created {formatDateTimeUTC(booking.createdAt)}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-sm">
-              <span>
-                Booking Date: {formatDateUTC(booking.date)} at {booking.time}
-              </span>
-              <span
-                className={`font-medium ${
-                  new Date(`${booking.date}T${booking.time}`) > new Date()
-                    ? "text-green-600"
-                    : booking.status === "completed"
-                      ? "text-blue-600"
-                      : "text-orange-600"
-                }`}
-              >
-                {new Date(`${booking.date}T${booking.time}`) > new Date()
-                  ? `${Math.ceil((new Date(`${booking.date}T${booking.time}`).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days until booking`
-                  : booking.status === "completed"
-                    ? "Service completed"
-                    : "Booking date has passed"}
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Timer className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Created</p>
+                <p className="text-xs text-muted-foreground">{daysSinceCreated} days ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Service Date</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDateUTC(booking.date)} at {booking.time}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">
+                  {daysUntilBooking >= 0 ? "Days Until" : "Days Since"}
+                </p>
+                <p className={`text-xs ${daysUntilBooking < 0 ? "text-red-600" : daysUntilBooking <= 1 ? "text-orange-600" : "text-green-600"}`}>
+                  {Math.abs(daysUntilBooking)} days
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Revenue</p>
+                <p className="text-xs text-muted-foreground">${booking.totalRevenue || booking.serviceFee}</p>
+              </div>
             </div>
           </div>
-          <div className="relative">
-            {/* Progress line */}
-            <div className="absolute top-6 left-0 right-0 h-0.5 bg-muted"></div>
-            <div
-              className="absolute top-6 left-0 h-0.5 bg-primary transition-all duration-500"
-              style={{
-                width: `${Math.min(100, ((["new", "contacted", "confirmed", "in_progress", "completed"].indexOf(booking.status) + 1) / 5) * 100)}%`,
-              }}
-            ></div>
 
-            {/* Steps */}
-            <div className="relative flex justify-between">
-              {[
-                { key: "new", label: "New", desc: "Booking created" },
-                {
-                  key: "contacted",
-                  label: "Contacted",
-                  desc: "Passenger contacted",
-                },
-                {
-                  key: "confirmed",
-                  label: "Confirmed",
-                  desc: "Booking confirmed",
-                },
-                {
-                  key: "in_progress",
-                  label: "In Progress",
-                  desc: "Service active",
-                },
-                {
-                  key: "completed",
-                  label: "Completed",
-                  desc: "Service finished",
-                },
-              ].map((step, index) => {
-                const isCompleted =
-                  [
-                    "new",
-                    "contacted",
-                    "confirmed",
-                    "in_progress",
-                    "completed",
-                  ].indexOf(booking.status) >= index;
-                const isCurrent = booking.status === step.key;
-                return (
-                  <div
-                    key={step.key}
-                    className="flex flex-col items-center text-center"
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                        isCompleted
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : isCurrent
-                            ? "border-primary text-primary"
-                            : "border-muted-foreground/30 text-muted-foreground"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-6 h-6" />
-                      ) : (
-                        <span className="text-sm font-medium">{index + 1}</span>
-                      )}
-                    </div>
-                    <div className="mt-3 max-w-20">
-                      <p
-                        className={`text-sm font-medium ${isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"}`}
-                      >
-                        {step.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Status-specific alerts */}
+          {isOverdue && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <span className="text-sm text-red-800">This booking is overdue - service date has passed</span>
+            </div>
+          )}
+          {isToday && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <span className="text-sm text-blue-800">Service is scheduled for today</span>
+            </div>
+          )}
+          {isUpcoming && !isToday && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+              <Calendar className="h-4 w-4 text-yellow-600" />
+              <span className="text-sm text-yellow-800">Service is coming up in {daysUntilBooking} days</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-2">Key Insights</h4>
+              <ul className="space-y-1">
+                {statusInsights.insights.map((insight, index) => (
+                  <li key={index} className="text-sm text-muted-foreground flex items-center gap-2">
+                    <div className="w-1 h-1 bg-current rounded-full"></div>
+                    {insight}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Recommended Actions</h4>
+              <div className="space-y-2">
+                {statusInsights.actions.map((action, index) => (
+                  <Button key={index} variant="outline" size="sm" className="w-full justify-start">
+                    {action}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -600,7 +717,6 @@ export default function BookingDetailPage() {
           booking={booking}
           onStatusChange={(updatedBooking) => {
             setBooking(updatedBooking);
-            // Reload activity logs to show new status change
             loadData();
           }}
         />
@@ -609,240 +725,129 @@ export default function BookingDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Details */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Passenger & Service Details */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5" />
-                Passenger & Flight Information
+                <Users className="h-5 w-5" />
+                Passenger & Service Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Passenger Name
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Passenger Name</label>
                   {editing ? (
                     <Input
                       value={form.passengerName || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, passengerName: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, passengerName: e.target.value })}
                     />
                   ) : (
-                    <p className="text-lg font-medium">
-                      {booking.passengerName}
+                    <p className="text-lg font-medium">{booking.passengerName}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Company</label>
+                  {editing ? (
+                    <Input
+                      value={form.company || ""}
+                      onChange={(e) => setForm({ ...form, company: e.target.value })}
+                    />
+                  ) : (
+                    <p>{booking.company || "Individual"}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  {editing ? (
+                    <Input
+                      value={form.phone || ""}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    />
+                  ) : (
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      {booking.phone}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Company
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={form.company || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, company: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <p>{booking.company}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Phone
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={form.phone || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, phone: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <p>{booking.phone}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Email</label>
                   {editing ? (
                     <Input
                       value={form.email || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, email: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
                   ) : (
-                    <p>{booking.email}</p>
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      {booking.email}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Flight Number
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={form.flightNumber || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, flightNumber: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <p className="font-medium">{booking.flightNumber}</p>
-                  )}
+                  <label className="block text-sm font-medium mb-1">Flight</label>
+                  <p className="flex items-center gap-2">
+                    <Plane className="h-4 w-4" />
+                    {booking.flightNumber} - {booking.airline}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Airline
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={form.airline || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, airline: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <p>{booking.airline}</p>
-                  )}
+                  <label className="block text-sm font-medium mb-1">Service Date & Time</label>
+                  <p className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {formatDateUTC(booking.date)} at {booking.time}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Date</label>
-                  {editing ? (
-                    <DatePicker
-                      value={form.date || null}
-                      onChange={(d) => setForm({ ...form, date: d || "" })}
-                    />
-                  ) : (
-                    <p>{formatDateUTC(booking.date)}</p>
-                  )}
+                  <label className="block text-sm font-medium mb-1">Location</label>
+                  <p className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Terminal {booking.terminal}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Time</label>
-                  {editing ? (
-                    <TimePicker
-                      value={form.time || null}
-                      onChange={(t) => setForm({ ...form, time: t || "" })}
-                    />
-                  ) : (
-                    <p>{booking.time}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Terminal
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={form.terminal || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, terminal: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <p>{booking.terminal}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Passengers
-                  </label>
-                  {editing ? (
-                    <Input
-                      type="number"
-                      min={1}
-                      value={form.passengerCount?.toString() || "1"}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          passengerCount: Number(e.target.value),
-                        })
-                      }
-                    />
-                  ) : (
-                    <p>{booking.passengerCount}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Service
-                  </label>
-                  {editing ? (
-                    <Select
-                      value={form.serviceId || ""}
-                      onValueChange={(val) =>
-                        setForm({ ...form, serviceId: val })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {serviceOptions
-                          .filter((opt) => opt.active)
-                          .map((opt) => (
-                            <SelectItem key={opt.id} value={opt.id}>
-                              {opt.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant="outline">
-                      {serviceOptions.find((s) => s.id === booking.serviceId)
-                        ?.name || booking.serviceId}
-                    </Badge>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Status
-                  </label>
-                  {editing ? (
-                    <Select
-                      value={form.status || booking.status}
-                      onValueChange={(val) =>
-                        setForm({ ...form, status: val as Booking["status"] })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="contacted">Contacted</SelectItem>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant={getStatusColor(booking.status)}>
-                      {booking.status.replace("_", " ")}
-                    </Badge>
-                  )}
+                  <label className="block text-sm font-medium mb-1">Service Type</label>
+                  <Badge variant="outline">
+                    {serviceOptions.find((s) => s.id === booking.serviceId)?.name || booking.serviceId}
+                  </Badge>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Special Requests
-                </label>
-                {editing ? (
-                  <Textarea
-                    value={form.specialRequests || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, specialRequests: e.target.value })
-                    }
-                  />
-                ) : (
-                  <p className="text-sm">{booking.specialRequests || "None"}</p>
-                )}
-              </div>
+
+              {booking.specialRequests && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Special Requests</label>
+                  <p className="text-sm bg-muted p-3 rounded-lg">{booking.specialRequests}</p>
+                </div>
+              )}
+
+              {/* Status-specific additional info */}
+              {booking.status === "completed" && booking.actualDuration && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Actual Duration</label>
+                    <p className="text-lg font-medium">{booking.actualDuration} min</p>
+                  </div>
+                  {booking.customerSatisfaction && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Satisfaction</label>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${i < booking.customerSatisfaction! ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                          />
+                        ))}
+                        <span className="ml-2 text-sm">{booking.customerSatisfaction}/5</span>
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Processing Time</label>
+                    <p className="text-sm">{booking.processingTime ? `${Math.round(booking.processingTime / 1000 / 60)} min` : "N/A"}</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -851,7 +856,7 @@ export default function BookingDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Activity History
+                Activity Timeline
               </CardTitle>
               <div className="flex gap-2">
                 <Button
@@ -930,28 +935,34 @@ export default function BookingDetailPage() {
               )}
 
               <div className="space-y-3">
-                {activityLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-start gap-3 p-3 border rounded-lg group hover:bg-muted/50"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">
-                          {log.action}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {log.user}
-                        </Badge>
+                {activityLogs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No activity logs yet</p>
+                    <p className="text-sm text-muted-foreground">Activities will appear here as the booking progresses</p>
+                  </div>
+                ) : (
+                  activityLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-3 p-3 border rounded-lg group hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">
+                            {log.action}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {log.user}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {log.details}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDateTimeUTC(log.timestamp)}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {log.details}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {formatDateTimeUTC(log.timestamp)}
-                      </span>
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                         <Button
                           variant="ghost"
@@ -971,12 +982,7 @@ export default function BookingDetailPage() {
                         </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {activityLogs.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
-                    No activity logs for this booking
-                  </p>
+                  ))
                 )}
               </div>
             </CardContent>
@@ -985,40 +991,113 @@ export default function BookingDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Assignment */}
+          {/* Status & Priority */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Assignment
+                <Target className="h-5 w-5" />
+                Status & Priority
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {assignedShift ? (
+              <div>
+                <label className="block text-sm font-medium mb-2">Current Status</label>
+                <Badge variant={getStatusColor(booking.status)} className="text-sm px-3 py-1">
+                  {booking.status.replace("_", " ").toUpperCase()}
+                </Badge>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Priority</label>
+                <Badge variant={booking.priority === "high" ? "destructive" : booking.priority === "normal" ? "secondary" : "outline"}>
+                  {booking.priority}
+                </Badge>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Customer Type</label>
+                <Badge variant="outline">{booking.customerType}</Badge>
+              </div>
+
+              {/* Quick Status Actions */}
+              <div className="pt-4 border-t">
+                <label className="block text-sm font-medium mb-2">Quick Actions</label>
+                <div className="space-y-2">
+                  {booking.status === "new" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleStatusChange("contacted")}
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Mark as Contacted
+                    </Button>
+                  )}
+                  {booking.status === "contacted" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleStatusChange("confirmed")}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm Booking
+                    </Button>
+                  )}
+                  {booking.status === "confirmed" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleStatusChange("in_progress")}
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Start Service
+                    </Button>
+                  )}
+                  {booking.status === "in_progress" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleStatusChange("completed")}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Complete Service
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Assignment & Equipment */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Assignment & Equipment
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {assignedAgent ? (
                 <div>
-                  <p className="text-sm font-medium">Assigned Shift</p>
-                  <p className="text-sm">
-                    {assignedShift.shift} -{" "}
-                    {agents.find((a) => a.id === assignedShift.agentId)?.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {assignedShift.date}
-                  </p>
+                  <p className="text-sm font-medium">Assigned Agent</p>
+                  <p className="text-sm">{assignedAgent.name}</p>
+                  <p className="text-xs text-muted-foreground">{assignedAgent.role}</p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Not assigned to a shift
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">No agent assigned</p>
                   <Select onValueChange={handleAssignShift}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Assign to shift" />
+                      <SelectValue placeholder="Assign agent" />
                     </SelectTrigger>
                     <SelectContent>
                       {shifts.map((shift) => (
                         <SelectItem key={shift.id} value={shift.id}>
-                          {shift.shift} -{" "}
-                          {agents.find((a) => a.id === shift.agentId)?.name}
+                          {shift.shift} - {agents.find((a) => a.id === shift.agentId)?.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1026,57 +1105,103 @@ export default function BookingDetailPage() {
                 </div>
               )}
 
-              {assignedAgent && (
+              {booking.equipmentNeeded && booking.equipmentNeeded.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium">Assigned Agent</p>
-                  <p className="text-sm">{assignedAgent.name}</p>
+                  <p className="text-sm font-medium mb-2">Equipment Needed</p>
+                  <div className="flex flex-wrap gap-1">
+                    {booking.equipmentNeeded.map((equipment, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {equipment}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {booking.specialHandling && booking.specialHandling.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Special Handling</p>
+                  <div className="flex flex-wrap gap-1">
+                    {booking.specialHandling.map((handling, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {handling}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Audit Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Audit Information
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleStatusChange("contacted")}
-                disabled={booking.status === "contacted"}
-              >
-                Mark as Contacted
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleStatusChange("confirmed")}
-                disabled={booking.status === "confirmed"}
-              >
-                Mark as Confirmed
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleStatusChange("in_progress")}
-                disabled={booking.status === "in_progress"}
-              >
-                Mark as In Progress
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleStatusChange("completed")}
-                disabled={booking.status === "completed"}
-              >
-                Mark as Completed
-              </Button>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm font-medium">Created By</p>
+                <p className="text-sm text-muted-foreground">
+                  {agents.find((a) => a.id === booking.createdBy)?.name || booking.createdBy || "Unknown"}
+                </p>
+              </div>
+              {booking.supervisedBy && (
+                <div>
+                  <p className="text-sm font-medium">Supervised By</p>
+                  <p className="text-sm text-muted-foreground">
+                    {agents.find((a) => a.id === booking.supervisedBy)?.name || booking.supervisedBy}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium">Created Date</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDateTimeUTC(booking.createdAt)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Last Updated</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDateTimeUTC(booking.updatedAt)}
+                </p>
+              </div>
+              {booking.lastModifiedBy && booking.lastModifiedBy !== booking.createdBy && (
+                <div>
+                  <p className="text-sm font-medium">Last Modified By</p>
+                  <p className="text-sm text-muted-foreground">
+                    {agents.find((a) => a.id === booking.lastModifiedBy)?.name || booking.lastModifiedBy}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Financial Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Financial Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm">Service Fee</span>
+                <span className="text-sm font-medium">${booking.serviceFee}</span>
+              </div>
+              {(booking.additionalCharges && booking.additionalCharges > 0) && (
+                <div className="flex justify-between">
+                  <span className="text-sm">Additional Charges</span>
+                  <span className="text-sm font-medium">${booking.additionalCharges}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-2">
+                <span className="text-sm font-medium">Total Revenue</span>
+                <span className="text-sm font-bold">${booking.totalRevenue || booking.serviceFee}</span>
+              </div>
             </CardContent>
           </Card>
         </div>

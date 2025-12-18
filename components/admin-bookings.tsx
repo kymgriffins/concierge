@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { MockAPI, Booking, RosterShift, Agent } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
-import { formatDateUTC } from "@/lib/utils";
+import { formatDateUTC, formatRelativeTime } from "@/lib/utils";
 import DataTable, { Column } from "@/components/ui/data-table/data-table";
 import { Tooltip } from "@/components/ui/tooltip";
 import { List, Plus, Clock, CheckCircle, Eye } from "lucide-react";
@@ -34,7 +34,7 @@ export function AdminBookings() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [sortBy, setSortBy] = useState<"date" | "passenger" | "flight">("date");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [serviceOptions, setServiceOptions] = useState<
     {
       id: string;
@@ -69,10 +69,12 @@ export function AdminBookings() {
     canDeleteBooking?: boolean;
     canUpdateBooking?: boolean;
   } | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
 
   useEffect(() => {
     loadBookings();
     loadServiceOptions();
+    loadAgents();
     (async () => setPermissions(await MockAPI.getPermissions()))();
   }, []);
 
@@ -106,6 +108,15 @@ export function AdminBookings() {
       );
     } catch (error) {
       console.error("Error loading service options:", error);
+    }
+  };
+
+  const loadAgents = async () => {
+    try {
+      const agentsData = await MockAPI.getAgents();
+      setAgents(agentsData);
+    } catch (error) {
+      console.error("Error loading agents:", error);
     }
   };
 
@@ -164,7 +175,7 @@ export function AdminBookings() {
           booking.flightNumber
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          booking.company.toLowerCase().includes(searchTerm.toLowerCase()),
+          (booking.company && booking.company.toLowerCase().includes(searchTerm.toLowerCase())),
       );
     }
 
@@ -444,23 +455,23 @@ export function AdminBookings() {
       },
       {
         key: "date",
-        header: "Date",
-        accessor: (r) => r.date,
-        cell: (r) => formatDateUTC(r.date),
+        header: "Booking Date & Time",
+        accessor: (r) => `${r.date} ${r.time}`,
+        cell: (r) => {
+          const { text, color } = formatRelativeTime(r.date, r.status);
+          return (
+            <div>
+              <div className={color}>{text}</div>
+              <div className="text-sm text-muted-foreground">{r.time}</div>
+            </div>
+          );
+        },
         sortable: true,
         meta: {
           hideOnMobile: true,
         },
       },
-      {
-        key: "company",
-        header: "Company",
-        accessor: (r) => r.company,
-        filterable: true,
-        meta: {
-          hideOnMobile: true,
-        },
-      },
+
       {
         key: "service",
         header: "Service",
@@ -495,12 +506,97 @@ export function AdminBookings() {
         },
       },
       {
+        key: "createdDate",
+        header: "Created Date",
+        accessor: (r) => r.createdAt,
+        cell: (r) => (
+          <div className="text-sm">
+            {r.createdAt ? (
+              <div>
+                <div>{new Date(r.createdAt).toLocaleDateString()}</div>
+                <div className="text-muted-foreground">
+                  {new Date(r.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+            ) : (
+              "—"
+            )}
+          </div>
+        ),
+        sortable: true,
+        meta: {
+          hideOnMobile: false,
+          hideOnTablet: false,
+        },
+      },
+      {
+        key: "createdBy",
+        header: "Created By",
+        cell: (r) => {
+          const agent = agents.find((a) => a.id === r.createdBy);
+          return (
+            <div className="text-sm">
+              {agent ? agent.name : r.createdBy || "Unknown"}
+            </div>
+          );
+        },
+        meta: {
+          hideOnMobile: true,
+          hideOnTablet: true,
+        },
+      },
+      {
+        key: "supervisedBy",
+        header: "Supervised By",
+        cell: (r) => {
+          const agent = agents.find((a) => a.id === r.supervisedBy);
+          return (
+            <div className="text-sm">
+              {agent ? agent.name : r.supervisedBy || "—"}
+            </div>
+          );
+        },
+        meta: {
+          hideOnMobile: true,
+          hideOnTablet: true,
+        },
+      },
+      {
+        key: "createdAt",
+        header: "Created",
+        cell: (r) => (
+          <div className="text-sm text-muted-foreground">
+            {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}
+          </div>
+        ),
+        meta: {
+          hideOnMobile: true,
+          hideOnTablet: true,
+        },
+      },
+      {
+        key: "updatedAt",
+        header: "Updated",
+        cell: (r) => (
+          <div className="text-sm text-muted-foreground">
+            {r.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : "—"}
+          </div>
+        ),
+        meta: {
+          hideOnMobile: true,
+          hideOnTablet: true,
+        },
+      },
+      {
         key: "actions",
         header: "",
         cell: (r) => (
           <div className="flex gap-2">
             <Tooltip
-              content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company} - Status: ${r.status.replace("_", " ")}`}
+              content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company || "N/A"} - Status: ${r.status.replace("_", " ")}`}
             >
               <Button
                 variant="ghost"

@@ -680,51 +680,7 @@ const lastNames = [
   "Sullivan",
 ];
 
-const companies = [
-  "TechCorp Inc.",
-  "Global Solutions",
-  "Enterprise Corp",
-  "Innovative Systems",
-  "Digital Dynamics",
-  "Future Tech",
-  "Smart Solutions",
-  "Advanced Analytics",
-  "Cloud Services Ltd",
-  "DataTech",
-  "InfoSys",
-  "NetWorks",
-  "SecureTech",
-  "WebSolutions",
-  "TechStart Ltd",
-  "GlobalTech",
-  "InnovateCorp",
-  "DataFlow",
-  "CloudNine",
-  "TechHub",
-  "InfoTech Solutions",
-  "NetSecure",
-  "DataGuard",
-  "WebTech",
-  "StartUp Inc",
-  "GlobalNet",
-  "InnovateLab",
-  "DataStream",
-  "CloudTech",
-  "TechSolutions",
-  "InfoNet",
-  "NetTech",
-  "SecureNet",
-  "WebCorp",
-  "StartCorp",
-  "GlobalHub",
-  "InnovateTech",
-  "DataTech Solutions",
-  "CloudSecure",
-  "Private Client",
-  "VIP Customer",
-  "Executive Services",
-  "Premium Client",
-];
+
 
 const airlines = [
   "American Airlines",
@@ -778,17 +734,15 @@ function generatePhone() {
   return `+1-555-${randomInt(100, 999).toString().padStart(3, "0")}`;
 }
 
-function generateEmail(firstName, lastName, company) {
-  const domains = ["gmail.com", "yahoo.com", "outlook.com", "company.com"];
+function generateEmail(firstName, lastName) {
+  const domains = ["gmail.com", "yahoo.com", "outlook.com"];
   const first = firstName.toLowerCase();
   const last = lastName.toLowerCase();
-  const companyDomain = company.toLowerCase().replace(/[^a-z]/g, "") + ".com";
 
   const formats = [
-    `${first}.${last}@${companyDomain}`,
-    `${first}${last}@${companyDomain}`,
-    `${first[0]}${last}@${companyDomain}`,
     `${first}.${last}@${randomChoice(domains)}`,
+    `${first}${last}@${randomChoice(domains)}`,
+    `${first[0]}${last}@${randomChoice(domains)}`,
   ];
 
   return randomChoice(formats);
@@ -849,7 +803,6 @@ function generateBooking(id) {
     lastName,
     fullName: passengerName,
   } = nameGenerator.generateFullName();
-  const company = randomChoice(companies);
   const airline = randomChoice(airlines);
   const date = generateDate();
   const time = generateTime();
@@ -897,32 +850,15 @@ function generateBooking(id) {
   const additionalCharges = Math.random() < 0.6 ? randomInt(0, 100) : 0;
   const totalRevenue = serviceFee + additionalCharges;
 
-  // Priority based on company type and special requests
+  // Priority based on passenger count and special requests
   let priority = "normal";
-  if (
-    company.toLowerCase().includes("vip") ||
-    company.toLowerCase().includes("private")
-  ) {
-    priority = "vip";
-  } else if (
-    company.toLowerCase().includes("corporate") ||
-    passengerCount > 2
-  ) {
+  if (passengerCount > 2) {
     priority = Math.random() < 0.3 ? "high" : "normal";
   }
 
-  // Customer type
+  // Customer type - now based on passenger count and random chance
   let customerType = "individual";
-  if (
-    company.toLowerCase().includes("vip") ||
-    company.toLowerCase().includes("private")
-  ) {
-    customerType = "vip";
-  } else if (
-    company.toLowerCase().includes("corporate") ||
-    company.toLowerCase().includes("inc") ||
-    company.toLowerCase().includes("ltd")
-  ) {
+  if (passengerCount > 2) {
     customerType = "corporate";
   } else if (Math.random() < 0.1) {
     customerType = "frequent_flyer";
@@ -1024,12 +960,19 @@ function generateBooking(id) {
   const lastModifiedBy =
     Math.random() < 0.7 ? randomChoice(agentIds) : undefined;
 
+  // Supervisor assignments - set if created by supervisor or for completed/reviewed bookings
+  let supervisedBy = undefined;
+  if (createdBy === "s1") {
+    supervisedBy = "s1"; // Supervisor created this booking
+  } else if (status === "completed" && Math.random() < 0.6) {
+    supervisedBy = "s1"; // Supervisor reviewed this completed booking
+  }
+
   const booking = {
     id: id.toString(),
     passengerName,
-    company,
     phone: generatePhone(),
-    email: generateEmail(firstName, lastName, company),
+    email: generateEmail(firstName, lastName),
     flightNumber: generateFlightNumber(airline),
     airline,
     date,
@@ -1057,6 +1000,7 @@ function generateBooking(id) {
     specialHandling,
     createdBy,
     lastModifiedBy,
+    supervisedBy,
     tags,
     internalNotes,
     followUpRequired,

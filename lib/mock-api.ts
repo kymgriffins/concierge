@@ -4,7 +4,7 @@
 export interface Booking {
   id: string;
   passengerName: string;
-  company: string;
+  company?: string;
   phone: string;
   email: string;
   flightNumber: string;
@@ -44,6 +44,7 @@ export interface Booking {
   specialHandling?: string[]; // vip, medical, diplomatic, etc.
   createdBy?: string; // agent ID who created
   lastModifiedBy?: string; // agent ID who last modified
+  supervisedBy?: string; // supervisor agent ID who reviewed/approved
   modificationHistory?: Array<{
     timestamp: string;
     agentId: string;
@@ -1082,7 +1083,7 @@ export class MockAPI {
       (booking) =>
         booking.passengerName.toLowerCase().includes(query.toLowerCase()) ||
         booking.flightNumber.toLowerCase().includes(query.toLowerCase()) ||
-        booking.company.toLowerCase().includes(query.toLowerCase()),
+        (booking.company && booking.company.toLowerCase().includes(query.toLowerCase())),
     );
 
     if (filters.status) {

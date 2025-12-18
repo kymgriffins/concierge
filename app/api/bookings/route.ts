@@ -53,6 +53,8 @@ export async function POST(req: NextRequest) {
       id: (db.bookings.length + 1).toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      createdBy: agent.id,
+      supervisedBy: agent.role === 'supervisor' ? agent.id : undefined,
       notes: [],
     };
     db.bookings.push(newBooking);

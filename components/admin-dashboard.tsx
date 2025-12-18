@@ -22,6 +22,7 @@ import {
 import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { SupervisorReviewPanel } from "@/components/supervisor-review-panel";
+import { formatRelativeTime } from "@/lib/utils";
 
 export function AdminDashboard({
   onNavigate,
@@ -145,34 +146,43 @@ export function AdminDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentBookings.slice(0, 4).map((booking) => (
-                <div
-                  key={booking.id}
-                  className="flex items-center justify-between space-x-4"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {booking.passengerName}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {booking.flightNumber} • 1 service
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      booking.status === "new"
-                        ? "default"
-                        : booking.status === "confirmed"
-                          ? "secondary"
-                          : booking.status === "completed"
-                            ? "outline"
-                            : "destructive"
-                    }
+              {recentBookings.slice(0, 4).map((booking) => {
+                const { text: createdTimeText, color: createdTimeColor } = formatRelativeTime(
+                  booking.createdAt.split('T')[0],
+                  booking.status
+                );
+                return (
+                  <div
+                    key={booking.id}
+                    className="flex items-center justify-between space-x-4"
                   >
-                    {booking.status}
-                  </Badge>
-                </div>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {booking.passengerName}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {booking.flightNumber} • Created <span className={createdTimeColor}>{createdTimeText}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(booking.createdAt).toLocaleDateString()} at {new Date(booking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        booking.status === "new"
+                          ? "default"
+                          : booking.status === "confirmed"
+                            ? "secondary"
+                            : booking.status === "completed"
+                              ? "outline"
+                              : "destructive"
+                      }
+                    >
+                      {booking.status}
+                    </Badge>
+                  </div>
+                );
+              })}
             </div>
             <Separator className="my-4" />
             <Button
@@ -193,19 +203,25 @@ export function AdminDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {todaySchedule.slice(0, 4).map((booking) => (
-                <div key={booking.id} className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {booking.passengerName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {booking.flightNumber} at {booking.time}
-                    </p>
+              {todaySchedule.slice(0, 4).map((booking) => {
+                const { text: bookingTimeText, color: bookingTimeColor } = formatRelativeTime(
+                  booking.date,
+                  booking.status
+                );
+                return (
+                  <div key={booking.id} className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {booking.passengerName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {booking.flightNumber} • <span className={bookingTimeColor}>{bookingTimeText}</span> at {booking.time}
+                      </p>
+                    </div>
+                    <Badge variant="outline">1 service</Badge>
                   </div>
-                  <Badge variant="outline">1 service</Badge>
-                </div>
-              ))}
+                );
+              })}
               {todaySchedule.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No confirmed bookings for today
@@ -279,9 +295,16 @@ export function AdminDashboard({
               </p>
               <p className="text-xs text-muted-foreground">
                 Last synced:{" "}
-                {stats
-                  ? new Date(stats.lastSyncTime).toLocaleTimeString()
-                  : "Never"}
+                {stats ? (
+                  (() => {
+                    const { text: syncTimeText, color: syncTimeColor } = formatRelativeTime(
+                      stats.lastSyncTime.split('T')[0]
+                    );
+                    return <span className={syncTimeColor}>{syncTimeText}</span>;
+                  })()
+                ) : (
+                  "Never"
+                )}
               </p>
             </div>
           </div>
