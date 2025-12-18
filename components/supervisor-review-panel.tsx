@@ -1,14 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { MockAPI, Booking } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
-import { formatDateUTC } from '@/lib/utils';
-import { CheckCircle2, Clock, AlertCircle, UserCheck, Shield, Check, X } from 'lucide-react';
+import { formatDateUTC } from "@/lib/utils";
+import {
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  UserCheck,
+  Shield,
+  Check,
+  X,
+} from "lucide-react";
 
 export function SupervisorReviewPanel() {
   const [pendingReviews, setPendingReviews] = useState<Booking[]>([]);
@@ -28,7 +42,7 @@ export function SupervisorReviewPanel() {
       const reviews = await MockAPI.getBookingsPendingReview();
       setPendingReviews(reviews);
     } catch (error) {
-      console.error('Error loading pending reviews:', error);
+      console.error("Error loading pending reviews:", error);
     } finally {
       setLoading(false);
     }
@@ -39,16 +53,16 @@ export function SupervisorReviewPanel() {
       const user = await MockAPI.getCurrentUser();
       setCurrentUser(user);
     } catch (error) {
-      console.error('Error loading current user:', error);
+      console.error("Error loading current user:", error);
     }
   };
 
   const handleApprove = async (bookingId: string) => {
-    if (currentUser?.role !== 'supervisor') {
+    if (currentUser?.role !== "supervisor") {
       toast.showToast({
-        title: 'Permission Denied',
-        description: 'Only supervisors can approve reviews',
-        type: 'error'
+        title: "Permission Denied",
+        description: "Only supervisors can approve reviews",
+        type: "error",
       });
       return;
     }
@@ -57,18 +71,18 @@ export function SupervisorReviewPanel() {
     try {
       await MockAPI.approveSupervisorReview(bookingId, reviewNotes[bookingId]);
       await loadPendingReviews();
-      setReviewNotes(prev => ({ ...prev, [bookingId]: '' }));
+      setReviewNotes((prev) => ({ ...prev, [bookingId]: "" }));
       toast.showToast({
-        title: 'Review Approved',
-        description: 'Service has been completed and approved',
-        type: 'success'
+        title: "Review Approved",
+        description: "Service has been completed and approved",
+        type: "success",
       });
     } catch (error) {
-      console.error('Error approving review:', error);
+      console.error("Error approving review:", error);
       toast.showToast({
-        title: 'Approval Failed',
+        title: "Approval Failed",
         description: String(error),
-        type: 'error'
+        type: "error",
       });
     } finally {
       setProcessingId(null);
@@ -77,11 +91,11 @@ export function SupervisorReviewPanel() {
 
   const getServiceTypeIcon = (serviceId: string) => {
     const icons = {
-      arrival: '🛬',
-      departure: '🛫',
-      transit: '🔄'
+      arrival: "🛬",
+      departure: "🛫",
+      transit: "🔄",
     };
-    return icons[serviceId as keyof typeof icons] || '✈️';
+    return icons[serviceId as keyof typeof icons] || "✈️";
   };
 
   if (loading) {
@@ -112,15 +126,15 @@ export function SupervisorReviewPanel() {
           Supervisor Reviews
           <Badge variant="secondary">{pendingReviews.length}</Badge>
         </CardTitle>
-        <CardDescription>
-          Review and approve completed services
-        </CardDescription>
+        <CardDescription>Review and approve completed services</CardDescription>
       </CardHeader>
       <CardContent>
         {pendingReviews.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No services pending supervisor review</p>
+            <p className="text-muted-foreground">
+              No services pending supervisor review
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -129,11 +143,14 @@ export function SupervisorReviewPanel() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">{getServiceTypeIcon(booking.serviceId)}</span>
+                      <span className="text-lg">
+                        {getServiceTypeIcon(booking.serviceId)}
+                      </span>
                       <div>
                         <h4 className="font-medium">{booking.passengerName}</h4>
                         <p className="text-sm text-muted-foreground">
-                          {booking.flightNumber} • {booking.airline} • {formatDateUTC(booking.date)} {booking.time}
+                          {booking.flightNumber} • {booking.airline} •{" "}
+                          {formatDateUTC(booking.date)} {booking.time}
                         </p>
                       </div>
                     </div>
@@ -145,12 +162,15 @@ export function SupervisorReviewPanel() {
 
                   <div className="mb-3">
                     <p className="text-sm">
-                      <span className="font-medium">Service:</span> {booking.serviceId} •
-                      <span className="font-medium ml-2">Company:</span> {booking.company}
+                      <span className="font-medium">Service:</span>{" "}
+                      {booking.serviceId} •
+                      <span className="font-medium ml-2">Company:</span>{" "}
+                      {booking.company}
                     </p>
                     {booking.specialRequests && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium">Requests:</span> {booking.specialRequests}
+                        <span className="font-medium">Requests:</span>{" "}
+                        {booking.specialRequests}
                       </p>
                     )}
                   </div>
@@ -158,20 +178,28 @@ export function SupervisorReviewPanel() {
                   <div className="space-y-3">
                     <Textarea
                       placeholder="Add approval notes (optional)..."
-                      value={reviewNotes[booking.id] || ''}
-                      onChange={(e) => setReviewNotes(prev => ({ ...prev, [booking.id]: e.target.value }))}
+                      value={reviewNotes[booking.id] || ""}
+                      onChange={(e) =>
+                        setReviewNotes((prev) => ({
+                          ...prev,
+                          [booking.id]: e.target.value,
+                        }))
+                      }
                       className="min-h-[60px]"
                     />
 
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleApprove(booking.id)}
-                        disabled={processingId === booking.id || currentUser?.role !== 'supervisor'}
+                        disabled={
+                          processingId === booking.id ||
+                          currentUser?.role !== "supervisor"
+                        }
                         size="sm"
                         className="flex-1"
                       >
                         {processingId === booking.id ? (
-                          'Approving...'
+                          "Approving..."
                         ) : (
                           <>
                             <Check className="w-4 h-4 mr-2" />
@@ -179,7 +207,7 @@ export function SupervisorReviewPanel() {
                           </>
                         )}
                       </Button>
-                      {currentUser?.role !== 'supervisor' && (
+                      {currentUser?.role !== "supervisor" && (
                         <div className="flex items-center text-xs text-muted-foreground">
                           <Shield className="w-3 h-3 mr-1" />
                           Supervisor access required

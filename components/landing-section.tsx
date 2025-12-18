@@ -4,13 +4,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MockAPI } from "@/lib/mock-api";
 
 export function LandingSection() {
-  const [currentView, setCurrentView] = useState<"landing" | "login" | "dashboard">("landing");
+  const [currentView, setCurrentView] = useState<
+    "landing" | "login" | "dashboard"
+  >("landing");
   const [username, setUsername] = useState("waithera");
   const [password, setPassword] = useState("wai789");
   const [loginError, setLoginError] = useState<string>("");
@@ -51,8 +59,9 @@ export function LandingSection() {
               Premium Airport Concierge
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Elevate your travel experience with our comprehensive concierge services.
-              From meet & greet to VIP lounge access, we handle every detail.
+              Elevate your travel experience with our comprehensive concierge
+              services. From meet & greet to VIP lounge access, we handle every
+              detail.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={handleGetStarted}>
@@ -68,7 +77,9 @@ export function LandingSection() {
         {/* Services Section */}
         <section className="py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-12">Our Premium Services</h2>
+            <h2 className="text-4xl font-bold text-center mb-12">
+              Our Premium Services
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Card>
                 <CardHeader>
@@ -190,9 +201,12 @@ export function LandingSection() {
         {/* CTA Section */}
         <section className="py-20 px-6 bg-muted/50">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">Ready for Premium Service?</h2>
+            <h2 className="text-4xl font-bold mb-6">
+              Ready for Premium Service?
+            </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Join thousands of satisfied travelers who trust us with their airport experience.
+              Join thousands of satisfied travelers who trust us with their
+              airport experience.
             </p>
             <Button size="lg" onClick={handleGetStarted}>
               Start Your Journey
@@ -209,7 +223,9 @@ export function LandingSection() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Airport Concierge Portal</CardTitle>
-            <CardDescription>Login to manage bookings and operations</CardDescription>
+            <CardDescription>
+              Login to manage bookings and operations
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -223,7 +239,9 @@ export function LandingSection() {
                   required
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">Try: waithera, staffa, supervisor, annabelle</p>
+                <p className="text-xs text-muted-foreground">
+                  Try: waithera, staffa, supervisor, annabelle
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -235,7 +253,9 @@ export function LandingSection() {
                   required
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">Corresponding passwords: wai789, staff123, super999, anna456</p>
+                <p className="text-xs text-muted-foreground">
+                  Corresponding passwords: wai789, staff123, super999, anna456
+                </p>
               </div>
               {loginError && (
                 <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
@@ -257,9 +277,12 @@ export function LandingSection() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           <header className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Airport Concierge Dashboard</h1>
+            <h1 className="text-4xl font-bold mb-2">
+              Airport Concierge Dashboard
+            </h1>
             <p className="text-muted-foreground">
-              Manage bookings, monitor operations, and ensure seamless service delivery.
+              Manage bookings, monitor operations, and ensure seamless service
+              delivery.
             </p>
           </header>
 
@@ -280,14 +303,18 @@ export function LandingSection() {
                   <div className="flex items-center justify-between p-3 border rounded">
                     <div>
                       <p className="font-medium">John Smith - UA 457</p>
-                      <p className="text-sm text-muted-foreground">WhatsApp • 2 pax • Meet & Greet</p>
+                      <p className="text-sm text-muted-foreground">
+                        WhatsApp • 2 pax • Meet & Greet
+                      </p>
                     </div>
                     <Badge>New</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded">
                     <div>
                       <p className="font-medium">Sarah Johnson - DL 892</p>
-                      <p className="text-sm text-muted-foreground">Email • 1 pax • Fast Track + Lounge</p>
+                      <p className="text-sm text-muted-foreground">
+                        Email • 1 pax • Fast Track + Lounge
+                      </p>
                     </div>
                     <Badge>Contacted</Badge>
                   </div>
@@ -340,7 +367,9 @@ export function LandingSection() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Online - Last synced 2 min ago</span>
+                  <span className="text-sm">
+                    Online - Last synced 2 min ago
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   5 local changes pending sync
@@ -356,12 +385,24 @@ export function LandingSection() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm">Meet & Greet</Button>
-                  <Button variant="outline" size="sm">Fast Track</Button>
-                  <Button variant="outline" size="sm">Lounge Access</Button>
-                  <Button variant="outline" size="sm">Porter Service</Button>
-                  <Button variant="outline" size="sm">Chauffeur</Button>
-                  <Button variant="outline" size="sm">VIP Package</Button>
+                  <Button variant="outline" size="sm">
+                    Meet & Greet
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Fast Track
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Lounge Access
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Porter Service
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Chauffeur
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    VIP Package
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -370,7 +411,9 @@ export function LandingSection() {
             <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2">
               <CardHeader>
                 <CardTitle>📋 Recent Activity</CardTitle>
-                <CardDescription>Latest updates and completions</CardDescription>
+                <CardDescription>
+                  Latest updates and completions
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">

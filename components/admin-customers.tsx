@@ -4,13 +4,31 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Customer, MockAPI } from "@/lib/mock-api";
-import DataTable, { Column } from '@/components/ui/data-table/data-table';
-import { formatDateUTC } from '@/lib/utils';
-import { Building, Calendar, Mail, MoreHorizontal, Phone, Eye } from "lucide-react";
+import DataTable, { Column } from "@/components/ui/data-table/data-table";
+import { formatDateUTC } from "@/lib/utils";
+import {
+  Building,
+  Calendar,
+  Mail,
+  MoreHorizontal,
+  Phone,
+  Eye,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -46,7 +64,7 @@ export function AdminCustomers() {
       const data = await MockAPI.getCustomers();
       setCustomers(data);
     } catch (error) {
-      console.error('Error loading customers:', error);
+      console.error("Error loading customers:", error);
     } finally {
       setLoading(false);
     }
@@ -55,16 +73,19 @@ export function AdminCustomers() {
   const filterCustomers = () => {
     let filtered = customers;
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(customer => customer.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(
+        (customer) => customer.status === statusFilter,
+      );
     }
 
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(customer =>
-        customer.name.toLowerCase().includes(lowerTerm) ||
-        customer.email.toLowerCase().includes(lowerTerm) ||
-        customer.company.toLowerCase().includes(lowerTerm)
+      filtered = filtered.filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(lowerTerm) ||
+          customer.email.toLowerCase().includes(lowerTerm) ||
+          customer.company.toLowerCase().includes(lowerTerm),
       );
     }
 
@@ -79,11 +100,14 @@ export function AdminCustomers() {
     }
 
     const lowerTerm = searchTerm.toLowerCase();
-    const results = customers.filter(customer =>
-      customer.name.toLowerCase().includes(lowerTerm) ||
-      customer.email.toLowerCase().includes(lowerTerm) ||
-      customer.company.toLowerCase().includes(lowerTerm)
-    ).slice(0, 5); // Limit to 5 results
+    const results = customers
+      .filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(lowerTerm) ||
+          customer.email.toLowerCase().includes(lowerTerm) ||
+          customer.company.toLowerCase().includes(lowerTerm),
+      )
+      .slice(0, 5); // Limit to 5 results
 
     setSearchResults(results);
     setShowSearchDropdown(results.length > 0);
@@ -91,19 +115,22 @@ export function AdminCustomers() {
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
-  const handleStatusChange = async (customerId: string, newStatus: Customer['status']) => {
+  const handleStatusChange = async (
+    customerId: string,
+    newStatus: Customer["status"],
+  ) => {
     try {
       await MockAPI.updateCustomer(customerId, { status: newStatus });
       await loadCustomers();
     } catch (error) {
-      console.error('Error updating customer status:', error);
+      console.error("Error updating customer status:", error);
     }
   };
 
@@ -120,22 +147,22 @@ export function AdminCustomers() {
     setCreating(true);
     try {
       const payload: any = {
-        name: form.name || '',
-        email: form.email || '',
-        phone: form.phone || '',
-        company: form.company || '',
-        role: form.role || 'Regular',
-        status: (form.status as Customer['status']) || 'active',
+        name: form.name || "",
+        email: form.email || "",
+        phone: form.phone || "",
+        company: form.company || "",
+        role: form.role || "Regular",
+        status: (form.status as Customer["status"]) || "active",
         totalBookings: form.totalBookings || 0,
-        lastBookingDate: form.lastBookingDate || '',
-        notes: form.notes || ''
+        lastBookingDate: form.lastBookingDate || "",
+        notes: form.notes || "",
       };
       await MockAPI.createCustomer(payload);
       await loadCustomers();
       setShowCreate(false);
       resetForm();
     } catch (error) {
-      console.error('Error creating customer:', error);
+      console.error("Error creating customer:", error);
     } finally {
       setCreating(false);
     }
@@ -158,19 +185,19 @@ export function AdminCustomers() {
       setEditing(false);
       resetForm();
     } catch (error) {
-      console.error('Error updating customer:', error);
+      console.error("Error updating customer:", error);
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete customer?')) return;
+    if (!confirm("Delete customer?")) return;
     try {
       await MockAPI.deleteCustomer(id);
       await loadCustomers();
     } catch (error) {
-      console.error('Error deleting customer:', error);
+      console.error("Error deleting customer:", error);
     }
   };
 
@@ -200,7 +227,9 @@ export function AdminCustomers() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your relationships with passengers and bookers</p>
+          <p className="text-muted-foreground">
+            Manage your relationships with passengers and bookers
+          </p>
         </div>
         <Button onClick={handleOpenCreate}>
           <span className="mr-2">+</span>
@@ -217,8 +246,14 @@ export function AdminCustomers() {
                 placeholder="Search customers to view details..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchTerm && searchResults.length > 0 && setShowSearchDropdown(true)}
-                onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                onFocus={() =>
+                  searchTerm &&
+                  searchResults.length > 0 &&
+                  setShowSearchDropdown(true)
+                }
+                onBlur={() =>
+                  setTimeout(() => setShowSearchDropdown(false), 200)
+                }
                 className="w-full"
               />
               {/* Search Results Dropdown */}
@@ -229,15 +264,22 @@ export function AdminCustomers() {
                       key={customer.id}
                       className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
                       onClick={() => {
-                        console.log('Clicked customer:', customer.id, customer.name);
-                        console.log('Navigating to:', `/admin/customers/${customer.id}`);
+                        console.log(
+                          "Clicked customer:",
+                          customer.id,
+                          customer.name,
+                        );
+                        console.log(
+                          "Navigating to:",
+                          `/admin/customers/${customer.id}`,
+                        );
                         try {
                           router.push(`/admin/customers/${customer.id}`);
-                          console.log('Router push executed successfully');
+                          console.log("Router push executed successfully");
                         } catch (error) {
-                          console.error('Error during navigation:', error);
+                          console.error("Error during navigation:", error);
                         }
-                        setSearchTerm('');
+                        setSearchTerm("");
                         setShowSearchDropdown(false);
                       }}
                     >
@@ -247,12 +289,19 @@ export function AdminCustomers() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{customer.name}</div>
+                        <div className="font-medium text-sm truncate">
+                          {customer.name}
+                        </div>
                         <div className="text-xs text-muted-foreground truncate">
                           {customer.email} • {customer.company}
                         </div>
                       </div>
-                      <Badge variant={customer.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                      <Badge
+                        variant={
+                          customer.status === "active" ? "default" : "secondary"
+                        }
+                        className="text-xs"
+                      >
                         {customer.status}
                       </Badge>
                     </div>
@@ -279,13 +328,39 @@ export function AdminCustomers() {
       {showCreate && (
         <Card>
           <CardContent>
-            <form onSubmit={editing ? handleSubmitEdit : handleSubmitCreate} className="space-y-4">
+            <form
+              onSubmit={editing ? handleSubmitEdit : handleSubmitCreate}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input placeholder="Name" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                <Input placeholder="Company" value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
-                <Input placeholder="Email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                <Input placeholder="Phone" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                <Select value={form.status || 'active'} onValueChange={(v) => setForm({ ...form, status: v as Customer['status'] })}>
+                <Input
+                  placeholder="Name"
+                  value={form.name || ""}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+                <Input
+                  placeholder="Company"
+                  value={form.company || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, company: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Email"
+                  value={form.email || ""}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+                <Input
+                  placeholder="Phone"
+                  value={form.phone || ""}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+                <Select
+                  value={form.status || "active"}
+                  onValueChange={(v) =>
+                    setForm({ ...form, status: v as Customer["status"] })
+                  }
+                >
                   <SelectTrigger className="w-full sm:w-48">
                     <SelectValue />
                   </SelectTrigger>
@@ -296,8 +371,23 @@ export function AdminCustomers() {
                 </Select>
               </div>
               <div className="flex gap-2">
-                <Button type="submit" disabled={creating}>{creating ? 'Saving...' : (editing ? 'Save changes' : 'Create customer')}</Button>
-                <Button variant="outline" onClick={() => { setShowCreate(false); setEditing(false); resetForm(); }}>Cancel</Button>
+                <Button type="submit" disabled={creating}>
+                  {creating
+                    ? "Saving..."
+                    : editing
+                      ? "Save changes"
+                      : "Create customer"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreate(false);
+                    setEditing(false);
+                    resetForm();
+                  }}
+                >
+                  Cancel
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -305,29 +395,100 @@ export function AdminCustomers() {
       )}
       <div>
         <DataTable
-          columns={[
-            { key: 'avatar', header: '', cell: (c) => (<div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{getInitials(c.name)}</AvatarFallback></Avatar></div>), width: 'w-12' },
-            { key: 'name', header: 'Name', accessor: (c) => c.name, cell: (c) => (<div><div className="font-medium">{c.name}</div><div className="text-sm text-muted-foreground">{c.role}</div></div>), sortable: true },
-            { key: 'company', header: 'Company', accessor: (c) => c.company },
-            { key: 'email', header: 'Email', accessor: (c) => c.email },
-            { key: 'phone', header: 'Phone', accessor: (c) => c.phone },
-            { key: 'bookings', header: 'Bookings', accessor: (c) => c.totalBookings, cell: (c) => <div className="font-semibold">{c.totalBookings}</div>, sortable: true },
-            { key: 'last', header: 'Last Booking', accessor: (c) => c.lastBookingDate, cell: (c) => c.lastBookingDate ? formatDateUTC(c.lastBookingDate) : '-' },
-            { key: 'actions', header: '', cell: (c) => (
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => router.push(`/admin/customers/${c.id}`)}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(c)}>Edit</Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)}>Delete</Button>
-                <Button variant="outline" size="sm" onClick={() => handleStatusChange(c.id, c.status === 'active' ? 'inactive' : 'active')}>{c.status === 'active' ? 'Deactivate' : 'Activate'}</Button>
-              </div>
-            ) }
-          ] as Column<Customer>[]}
+          columns={
+            [
+              {
+                key: "avatar",
+                header: "",
+                cell: (c) => (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{getInitials(c.name)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                ),
+                width: "w-12",
+              },
+              {
+                key: "name",
+                header: "Name",
+                accessor: (c) => c.name,
+                cell: (c) => (
+                  <div>
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {c.role}
+                    </div>
+                  </div>
+                ),
+                sortable: true,
+              },
+              { key: "company", header: "Company", accessor: (c) => c.company },
+              { key: "email", header: "Email", accessor: (c) => c.email },
+              { key: "phone", header: "Phone", accessor: (c) => c.phone },
+              {
+                key: "bookings",
+                header: "Bookings",
+                accessor: (c) => c.totalBookings,
+                cell: (c) => (
+                  <div className="font-semibold">{c.totalBookings}</div>
+                ),
+                sortable: true,
+              },
+              {
+                key: "last",
+                header: "Last Booking",
+                accessor: (c) => c.lastBookingDate,
+                cell: (c) =>
+                  c.lastBookingDate ? formatDateUTC(c.lastBookingDate) : "-",
+              },
+              {
+                key: "actions",
+                header: "",
+                cell: (c) => (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/admin/customers/${c.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenEdit(c)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(c.id)}
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleStatusChange(
+                          c.id,
+                          c.status === "active" ? "inactive" : "active",
+                        )
+                      }
+                    >
+                      {c.status === "active" ? "Deactivate" : "Activate"}
+                    </Button>
+                  </div>
+                ),
+              },
+            ] as Column<Customer>[]
+          }
           data={filteredCustomers}
           defaultPageSize={10}
-          pageSizeOptions={[10,25,50]}
+          pageSizeOptions={[10, 25, 50]}
         />
       </div>
     </div>

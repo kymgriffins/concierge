@@ -31,6 +31,7 @@ This project includes a small JSON-backed mock backend and Next.js API routes fo
    curl -b /tmp/mock_cookies -X POST http://localhost:3000/api/bookings -H "Content-Type: application/json" -d '{"passengerName":"Test","company":"X","phone":"+1","email":"t@x.com","flightNumber":"XX 1","airline":"X","date":"2025-12-20","time":"10:00","passengerCount":1,"services":[],"specialRequests":"","status":"new","source":"manual"}'
 
 Notes:
+
 - This is a development-only mock backend. Data is persisted to `data/mockdb.json`.
 - Passwords are stored in plain text for convenience (do not use in production).
 - Cookies are HTTP-only and persisted for 24 hours.

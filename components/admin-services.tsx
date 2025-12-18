@@ -1,13 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { MockAPI, ServiceOption } from "@/lib/mock-api";
-import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import DataTable, { Column } from "@/components/ui/data-table/data-table";
 import { useToast } from "@/components/ui/toast";
 
 export function AdminServices() {
@@ -45,20 +51,28 @@ export function AdminServices() {
     e.preventDefault();
     try {
       await MockAPI.createServiceOption({
-        name: form.name || '',
-        description: form.description || '',
-        icon: form.icon || '',
+        name: form.name || "",
+        description: form.description || "",
+        icon: form.icon || "",
         price: form.price,
         availableDate: form.availableDate,
         availableTime: form.availableTime,
-        active: form.active ?? true
+        active: form.active ?? true,
       });
       await load();
       setShowForm(false);
-      toast.showToast({ title: 'Service created', description: `${form.name} created`, type: 'success' });
+      toast.showToast({
+        title: "Service created",
+        description: `${form.name} created`,
+        type: "success",
+      });
     } catch (err) {
       console.error(err);
-      toast.showToast({ title: 'Create failed', description: String(err), type: 'error' });
+      toast.showToast({
+        title: "Create failed",
+        description: String(err),
+        type: "error",
+      });
     }
   };
 
@@ -72,74 +86,155 @@ export function AdminServices() {
     e.preventDefault();
     if (!form.id) return;
     try {
-      await MockAPI.updateServiceOption(form.id, form as Partial<ServiceOption>);
+      await MockAPI.updateServiceOption(
+        form.id,
+        form as Partial<ServiceOption>,
+      );
       await load();
       setEditing(false);
       setShowForm(false);
       reset();
-      toast.showToast({ title: 'Service updated', description: `${form.name} updated`, type: 'success' });
+      toast.showToast({
+        title: "Service updated",
+        description: `${form.name} updated`,
+        type: "success",
+      });
     } catch (err) {
       console.error(err);
-      toast.showToast({ title: 'Update failed', description: String(err), type: 'error' });
+      toast.showToast({
+        title: "Update failed",
+        description: String(err),
+        type: "error",
+      });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete service option?')) return;
+    if (!confirm("Delete service option?")) return;
     try {
       await MockAPI.deleteServiceOption(id);
       await load();
-      toast.showToast({ title: 'Service deleted', description: `Service ${id} removed`, type: 'success' });
+      toast.showToast({
+        title: "Service deleted",
+        description: `Service ${id} removed`,
+        type: "success",
+      });
     } catch (err) {
       console.error(err);
-      toast.showToast({ title: 'Delete failed', description: String(err), type: 'error' });
+      toast.showToast({
+        title: "Delete failed",
+        description: String(err),
+        type: "error",
+      });
     }
   };
 
   const toggleServiceStatus = async (service: ServiceOption) => {
     try {
-      await MockAPI.updateServiceOption(service.id, { active: !service.active });
+      await MockAPI.updateServiceOption(service.id, {
+        active: !service.active,
+      });
       await load();
       toast.showToast({
-        title: 'Service updated',
-        description: `${service.name} is now ${!service.active ? 'active' : 'inactive'}`,
-        type: 'success'
+        title: "Service updated",
+        description: `${service.name} is now ${!service.active ? "active" : "inactive"}`,
+        type: "success",
       });
     } catch (err) {
       console.error(err);
-      toast.showToast({ title: 'Update failed', description: String(err), type: 'error' });
+      toast.showToast({
+        title: "Update failed",
+        description: String(err),
+        type: "error",
+      });
     }
   };
 
   if (loading) return <div>Loading...</div>;
 
   const columns: Column<ServiceOption>[] = [
-    { key: 'icon', header: '', accessor: (s) => s.icon, cell: (s) => (<div className="text-lg">{s.icon}</div>), width: 'w-16' },
-    { key: 'name', header: 'Name', accessor: (s) => s.name, cell: (s) => <div className="font-medium">{s.name}</div>, sortable: true },
-    { key: 'description', header: 'Description', accessor: (s) => s.description },
-    { key: 'price', header: 'Price', accessor: (s) => s.price, cell: (s) => s.price ? `$${s.price}` : '-' , sortable: true },
-    { key: 'status', header: 'Status', accessor: (s) => s.active, cell: (s) => (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-        s.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-      }`}>
-        {s.active ? 'Active' : 'Inactive'}
-      </span>
-    ) },
-    { key: 'availableDate', header: 'Available Date', accessor: (s) => s.availableDate, cell: (s) => s.availableDate || '-' },
-    { key: 'availableTime', header: 'Available Time', accessor: (s) => s.availableTime, cell: (s) => s.availableTime || '-' },
-    { key: 'actions', header: '', cell: (s) => (
-      <div className="flex gap-2">
-        <Button
-          variant={s.active ? "secondary" : "default"}
-          size="sm"
-          onClick={(e) => { e.stopPropagation(); toggleServiceStatus(s); }}
+    {
+      key: "icon",
+      header: "",
+      accessor: (s) => s.icon,
+      cell: (s) => <div className="text-lg">{s.icon}</div>,
+      width: "w-16",
+    },
+    {
+      key: "name",
+      header: "Name",
+      accessor: (s) => s.name,
+      cell: (s) => <div className="font-medium">{s.name}</div>,
+      sortable: true,
+    },
+    {
+      key: "description",
+      header: "Description",
+      accessor: (s) => s.description,
+    },
+    {
+      key: "price",
+      header: "Price",
+      accessor: (s) => s.price,
+      cell: (s) => (s.price ? `$${s.price}` : "-"),
+      sortable: true,
+    },
+    {
+      key: "status",
+      header: "Status",
+      accessor: (s) => s.active,
+      cell: (s) => (
+        <span
+          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            s.active
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
         >
-          {s.active ? 'Deactivate' : 'Activate'}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
-        <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)}>Delete</Button>
-      </div>
-    ) }
+          {s.active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      key: "availableDate",
+      header: "Available Date",
+      accessor: (s) => s.availableDate,
+      cell: (s) => s.availableDate || "-",
+    },
+    {
+      key: "availableTime",
+      header: "Available Time",
+      accessor: (s) => s.availableTime,
+      cell: (s) => s.availableTime || "-",
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (s) => (
+        <div className="flex gap-2">
+          <Button
+            variant={s.active ? "secondary" : "default"}
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleServiceStatus(s);
+            }}
+          >
+            {s.active ? "Deactivate" : "Activate"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDelete(s.id)}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -149,27 +244,57 @@ export function AdminServices() {
           <h1 className="text-2xl font-bold">Service Options</h1>
           <p className="text-muted-foreground">Manage available services</p>
         </div>
-        <Button onClick={openCreate}><span className="mr-2">+</span>New Service</Button>
+        <Button onClick={openCreate}>
+          <span className="mr-2">+</span>New Service
+        </Button>
       </div>
 
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>{editing ? 'Edit Service' : 'Create Service'}</CardTitle>
-            <CardDescription>{editing ? 'Update service option' : 'Add a new service option'}</CardDescription>
+            <CardTitle>{editing ? "Edit Service" : "Create Service"}</CardTitle>
+            <CardDescription>
+              {editing ? "Update service option" : "Add a new service option"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={editing ? submitEdit : submitCreate} className="space-y-4">
+            <form
+              onSubmit={editing ? submitEdit : submitCreate}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input placeholder="Name" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                <Input placeholder="Icon" value={form.icon || ''} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
-                <Input placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                <Input type="number" placeholder="Price" value={form.price?.toString() || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                <Input
+                  placeholder="Name"
+                  value={form.name || ""}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+                <Input
+                  placeholder="Icon"
+                  value={form.icon || ""}
+                  onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                />
+                <Input
+                  placeholder="Description"
+                  value={form.description || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Price"
+                  value={form.price?.toString() || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, price: Number(e.target.value) })
+                  }
+                />
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Available Date</label>
                   <DatePicker
                     value={form.availableDate || null}
-                    onChange={(date) => setForm({ ...form, availableDate: date || undefined })}
+                    onChange={(date) =>
+                      setForm({ ...form, availableDate: date || undefined })
+                    }
                     placeholder="Select available date"
                   />
                 </div>
@@ -177,13 +302,26 @@ export function AdminServices() {
                   <label className="text-sm font-medium">Available Time</label>
                   <TimePicker
                     value={form.availableTime || null}
-                    onChange={(time) => setForm({ ...form, availableTime: time || undefined })}
+                    onChange={(time) =>
+                      setForm({ ...form, availableTime: time || undefined })
+                    }
                   />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button type="submit">{editing ? 'Save changes' : 'Create service'}</Button>
-                <Button variant="outline" onClick={() => { setShowForm(false); setEditing(false); reset(); }}>Cancel</Button>
+                <Button type="submit">
+                  {editing ? "Save changes" : "Create service"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditing(false);
+                    reset();
+                  }}
+                >
+                  Cancel
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -194,7 +332,7 @@ export function AdminServices() {
         columns={columns}
         data={services}
         defaultPageSize={9}
-        pageSizeOptions={[9,18,36]}
+        pageSizeOptions={[9, 18, 36]}
         onRowClick={(s) => openEdit(s)}
         searchable={true}
         exportable={true}

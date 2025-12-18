@@ -1,24 +1,26 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { readDB } from '../../../lib/json-db';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { readDB } from "../../../lib/json-db";
 
 function parseCookies(cookieHeader: string | null) {
   const map: Record<string, string> = {};
   if (!cookieHeader) return map;
-  cookieHeader.split(';').forEach(pair => {
-    const [k, v] = pair.split('=');
+  cookieHeader.split(";").forEach((pair) => {
+    const [k, v] = pair.split("=");
     if (k && v) map[k.trim()] = decodeURIComponent(v.trim());
   });
   return map;
 }
 
 async function getSession(req: NextRequest) {
-  const cookieHeader = req.headers.get('cookie');
+  const cookieHeader = req.headers.get("cookie");
   const cookies = parseCookies(cookieHeader);
-  const token = cookies['mock_sess'];
+  const token = cookies["mock_sess"];
   if (!token) return null;
   const db = await readDB();
-  const session = (db.sessions || []).find((s: any) => s.token === token && s.expiresAt > Date.now());
+  const session = (db.sessions || []).find(
+    (s: any) => s.token === token && s.expiresAt > Date.now(),
+  );
   if (!session) return null;
   const agent = db.agents.find((a: any) => a.id === session.agentId);
   return { session, agent };
@@ -27,8 +29,10 @@ async function getSession(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const res = await getSession(req);
-    if (!res) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    if (res.agent.role !== 'supervisor') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!res)
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (res.agent.role !== "supervisor")
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const db = await readDB();
     return NextResponse.json({ sessions: db.sessions || [] }, { status: 200 });

@@ -19,7 +19,7 @@ export function TimePicker({ value, onChange, className, placeholder }: Props) {
       onChange={(e) => onChange(e.target.value || null)}
       className={cn(
         "bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
-        className
+        className,
       )}
       placeholder={placeholder}
     />

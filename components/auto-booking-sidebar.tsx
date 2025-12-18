@@ -1,15 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MockAPI, IncomingMessage, Booking, RosterShift, Agent } from "@/lib/mock-api";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  MockAPI,
+  IncomingMessage,
+  Booking,
+  RosterShift,
+  Agent,
+} from "@/lib/mock-api";
 import { MessageParser } from "@/lib/message-parser";
 import { AutoBookingResult } from "@/app/api/messages/process/route";
 import {
@@ -32,30 +56,38 @@ import {
   AlertCircle,
   UserCheck,
   CalendarDays,
-  Target
+  Target,
 } from "lucide-react";
 
 interface ParsedDataDisplayProps {
   data: any;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 function ParsedDataDisplay({ data, confidence }: ParsedDataDisplayProps) {
   const getConfidenceColor = (level: string) => {
     switch (level) {
-      case 'high': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-red-600';
-      default: return 'text-gray-600';
+      case "high":
+        return "text-green-600";
+      case "medium":
+        return "text-yellow-600";
+      case "low":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getConfidenceIcon = (level: string) => {
     switch (level) {
-      case 'high': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'medium': return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      case 'low': return <AlertCircle className="h-4 w-4 text-red-600" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-600" />;
+      case "high":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "medium":
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case "low":
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -64,7 +96,15 @@ function ParsedDataDisplay({ data, confidence }: ParsedDataDisplayProps) {
       <div className="flex items-center gap-2">
         <Star className="h-4 w-4" />
         <span className="font-medium">Confidence:</span>
-        <Badge variant={confidence === 'high' ? 'default' : confidence === 'medium' ? 'secondary' : 'destructive'}>
+        <Badge
+          variant={
+            confidence === "high"
+              ? "default"
+              : confidence === "medium"
+                ? "secondary"
+                : "destructive"
+          }
+        >
           {confidence.toUpperCase()}
         </Badge>
         {getConfidenceIcon(confidence)}
@@ -99,7 +139,9 @@ function ParsedDataDisplay({ data, confidence }: ParsedDataDisplayProps) {
           <div className="flex items-center gap-2 text-sm">
             <Plane className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">Flight:</span>
-            <span>{data.flightNumber} {data.airline && `(${data.airline})`}</span>
+            <span>
+              {data.flightNumber} {data.airline && `(${data.airline})`}
+            </span>
           </div>
         )}
 
@@ -142,7 +184,7 @@ function ParsedDataDisplay({ data, confidence }: ParsedDataDisplayProps) {
             <div className="flex flex-wrap gap-1">
               {data.services.map((service: string) => (
                 <Badge key={service} variant="outline" className="text-xs">
-                  {service.replace('_', ' ')}
+                  {service.replace("_", " ")}
                 </Badge>
               ))}
             </div>
@@ -153,7 +195,9 @@ function ParsedDataDisplay({ data, confidence }: ParsedDataDisplayProps) {
           <div className="flex items-start gap-2 text-sm">
             <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
             <span className="font-medium">Requests:</span>
-            <span className="text-muted-foreground">{data.specialRequests}</span>
+            <span className="text-muted-foreground">
+              {data.specialRequests}
+            </span>
           </div>
         )}
       </div>
@@ -165,12 +209,13 @@ export function AutoBookingSidebar() {
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [parseResult, setParseResult] = useState<any>(null);
-  const [bookingResult, setBookingResult] = useState<AutoBookingResult | null>(null);
+  const [bookingResult, setBookingResult] = useState<AutoBookingResult | null>(
+    null,
+  );
   const [messages, setMessages] = useState<IncomingMessage[]>([]);
-  const [selectedMessage, setSelectedMessage] = useState<IncomingMessage | null>(null);
-  const [activeTab, setActiveTab] = useState<'input' | 'messages'>('input');
-
-
+  const [selectedMessage, setSelectedMessage] =
+    useState<IncomingMessage | null>(null);
+  const [activeTab, setActiveTab] = useState<"input" | "messages">("input");
 
   useEffect(() => {
     loadMessages();
@@ -181,7 +226,7 @@ export function AutoBookingSidebar() {
       const msgs = await MockAPI.getIncomingMessages(20);
       setMessages(msgs);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      console.error("Failed to load messages:", error);
     }
   };
 
@@ -190,18 +235,18 @@ export function AutoBookingSidebar() {
 
     setIsProcessing(true);
     try {
-      const response = await fetch('/api/messages/process', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputMessage })
+      const response = await fetch("/api/messages/process", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: inputMessage }),
       });
 
       const result = await response.json();
       setParseResult(result);
       setBookingResult(null);
     } catch (error) {
-      console.error('Parse error:', error);
-      setParseResult({ success: false, error: 'Failed to parse message' });
+      console.error("Parse error:", error);
+      setParseResult({ success: false, error: "Failed to parse message" });
     } finally {
       setIsProcessing(false);
     }
@@ -214,17 +259,20 @@ export function AutoBookingSidebar() {
     try {
       // First create a mock message
       const mockMessage = await MockAPI.createIncomingMessage({
-        source: 'manual' as any,
-        senderName: parseResult.data.passengerName || 'Test User',
-        senderContact: parseResult.data.phone || parseResult.data.email || 'test@example.com',
-        message: inputMessage
+        source: "manual" as any,
+        senderName: parseResult.data.passengerName || "Test User",
+        senderContact:
+          parseResult.data.phone ||
+          parseResult.data.email ||
+          "test@example.com",
+        message: inputMessage,
       });
 
       // Then process it
-      const response = await fetch('/api/messages/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageId: mockMessage.id })
+      const response = await fetch("/api/messages/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: mockMessage.id }),
       });
 
       const result = await response.json();
@@ -236,13 +284,13 @@ export function AutoBookingSidebar() {
         loadMessages(); // Refresh messages list
       }
     } catch (error) {
-      console.error('Auto-booking error:', error);
+      console.error("Auto-booking error:", error);
       setBookingResult({
         success: false,
-        messageId: '',
-        confidence: 'low',
+        messageId: "",
+        confidence: "low",
         requiresReview: true,
-        error: 'Failed to create auto-booking'
+        error: "Failed to create auto-booking",
       });
     } finally {
       setIsProcessing(false);
@@ -254,10 +302,10 @@ export function AutoBookingSidebar() {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('/api/messages/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageId: message.id })
+      const response = await fetch("/api/messages/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: message.id }),
       });
 
       const result = await response.json();
@@ -267,22 +315,18 @@ export function AutoBookingSidebar() {
         loadMessages(); // Refresh to show processed status
       }
     } catch (error) {
-      console.error('Message processing error:', error);
+      console.error("Message processing error:", error);
       setBookingResult({
         success: false,
         messageId: message.id,
-        confidence: 'low',
+        confidence: "low",
         requiresReview: true,
-        error: 'Failed to process message'
+        error: "Failed to process message",
       });
     } finally {
       setIsProcessing(false);
     }
   };
-
-
-
-
 
   return (
     <div className="w-96 h-full border-l bg-background flex flex-col">
@@ -300,30 +344,30 @@ export function AutoBookingSidebar() {
       {/* Tabs */}
       <div className="flex border-b">
         <button
-          onClick={() => setActiveTab('input')}
+          onClick={() => setActiveTab("input")}
           className={`flex-1 px-4 py-2 text-sm font-medium ${
-            activeTab === 'input'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'
+            activeTab === "input"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Test Input
         </button>
         <button
-          onClick={() => setActiveTab('messages')}
+          onClick={() => setActiveTab("messages")}
           className={`flex-1 px-4 py-2 text-sm font-medium ${
-            activeTab === 'messages'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'
+            activeTab === "messages"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Messages ({messages.filter(m => !m.processed).length})
+          Messages ({messages.filter((m) => !m.processed).length})
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
-        {activeTab === 'input' ? (
+        {activeTab === "input" ? (
           <div className="p-4 space-y-4">
             {/* Message Input */}
             <div>
@@ -384,20 +428,28 @@ export function AutoBookingSidebar() {
                   {parseResult.success ? (
                     <ParsedDataDisplay
                       data={parseResult.data}
-                      confidence={parseResult.data?.confidence?.overall || 'low'}
+                      confidence={
+                        parseResult.data?.confidence?.overall || "low"
+                      }
                     />
                   ) : (
                     <div className="space-y-2">
                       <div className="p-3 border border-red-200 bg-red-50 rounded-md">
-                        <p className="text-sm text-red-800">{parseResult.error}</p>
+                        <p className="text-sm text-red-800">
+                          {parseResult.error}
+                        </p>
                       </div>
                       {parseResult.suggestions && (
                         <div>
-                          <p className="text-sm font-medium mb-1">Suggestions:</p>
+                          <p className="text-sm font-medium mb-1">
+                            Suggestions:
+                          </p>
                           <ul className="text-sm text-muted-foreground space-y-1">
-                            {parseResult.suggestions.map((suggestion: string, i: number) => (
-                              <li key={i}>• {suggestion}</li>
-                            ))}
+                            {parseResult.suggestions.map(
+                              (suggestion: string, i: number) => (
+                                <li key={i}>• {suggestion}</li>
+                              ),
+                            )}
                           </ul>
                         </div>
                       )}
@@ -437,7 +489,7 @@ export function AutoBookingSidebar() {
                     <div className="space-y-2">
                       <div className="p-3 border border-yellow-200 bg-yellow-50 rounded-md">
                         <p className="text-sm text-yellow-800">
-                          {bookingResult.error || 'Booking creation failed'}
+                          {bookingResult.error || "Booking creation failed"}
                         </p>
                       </div>
                       {bookingResult.requiresReview && (
@@ -451,14 +503,17 @@ export function AutoBookingSidebar() {
               </Card>
             )}
           </div>
-        ) : activeTab === 'messages' ? (
+        ) : activeTab === "messages" ? (
           <div className="p-4 space-y-4">
             {/* Messages List */}
             <div className="space-y-2">
               {messages.map((message) => (
-                <Card key={message.id} className={`cursor-pointer transition-colors ${
-                  message.processed ? 'opacity-60' : 'hover:bg-muted/50'
-                }`}>
+                <Card
+                  key={message.id}
+                  className={`cursor-pointer transition-colors ${
+                    message.processed ? "opacity-60" : "hover:bg-muted/50"
+                  }`}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -471,7 +526,7 @@ export function AutoBookingSidebar() {
                           )}
                         </div>
                         <p className="text-sm font-medium truncate">
-                          {message.senderName || 'Unknown Sender'}
+                          {message.senderName || "Unknown Sender"}
                         </p>
                         <p className="text-xs text-muted-foreground line-clamp-2">
                           {message.message}

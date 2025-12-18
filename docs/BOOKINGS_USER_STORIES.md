@@ -1,6 +1,7 @@
 # Bookings User Stories
 
 ## Overview
+
 This document contains comprehensive user stories for the Airport Concierge Booking System. The system manages airport concierge services including meet & greet, fast track security, lounge access, porter services, chauffeur services, and VIP packages.
 
 ## Core Booking Management
@@ -10,6 +11,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to create new bookings manually so that I can schedule services for passengers.**
 
 **Acceptance Criteria:**
+
 - Can access booking creation form from admin dashboard
 - Required fields: passenger name, flight number, date, time, service type
 - Optional fields: company, phone, email, terminal, passenger count, special requests
@@ -21,6 +23,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to view all bookings in a comprehensive list so that I can manage the booking queue.**
 
 **Acceptance Criteria:**
+
 - Displays bookings in sortable, filterable table
 - Shows key information: passenger, flight, date, service, status
 - Supports pagination (default 25 per page, options: 10, 25, 50, 100)
@@ -31,6 +34,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to edit existing bookings so that I can update passenger information or service details.**
 
 **Acceptance Criteria:**
+
 - Edit form pre-populated with existing data
 - Role-based field restrictions (agents can only edit status/notes)
 - Supervisors can edit all fields
@@ -41,6 +45,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to delete bookings when necessary so that I can remove cancelled or erroneous entries.**
 
 **Acceptance Criteria:**
+
 - Delete confirmation dialog with booking details
 - Only supervisors can delete bookings
 - Logs deletion activity
@@ -52,6 +57,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to update booking statuses so that I can track service progress.**
 
 **Acceptance Criteria:**
+
 - Status options: new, contacted, confirmed, in_progress, completed, pending_review, cancelled
 - Status change triggers activity logging
 - Visual status indicators throughout the system
@@ -61,6 +67,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to submit completed bookings for supervisor review so that quality assurance is maintained.**
 
 **Acceptance Criteria:**
+
 - Submit button available on completed bookings
 - Changes status to "pending_review"
 - Includes agent notes for supervisor
@@ -70,6 +77,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to approve or reject booking reviews so that I can ensure service quality.**
 
 **Acceptance Criteria:**
+
 - Access to pending review queue
 - Approve: changes status back to completed
 - Reject: returns to agent with feedback
@@ -81,6 +89,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to filter bookings by multiple criteria so that I can find specific bookings quickly.**
 
 **Acceptance Criteria:**
+
 - Filter by: status, date range, service type, airline, terminal, source
 - Combined filters work together (AND logic)
 - Real-time filter application
@@ -91,6 +100,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to search bookings by passenger name, flight number, or company so that I can locate specific bookings.**
 
 **Acceptance Criteria:**
+
 - Search across passenger name, flight number, company
 - Case-insensitive partial matching
 - Real-time search results
@@ -104,6 +114,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to parse incoming messages (WhatsApp, email) so that I can automatically create bookings.**
 
 **Acceptance Criteria:**
+
 - Parses passenger name, flight details, date/time, contact info
 - Extracts service requests from natural language
 - Calculates confidence scores for parsed data
@@ -114,6 +125,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to automatically create bookings from high-confidence message parsing so that manual data entry is reduced.**
 
 **Acceptance Criteria:**
+
 - Auto-creates bookings when confidence is "high"
 - Maps message source to booking source field
 - Sets initial status to "new"
@@ -124,6 +136,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to review low-confidence auto-booking attempts so that I can manually complete them.**
 
 **Acceptance Criteria:**
+
 - Low/medium confidence bookings flagged for review
 - Shows parsed data with confidence indicators
 - Allows manual editing before creation
@@ -135,6 +148,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to view incoming messages so that I can process booking requests.**
 
 **Acceptance Criteria:**
+
 - Message queue shows unprocessed messages
 - Displays sender info, message content, received time
 - Source indicators (WhatsApp, email, etc.)
@@ -144,6 +158,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to test message parsing so that I can validate parsing accuracy.**
 
 **Acceptance Criteria:**
+
 - Test interface for inputting sample messages
 - Shows parsing results with confidence scores
 - Displays extracted entities
@@ -157,6 +172,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to automatically transition booking statuses based on flight times so that service progress is tracked accurately.**
 
 **Acceptance Criteria:**
+
 - Monitors flight times vs current time
 - Auto-transitions confirmed → in_progress when flight time reached
 - Configurable transition timing (default: at flight time)
@@ -167,6 +183,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to provide lifecycle status information so that agents understand next possible actions.**
 
 **Acceptance Criteria:**
+
 - Shows current status and next possible statuses
 - Indicates if auto-transition is pending
 - Shows time until auto-transition
@@ -178,6 +195,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to view service lifecycle statistics so that I can monitor system performance.**
 
 **Acceptance Criteria:**
+
 - Total bookings count
 - Auto-transitioned bookings today
 - Pending supervisor reviews count
@@ -192,6 +210,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to assign bookings to specific shifts so that workload is distributed properly.**
 
 **Acceptance Criteria:**
+
 - View available shifts for booking date
 - Assign booking to shift
 - Optionally assign to specific agent within shift
@@ -202,6 +221,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to view bookings assigned to my shifts so that I can manage my workload.**
 
 **Acceptance Criteria:**
+
 - Filter bookings by assigned agent/shift
 - Shows assignment details in booking list
 - Calendar view integration (future enhancement)
@@ -213,6 +233,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to integrate with the roster system so that bookings can be assigned to available staff.**
 
 **Acceptance Criteria:**
+
 - Access roster data for date-based assignments
 - Validates assignments against roster
 - Prevents over-assignment
@@ -226,6 +247,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to link bookings to customer profiles so that I can provide personalized service.**
 
 **Acceptance Criteria:**
+
 - Search existing customers during booking creation
 - Auto-populate booking fields from customer profile
 - Update customer booking history
@@ -235,6 +257,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to create customer profiles from booking information so that I can build customer relationships.**
 
 **Acceptance Criteria:**
+
 - Extract customer info from booking data
 - Create profile with booking history
 - Track service preferences
@@ -248,6 +271,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to view booking analytics so that I can understand business performance.**
 
 **Acceptance Criteria:**
+
 - Total bookings by time period
 - Revenue tracking (service fees + additional charges)
 - Service type popularity
@@ -258,6 +282,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to export booking data so that I can perform detailed analysis.**
 
 **Acceptance Criteria:**
+
 - Export to CSV/Excel formats
 - Configurable date ranges
 - Custom field selection
@@ -271,6 +296,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to track all booking activities so that I can maintain accountability.**
 
 **Acceptance Criteria:**
+
 - Logs all CRUD operations
 - User attribution for all changes
 - Timestamp tracking
@@ -281,6 +307,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to add notes to bookings so that I can document service delivery.**
 
 **Acceptance Criteria:**
+
 - Internal notes field (admin-only)
 - Public notes for customer communication
 - Note timestamping and user attribution
@@ -294,6 +321,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to integrate with airline APIs so that I can validate flight information.**
 
 **Acceptance Criteria:**
+
 - Flight number validation
 - Real-time flight status updates
 - Gate information integration
@@ -303,6 +331,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to integrate with payment systems so that I can process service fees.**
 
 **Acceptance Criteria:**
+
 - Payment processing for bookings
 - Invoice generation
 - Receipt management
@@ -316,6 +345,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a concierge agent, I want to receive notifications about booking updates so that I stay informed.**
 
 **Acceptance Criteria:**
+
 - Status change notifications
 - Assignment notifications
 - Review request notifications
@@ -325,6 +355,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a customer, I want to receive booking confirmations and updates so that I stay informed.**
 
 **Acceptance Criteria:**
+
 - Automated confirmation emails
 - Status update notifications
 - Service reminder notifications
@@ -338,6 +369,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to optimize booking assignments so that agent workload is balanced.**
 
 **Acceptance Criteria:**
+
 - Intelligent assignment suggestions
 - Workload balancing algorithms
 - Agent skill matching
@@ -347,6 +379,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to predict service demand so that staffing can be optimized.**
 
 **Acceptance Criteria:**
+
 - Historical data analysis
 - Demand forecasting
 - Seasonal trend analysis
@@ -360,6 +393,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a supervisor, I want to track service quality metrics so that I can ensure consistent service delivery.**
 
 **Acceptance Criteria:**
+
 - Customer satisfaction surveys
 - Service delivery time tracking
 - Quality checklist completion
@@ -369,6 +403,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to ensure data compliance so that privacy regulations are met.**
 
 **Acceptance Criteria:**
+
 - GDPR compliance
 - Data retention policies
 - Customer data protection
@@ -382,6 +417,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As the system, I want to automate routine tasks so that agent efficiency is improved.**
 
 **Acceptance Criteria:**
+
 - Automated customer follow-ups
 - Smart scheduling suggestions
 - Template-based responses
@@ -391,6 +427,7 @@ This document contains comprehensive user stories for the Airport Concierge Book
 **As a customer, I want a self-service booking portal so that I can book services directly.**
 
 **Acceptance Criteria:**
+
 - Customer-facing booking interface
 - Service selection and pricing
 - Real-time availability

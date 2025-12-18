@@ -31,18 +31,34 @@ export function DatePicker({ value, onChange, className, placeholder }: Props) {
           value={value || ""}
           placeholder={placeholder}
           readOnly
-          onClick={() => setOpen(v => !v)}
+          onClick={() => setOpen((v) => !v)}
         />
-        <button type="button" className="p-2 rounded-md hover:bg-muted/40" onClick={() => setOpen(v => !v)} aria-label="Toggle calendar">
+        <button
+          type="button"
+          className="p-2 rounded-md hover:bg-muted/40"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle calendar"
+        >
           <CalendarIcon className="h-4 w-4" />
         </button>
       </div>
 
       {open && (
         <div className="absolute z-50 mt-2 bg-card text-card-foreground ring-1 ring-border rounded-md shadow-lg p-2">
-          <DayPicker mode="single" selected={value ? new Date(value) : undefined} onSelect={handleSelect} />
+          <DayPicker
+            mode="single"
+            selected={value ? new Date(value) : undefined}
+            onSelect={handleSelect}
+          />
           <div className="flex justify-end mt-2">
-            <button className="text-sm text-muted-foreground px-2 py-1" onClick={() => { setOpen(false); }}>Close</button>
+            <button
+              className="text-sm text-muted-foreground px-2 py-1"
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

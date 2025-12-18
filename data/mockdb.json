@@ -67,15 +67,10 @@
       "customerSatisfaction": 4,
       "processingTime": 2172,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a2",
       "lastModifiedBy": "a2",
-      "tags": [
-        "group",
-        "porter"
-      ],
+      "tags": ["group", "porter"],
       "followUpRequired": true,
       "followUpDate": "2023-10-25",
       "loyaltyProgram": "Flying Blue",
@@ -106,16 +101,10 @@
       "serviceFee": 175,
       "additionalCharges": 84,
       "totalRevenue": 259,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["medical"],
       "createdBy": "a3",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "internalNotes": "New client, monitor satisfaction",
       "followUpRequired": true,
       "followUpDate": "2023-12-05",
@@ -148,14 +137,10 @@
       "additionalCharges": 72,
       "totalRevenue": 222,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "family"
-      ],
+      "specialHandling": ["family"],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": true,
       "followUpDate": "2024-05-12"
@@ -186,14 +171,10 @@
       "additionalCharges": 0,
       "totalRevenue": 200,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a3",
       "lastModifiedBy": "a1",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "followUpRequired": false
     },
     {
@@ -257,9 +238,7 @@
       "serviceFee": 200,
       "additionalCharges": 0,
       "totalRevenue": 200,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
@@ -294,13 +273,9 @@
       "additionalCharges": 27,
       "totalRevenue": 227,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false
     },
     {
@@ -497,14 +472,10 @@
       "customerSatisfaction": 5,
       "processingTime": 372,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "a3",
       "lastModifiedBy": "a3",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": true,
       "followUpDate": "2024-05-12"
@@ -535,14 +506,10 @@
       "additionalCharges": 3,
       "totalRevenue": 178,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "family"
-      ],
+      "specialHandling": ["family"],
       "createdBy": "a2",
       "lastModifiedBy": "a1",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "internalNotes": "Medical assistance may be needed",
       "followUpRequired": false
     },
@@ -571,14 +538,10 @@
       "serviceFee": 200,
       "additionalCharges": 17,
       "totalRevenue": 217,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "s1",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "Medical assistance may be needed",
       "followUpRequired": false,
       "loyaltyProgram": "Mileage Plus",
@@ -643,14 +606,10 @@
       "additionalCharges": 0,
       "totalRevenue": 175,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "lastModifiedBy": "s1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": false,
       "loyaltyProgram": "Mileage Plus",
@@ -720,14 +679,10 @@
       "customerSatisfaction": 5,
       "processingTime": 269,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "family"
-      ],
+      "specialHandling": ["family"],
       "createdBy": "a1",
       "lastModifiedBy": "s1",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "internalNotes": "High-value client, ensure premium service",
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
@@ -762,9 +717,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1272,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a1",
       "lastModifiedBy": "a4",
       "tags": [],
@@ -801,19 +754,11 @@
       "totalRevenue": 200,
       "customerSatisfaction": 5,
       "processingTime": 2184,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["family"],
       "createdBy": "a4",
       "lastModifiedBy": "a4",
-      "tags": [
-        "porter",
-        "family",
-        "business"
-      ],
+      "tags": ["porter", "family", "business"],
       "followUpRequired": false
     },
     {
@@ -842,9 +787,7 @@
       "additionalCharges": 3,
       "totalRevenue": 178,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "a3",
       "lastModifiedBy": "a4",
       "tags": [],
@@ -879,16 +822,11 @@
       "totalRevenue": 233,
       "customerSatisfaction": 5,
       "processingTime": 1086,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
+      "equipmentNeeded": ["wheelchair"],
       "specialHandling": [],
       "createdBy": "a1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "corporate",
-        "wheelchair"
-      ],
+      "tags": ["corporate", "wheelchair"],
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
       "frequentFlyerNumber": "EX876022"
@@ -954,9 +892,7 @@
       "additionalCharges": 22,
       "totalRevenue": 197,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "s1",
       "tags": [],
       "followUpRequired": false,
@@ -992,9 +928,7 @@
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": true,
       "followUpDate": "2024-06-22"
     },
@@ -1026,18 +960,11 @@
       "totalRevenue": 200,
       "customerSatisfaction": 3,
       "processingTime": 1575,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["electric_cart"],
+      "specialHandling": ["family"],
       "createdBy": "a1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "family",
-        "corporate"
-      ],
+      "tags": ["family", "corporate"],
       "internalNotes": "Family travel, prioritize comfort",
       "followUpRequired": true,
       "followUpDate": "2024-01-02"
@@ -1067,16 +994,11 @@
       "serviceFee": 175,
       "additionalCharges": 0,
       "totalRevenue": 175,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
-      "tags": [
-        "porter",
-        "corporate"
-      ],
+      "tags": ["porter", "corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Mileage Plus",
       "frequentFlyerNumber": "MI273209"
@@ -1143,17 +1065,11 @@
       "serviceFee": 175,
       "additionalCharges": 0,
       "totalRevenue": 175,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["family"],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE990737"
@@ -1187,14 +1103,10 @@
       "customerSatisfaction": 3,
       "processingTime": 2405,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE799796"
@@ -1227,12 +1139,8 @@
       "totalRevenue": 150,
       "customerSatisfaction": 4,
       "processingTime": 634,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["medical"],
       "createdBy": "a3",
       "tags": [],
       "followUpRequired": true,
@@ -1264,9 +1172,7 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "a3",
       "tags": [],
@@ -1308,9 +1214,7 @@
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a1",
-      "tags": [
-        "business"
-      ],
+      "tags": ["business"],
       "followUpRequired": false
     },
     {
@@ -1339,14 +1243,10 @@
       "additionalCharges": 58,
       "totalRevenue": 208,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "internalNotes": "High-value client, ensure premium service",
       "followUpRequired": false
     },
@@ -1379,14 +1279,10 @@
       "customerSatisfaction": 3,
       "processingTime": 1466,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a3",
       "lastModifiedBy": "a1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL675551"
@@ -1420,14 +1316,10 @@
       "customerSatisfaction": 3,
       "processingTime": 1775,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a4",
       "lastModifiedBy": "a1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false
     },
     {
@@ -1553,15 +1445,11 @@
       "serviceFee": 175,
       "additionalCharges": 5,
       "totalRevenue": 180,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "internalNotes": "New client, monitor satisfaction",
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
@@ -1595,17 +1483,10 @@
       "totalRevenue": 271,
       "customerSatisfaction": 3,
       "processingTime": 983,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["group"],
       "createdBy": "s1",
-      "tags": [
-        "wheelchair",
-        "group"
-      ],
+      "tags": ["wheelchair", "group"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE437736"
@@ -1635,17 +1516,11 @@
       "serviceFee": 175,
       "additionalCharges": 91,
       "totalRevenue": 266,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["medical"],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": false,
       "loyaltyProgram": "SkyMiles",
@@ -1680,9 +1555,7 @@
       "customerSatisfaction": 5,
       "processingTime": 1260,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a4",
       "lastModifiedBy": "a1",
       "tags": [],
@@ -1718,10 +1591,7 @@
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a2",
-      "tags": [
-        "corporate",
-        "porter"
-      ],
+      "tags": ["corporate", "porter"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL770182"
@@ -1786,17 +1656,11 @@
       "serviceFee": 175,
       "additionalCharges": 50,
       "totalRevenue": 225,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
-      "specialHandling": [
-        "vip"
-      ],
+      "equipmentNeeded": ["electric_cart"],
+      "specialHandling": ["vip"],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
-      "tags": [
-        "lounge"
-      ],
+      "tags": ["lounge"],
       "followUpRequired": true,
       "followUpDate": "2025-05-05"
     },
@@ -1862,15 +1726,11 @@
       "totalRevenue": 200,
       "customerSatisfaction": 5,
       "processingTime": 2209,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "followUpRequired": false
     },
     {
@@ -1901,9 +1761,7 @@
       "totalRevenue": 175,
       "customerSatisfaction": 3,
       "processingTime": 574,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a4",
@@ -1943,9 +1801,7 @@
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "lounge"
-      ],
+      "tags": ["lounge"],
       "followUpRequired": true,
       "followUpDate": "2025-09-07"
     },
@@ -2017,9 +1873,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "s1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false
     },
     {
@@ -2054,9 +1908,7 @@
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false,
       "loyaltyProgram": "SkyMiles",
       "frequentFlyerNumber": "SK253917"
@@ -2089,16 +1941,11 @@
       "totalRevenue": 189,
       "customerSatisfaction": 3,
       "processingTime": 511,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "a1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "vip",
-        "porter"
-      ],
+      "tags": ["vip", "porter"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": false
     },
@@ -2230,15 +2077,11 @@
       "serviceFee": 200,
       "additionalCharges": 0,
       "totalRevenue": 200,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "a1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": false
     },
@@ -2268,14 +2111,10 @@
       "additionalCharges": 31,
       "totalRevenue": 231,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": true,
       "followUpDate": "2023-07-09"
     },
@@ -2307,12 +2146,8 @@
       "totalRevenue": 256,
       "customerSatisfaction": 4,
       "processingTime": 854,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["diplomatic"],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
       "tags": [],
@@ -2347,9 +2182,7 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -2381,9 +2214,7 @@
       "additionalCharges": 84,
       "totalRevenue": 234,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a1",
       "tags": [],
       "followUpRequired": true,
@@ -2414,12 +2245,8 @@
       "serviceFee": 175,
       "additionalCharges": 0,
       "totalRevenue": 175,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "vip"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["vip"],
       "createdBy": "a3",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -2490,15 +2317,11 @@
       "totalRevenue": 256,
       "customerSatisfaction": 5,
       "processingTime": 1258,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE946667"
@@ -2529,14 +2352,10 @@
       "additionalCharges": 95,
       "totalRevenue": 270,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "internalNotes": "Family travel, prioritize comfort",
       "followUpRequired": true,
       "followUpDate": "2025-06-23",
@@ -2571,9 +2390,7 @@
       "totalRevenue": 261,
       "customerSatisfaction": 3,
       "processingTime": 757,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a1",
@@ -2645,15 +2462,10 @@
       "customerSatisfaction": 3,
       "processingTime": 611,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "family"
-      ],
+      "specialHandling": ["family"],
       "createdBy": "a3",
       "lastModifiedBy": "a3",
-      "tags": [
-        "family",
-        "corporate"
-      ],
+      "tags": ["family", "corporate"],
       "followUpRequired": true,
       "followUpDate": "2025-03-24"
     },
@@ -2862,9 +2674,7 @@
       "customerSatisfaction": 5,
       "processingTime": 827,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "tags": [],
       "internalNotes": "Requires special coordination",
@@ -2899,18 +2709,11 @@
       "totalRevenue": 175,
       "customerSatisfaction": 5,
       "processingTime": 2669,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["family"],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
-      "tags": [
-        "corporate",
-        "family"
-      ],
+      "tags": ["corporate", "family"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": true,
       "followUpDate": "2023-01-21"
@@ -2982,9 +2785,7 @@
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "SkyMiles",
       "frequentFlyerNumber": "SK208102"
@@ -3014,12 +2815,8 @@
       "serviceFee": 175,
       "additionalCharges": 17,
       "totalRevenue": 192,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
-      "specialHandling": [
-        "business"
-      ],
+      "equipmentNeeded": ["electric_cart"],
+      "specialHandling": ["business"],
       "createdBy": "a4",
       "tags": [],
       "internalNotes": "Family travel, prioritize comfort",
@@ -3054,14 +2851,10 @@
       "customerSatisfaction": 3,
       "processingTime": 2805,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "lastModifiedBy": "s1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
       "frequentFlyerNumber": "EX991500"
@@ -3094,17 +2887,11 @@
       "totalRevenue": 222,
       "customerSatisfaction": 5,
       "processingTime": 1476,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["medical"],
       "createdBy": "s1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "High-value client, ensure premium service",
       "followUpRequired": false
     },
@@ -3137,9 +2924,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1280,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a4",
       "lastModifiedBy": "a1",
       "tags": [],
@@ -3174,14 +2959,10 @@
       "customerSatisfaction": 3,
       "processingTime": 977,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "s1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": true,
       "followUpDate": "2025-11-14"
     },
@@ -3214,9 +2995,7 @@
       "customerSatisfaction": 3,
       "processingTime": 500,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a1",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -3283,9 +3062,7 @@
       "totalRevenue": 156,
       "customerSatisfaction": 3,
       "processingTime": 292,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
@@ -3321,15 +3098,10 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a4",
       "lastModifiedBy": "a1",
-      "tags": [
-        "vip",
-        "group"
-      ],
+      "tags": ["vip", "group"],
       "followUpRequired": true,
       "followUpDate": "2024-05-19",
       "loyaltyProgram": "Flying Blue",
@@ -3366,9 +3138,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "a1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false
     },
     {
@@ -3399,9 +3169,7 @@
       "totalRevenue": 150,
       "customerSatisfaction": 3,
       "processingTime": 2754,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "s1",
@@ -3473,13 +3241,9 @@
       "customerSatisfaction": 4,
       "processingTime": 317,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a4",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false
     },
     {
@@ -3508,9 +3272,7 @@
       "additionalCharges": 0,
       "totalRevenue": 175,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a4",
       "tags": [],
       "followUpRequired": false
@@ -3544,9 +3306,7 @@
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": true,
       "followUpDate": "2025-05-29"
     },
@@ -3645,9 +3405,7 @@
       "customerSatisfaction": 3,
       "processingTime": 322,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
       "tags": [],
@@ -3678,17 +3436,11 @@
       "serviceFee": 175,
       "additionalCharges": 43,
       "totalRevenue": 218,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["electric_cart"],
+      "specialHandling": ["group"],
       "createdBy": "a4",
       "lastModifiedBy": "s1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE919420"
@@ -3751,9 +3503,7 @@
       "serviceFee": 150,
       "additionalCharges": 0,
       "totalRevenue": 150,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "s1",
@@ -3791,9 +3541,7 @@
       "totalRevenue": 206,
       "customerSatisfaction": 5,
       "processingTime": 1040,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
@@ -3828,9 +3576,7 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "s1",
       "lastModifiedBy": "a1",
       "tags": [],
@@ -3865,9 +3611,7 @@
       "serviceFee": 150,
       "additionalCharges": 64,
       "totalRevenue": 214,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "a1",
       "lastModifiedBy": "a1",
@@ -3903,9 +3647,7 @@
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false
     },
     {
@@ -4006,17 +3748,11 @@
       "totalRevenue": 203,
       "customerSatisfaction": 5,
       "processingTime": 593,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["medical"],
       "createdBy": "a1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": false
     },
@@ -4087,9 +3823,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "a2",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "followUpRequired": false
     },
     {
@@ -4118,13 +3852,9 @@
       "additionalCharges": 97,
       "totalRevenue": 272,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "internalNotes": "New client, monitor satisfaction",
       "followUpRequired": true,
       "followUpDate": "2023-02-28"
@@ -4193,9 +3923,7 @@
       "customerSatisfaction": 4,
       "processingTime": 2442,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a3",
       "tags": [],
       "internalNotes": "Medical assistance may be needed",
@@ -4230,9 +3958,7 @@
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL143583"
@@ -4265,15 +3991,11 @@
       "totalRevenue": 248,
       "customerSatisfaction": 5,
       "processingTime": 929,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a3",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": false
     },
@@ -4344,19 +4066,11 @@
       "totalRevenue": 189,
       "customerSatisfaction": 5,
       "processingTime": 2014,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["group"],
       "createdBy": "a2",
       "lastModifiedBy": "a1",
-      "tags": [
-        "corporate",
-        "porter",
-        "group"
-      ],
+      "tags": ["corporate", "porter", "group"],
       "followUpRequired": true,
       "followUpDate": "2025-06-19",
       "loyaltyProgram": "Aer Lingus",
@@ -4390,18 +4104,10 @@
       "totalRevenue": 150,
       "customerSatisfaction": 3,
       "processingTime": 1581,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["family"],
       "createdBy": "a3",
-      "tags": [
-        "vip",
-        "porter",
-        "family"
-      ],
+      "tags": ["vip", "porter", "family"],
       "internalNotes": "High-value client, ensure premium service",
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
@@ -4435,18 +4141,11 @@
       "totalRevenue": 207,
       "customerSatisfaction": 5,
       "processingTime": 179,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["family"],
       "createdBy": "a3",
       "lastModifiedBy": "a4",
-      "tags": [
-        "porter",
-        "family"
-      ],
+      "tags": ["porter", "family"],
       "followUpRequired": false
     },
     {
@@ -4477,9 +4176,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "a2",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "internalNotes": "Family travel, prioritize comfort",
       "followUpRequired": false
     },
@@ -4577,9 +4274,7 @@
       "totalRevenue": 226,
       "customerSatisfaction": 4,
       "processingTime": 1386,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a4",
       "tags": [],
@@ -4614,14 +4309,10 @@
       "additionalCharges": 7,
       "totalRevenue": 157,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "a2",
       "lastModifiedBy": "s1",
-      "tags": [
-        "lounge"
-      ],
+      "tags": ["lounge"],
       "followUpRequired": false
     },
     {
@@ -4653,9 +4344,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1462,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -4691,9 +4380,7 @@
       "customerSatisfaction": 3,
       "processingTime": 2175,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "a2",
       "tags": [],
       "followUpRequired": false,
@@ -4728,9 +4415,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "a4",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": false
     },
@@ -4759,19 +4444,11 @@
       "serviceFee": 200,
       "additionalCharges": 84,
       "totalRevenue": 284,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["group"],
       "createdBy": "s1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "porter",
-        "group",
-        "corporate"
-      ],
+      "tags": ["porter", "group", "corporate"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": true,
       "followUpDate": "2023-12-09"
@@ -4802,14 +4479,10 @@
       "additionalCharges": 0,
       "totalRevenue": 175,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a2",
       "lastModifiedBy": "a1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": true,
       "followUpDate": "2023-08-28"
     },
@@ -4842,9 +4515,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1772,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "s1",
       "lastModifiedBy": "a1",
       "tags": [],
@@ -4885,9 +4556,7 @@
       "specialHandling": [],
       "createdBy": "a3",
       "lastModifiedBy": "a3",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false
     },
     {
@@ -4916,9 +4585,7 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "lastModifiedBy": "a1",
       "tags": [],
@@ -4987,17 +4654,11 @@
       "serviceFee": 175,
       "additionalCharges": 87,
       "totalRevenue": 262,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "vip"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["vip"],
       "createdBy": "a1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "followUpRequired": false
     },
     {
@@ -5028,9 +4689,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "s1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false,
       "loyaltyProgram": "SkyMiles",
       "frequentFlyerNumber": "SK860191"
@@ -5093,13 +4752,9 @@
       "additionalCharges": 98,
       "totalRevenue": 273,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "s1",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "internalNotes": "High-value client, ensure premium service",
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
@@ -5136,9 +4791,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "s1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "internalNotes": "Family travel, prioritize comfort",
       "followUpRequired": false
     },
@@ -5171,9 +4824,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1757,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
       "tags": [],
@@ -5210,14 +4861,10 @@
       "customerSatisfaction": 3,
       "processingTime": 1754,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a1",
       "lastModifiedBy": "s1",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false
     },
     {
@@ -5249,9 +4896,7 @@
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
-      "tags": [
-        "lounge"
-      ],
+      "tags": ["lounge"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
@@ -5286,9 +4931,7 @@
       "customerSatisfaction": 5,
       "processingTime": 1508,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "tags": [],
       "followUpRequired": false
@@ -5322,14 +4965,10 @@
       "customerSatisfaction": 4,
       "processingTime": 1512,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "family"
-      ],
+      "specialHandling": ["family"],
       "createdBy": "a3",
       "lastModifiedBy": "a3",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "followUpRequired": false
     },
     {
@@ -5395,12 +5034,8 @@
       "serviceFee": 200,
       "additionalCharges": 0,
       "totalRevenue": 200,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "business"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["business"],
       "createdBy": "a4",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -5431,15 +5066,11 @@
       "serviceFee": 175,
       "additionalCharges": 0,
       "totalRevenue": 175,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE355295"
@@ -5473,9 +5104,7 @@
       "customerSatisfaction": 5,
       "processingTime": 146,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -5510,16 +5139,10 @@
       "totalRevenue": 175,
       "customerSatisfaction": 4,
       "processingTime": 2757,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["medical"],
       "createdBy": "a1",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "followUpRequired": false
     },
     {
@@ -5548,13 +5171,9 @@
       "additionalCharges": 54,
       "totalRevenue": 229,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a1",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": true,
       "followUpDate": "2024-02-27"
     },
@@ -5655,15 +5274,11 @@
       "totalRevenue": 158,
       "customerSatisfaction": 4,
       "processingTime": 297,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a1",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "Family travel, prioritize comfort",
       "followUpRequired": false
     },
@@ -5696,9 +5311,7 @@
       "customerSatisfaction": 3,
       "processingTime": 1381,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
       "tags": [],
@@ -5733,17 +5346,11 @@
       "totalRevenue": 150,
       "customerSatisfaction": 3,
       "processingTime": 408,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "vip"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
       "lastModifiedBy": "a4",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "followUpRequired": false,
       "loyaltyProgram": "Mileage Plus",
       "frequentFlyerNumber": "MI568330"
@@ -5776,15 +5383,11 @@
       "totalRevenue": 200,
       "customerSatisfaction": 3,
       "processingTime": 649,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "s1",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "Medical assistance may be needed",
       "followUpRequired": false
     },
@@ -5855,9 +5458,7 @@
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL739914"
@@ -5890,17 +5491,11 @@
       "totalRevenue": 150,
       "customerSatisfaction": 5,
       "processingTime": 1360,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "a4",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": true,
       "followUpDate": "2025-01-19"
@@ -5933,9 +5528,7 @@
       "totalRevenue": 229,
       "customerSatisfaction": 4,
       "processingTime": 290,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "s1",
       "tags": [],
@@ -5972,15 +5565,11 @@
       "totalRevenue": 175,
       "customerSatisfaction": 3,
       "processingTime": 860,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "followUpRequired": false
     },
     {
@@ -6012,9 +5601,7 @@
       "customerSatisfaction": 4,
       "processingTime": 2075,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "tags": [],
       "followUpRequired": true,
@@ -6046,14 +5633,9 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a2",
-      "tags": [
-        "corporate",
-        "group"
-      ],
+      "tags": ["corporate", "group"],
       "followUpRequired": true,
       "followUpDate": "2025-08-15"
     },
@@ -6123,17 +5705,11 @@
       "totalRevenue": 270,
       "customerSatisfaction": 3,
       "processingTime": 1695,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["group"],
       "createdBy": "a4",
       "lastModifiedBy": "a4",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": false,
       "loyaltyProgram": "Mileage Plus",
@@ -6165,9 +5741,7 @@
       "additionalCharges": 11,
       "totalRevenue": 186,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
       "tags": [],
@@ -6235,9 +5809,7 @@
       "serviceFee": 150,
       "additionalCharges": 84,
       "totalRevenue": 234,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a3",
@@ -6273,9 +5845,7 @@
       "additionalCharges": 0,
       "totalRevenue": 150,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "s1",
       "lastModifiedBy": "a3",
       "tags": [],
@@ -6310,15 +5880,11 @@
       "totalRevenue": 200,
       "customerSatisfaction": 3,
       "processingTime": 2832,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "s1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false,
       "loyaltyProgram": "Aer Lingus",
       "frequentFlyerNumber": "AE968878"
@@ -6387,13 +5953,9 @@
       "additionalCharges": 50,
       "totalRevenue": 225,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a2",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
       "frequentFlyerNumber": "EX192089"
@@ -6423,16 +5985,10 @@
       "serviceFee": 175,
       "additionalCharges": 62,
       "totalRevenue": 237,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "medical"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["medical"],
       "createdBy": "a3",
-      "tags": [
-        "wheelchair"
-      ],
+      "tags": ["wheelchair"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": false
     },
@@ -6532,9 +6088,7 @@
       "specialHandling": [],
       "createdBy": "a3",
       "lastModifiedBy": "s1",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": true,
       "followUpDate": "2024-02-04",
       "loyaltyProgram": "Mileage Plus",
@@ -6602,15 +6156,11 @@
       "serviceFee": 150,
       "additionalCharges": 77,
       "totalRevenue": 227,
-      "equipmentNeeded": [
-        "porter"
-      ],
+      "equipmentNeeded": ["porter"],
       "specialHandling": [],
       "createdBy": "a1",
       "lastModifiedBy": "a3",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "followUpRequired": false
     },
     {
@@ -6642,14 +6192,10 @@
       "customerSatisfaction": 3,
       "processingTime": 856,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "business"
-      ],
+      "specialHandling": ["business"],
       "createdBy": "s1",
       "lastModifiedBy": "a2",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": true,
       "followUpDate": "2023-04-14",
       "loyaltyProgram": "Executive Club",
@@ -6716,19 +6262,11 @@
       "totalRevenue": 241,
       "customerSatisfaction": 4,
       "processingTime": 1624,
-      "equipmentNeeded": [
-        "wheelchair"
-      ],
-      "specialHandling": [
-        "group"
-      ],
+      "equipmentNeeded": ["wheelchair"],
+      "specialHandling": ["group"],
       "createdBy": "s1",
       "lastModifiedBy": "a1",
-      "tags": [
-        "wheelchair",
-        "group",
-        "medical"
-      ],
+      "tags": ["wheelchair", "group", "medical"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": true,
       "followUpDate": "2025-09-04",
@@ -6761,9 +6299,7 @@
       "additionalCharges": 43,
       "totalRevenue": 193,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "medical"
-      ],
+      "specialHandling": ["medical"],
       "createdBy": "a4",
       "lastModifiedBy": "s1",
       "tags": [],
@@ -6835,17 +6371,11 @@
       "totalRevenue": 181,
       "customerSatisfaction": 5,
       "processingTime": 2448,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "vip"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["vip"],
       "createdBy": "s1",
       "lastModifiedBy": "a1",
-      "tags": [
-        "porter"
-      ],
+      "tags": ["porter"],
       "followUpRequired": false
     },
     {
@@ -6879,9 +6409,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "a3",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "internalNotes": "VIP treatment requested",
       "followUpRequired": true,
       "followUpDate": "2025-08-07"
@@ -6915,9 +6443,7 @@
       "specialHandling": [],
       "createdBy": "a2",
       "lastModifiedBy": "a2",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": true,
       "followUpDate": "2024-04-20"
     },
@@ -6950,9 +6476,7 @@
       "specialHandling": [],
       "createdBy": "a3",
       "lastModifiedBy": "a2",
-      "tags": [
-        "vip"
-      ],
+      "tags": ["vip"],
       "followUpRequired": true,
       "followUpDate": "2024-02-04"
     },
@@ -6985,14 +6509,10 @@
       "customerSatisfaction": 3,
       "processingTime": 2627,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a2",
       "lastModifiedBy": "a3",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL905568"
@@ -7059,9 +6579,7 @@
       "totalRevenue": 251,
       "customerSatisfaction": 3,
       "processingTime": 1855,
-      "equipmentNeeded": [
-        "electric_cart"
-      ],
+      "equipmentNeeded": ["electric_cart"],
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
@@ -7098,17 +6616,11 @@
       "totalRevenue": 211,
       "customerSatisfaction": 4,
       "processingTime": 589,
-      "equipmentNeeded": [
-        "stroller"
-      ],
-      "specialHandling": [
-        "family"
-      ],
+      "equipmentNeeded": ["stroller"],
+      "specialHandling": ["family"],
       "createdBy": "a2",
       "lastModifiedBy": "a3",
-      "tags": [
-        "family"
-      ],
+      "tags": ["family"],
       "internalNotes": "Frequent business traveler",
       "followUpRequired": true,
       "followUpDate": "2023-03-17",
@@ -7144,9 +6656,7 @@
       "customerSatisfaction": 5,
       "processingTime": 1747,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "vip"
-      ],
+      "specialHandling": ["vip"],
       "createdBy": "a1",
       "lastModifiedBy": "a4",
       "tags": [],
@@ -7187,9 +6697,7 @@
       "equipmentNeeded": [],
       "specialHandling": [],
       "createdBy": "s1",
-      "tags": [
-        "business"
-      ],
+      "tags": ["business"],
       "internalNotes": "Requires special coordination",
       "followUpRequired": true,
       "followUpDate": "2023-02-12"
@@ -7220,9 +6728,7 @@
       "additionalCharges": 89,
       "totalRevenue": 239,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
       "lastModifiedBy": "a3",
       "tags": [],
@@ -7257,9 +6763,7 @@
       "specialHandling": [],
       "createdBy": "a4",
       "lastModifiedBy": "a2",
-      "tags": [
-        "group"
-      ],
+      "tags": ["group"],
       "followUpRequired": false,
       "loyaltyProgram": "Flying Blue",
       "frequentFlyerNumber": "FL962935"
@@ -7325,15 +6829,10 @@
       "customerSatisfaction": 5,
       "processingTime": 760,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "group"
-      ],
+      "specialHandling": ["group"],
       "createdBy": "a1",
       "lastModifiedBy": "a1",
-      "tags": [
-        "corporate",
-        "group"
-      ],
+      "tags": ["corporate", "group"],
       "followUpRequired": false,
       "loyaltyProgram": "Executive Club",
       "frequentFlyerNumber": "EX602314"
@@ -7363,17 +6862,10 @@
       "serviceFee": 175,
       "additionalCharges": 0,
       "totalRevenue": 175,
-      "equipmentNeeded": [
-        "porter"
-      ],
-      "specialHandling": [
-        "business"
-      ],
+      "equipmentNeeded": ["porter"],
+      "specialHandling": ["business"],
       "createdBy": "a1",
-      "tags": [
-        "corporate",
-        "porter"
-      ],
+      "tags": ["corporate", "porter"],
       "followUpRequired": true,
       "followUpDate": "2025-05-09"
     },
@@ -7405,9 +6897,7 @@
       "totalRevenue": 200,
       "customerSatisfaction": 3,
       "processingTime": 1002,
-      "equipmentNeeded": [
-        "stroller"
-      ],
+      "equipmentNeeded": ["stroller"],
       "specialHandling": [],
       "createdBy": "a4",
       "tags": [],
@@ -7444,9 +6934,7 @@
       "customerSatisfaction": 4,
       "processingTime": 1874,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a2",
       "lastModifiedBy": "a3",
       "tags": [],
@@ -7485,13 +6973,9 @@
       "customerSatisfaction": 5,
       "processingTime": 2126,
       "equipmentNeeded": [],
-      "specialHandling": [
-        "diplomatic"
-      ],
+      "specialHandling": ["diplomatic"],
       "createdBy": "a3",
-      "tags": [
-        "corporate"
-      ],
+      "tags": ["corporate"],
       "followUpRequired": false
     }
   ],

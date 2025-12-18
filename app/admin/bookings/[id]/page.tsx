@@ -2,18 +2,46 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import DatePicker from "@/components/ui/date-picker";
 import TimePicker from "@/components/ui/time-picker";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MockAPI, Booking, RosterShift, Agent, ActivityLog } from "@/lib/mock-api";
+import {
+  MockAPI,
+  Booking,
+  RosterShift,
+  Agent,
+  ActivityLog,
+} from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
-import { formatDateUTC, formatDateTimeUTC } from '@/lib/utils';
-import { ArrowLeft, Edit, Save, X, Trash2, UserCheck, Calendar, Activity, CheckCircle2 } from 'lucide-react';
+import { formatDateUTC, formatDateTimeUTC } from "@/lib/utils";
+import {
+  ArrowLeft,
+  Edit,
+  Save,
+  X,
+  Trash2,
+  UserCheck,
+  Calendar,
+  Activity,
+  CheckCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import { ServiceLifecycleManager } from "@/components/service-lifecycle-manager";
 
@@ -29,11 +57,30 @@ export default function BookingDetailPage() {
   const [shifts, setShifts] = useState<RosterShift[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [serviceOptions, setServiceOptions] = useState<{ id: string; name: string; description: string; icon: string; price?: number; active: boolean }[]>([]);
-  const [permissions, setPermissions] = useState<{ canCreateBooking?: boolean; canDeleteBooking?: boolean; canUpdateBooking?: boolean } | null>(null);
+  const [serviceOptions, setServiceOptions] = useState<
+    {
+      id: string;
+      name: string;
+      description: string;
+      icon: string;
+      price?: number;
+      active: boolean;
+    }[]
+  >([]);
+  const [permissions, setPermissions] = useState<{
+    canCreateBooking?: boolean;
+    canDeleteBooking?: boolean;
+    canUpdateBooking?: boolean;
+  } | null>(null);
   const [showAddActivity, setShowAddActivity] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<ActivityLog | null>(null);
-  const [activityForm, setActivityForm] = useState({ action: '', user: '', details: '' });
+  const [editingActivity, setEditingActivity] = useState<ActivityLog | null>(
+    null,
+  );
+  const [activityForm, setActivityForm] = useState({
+    action: "",
+    user: "",
+    details: "",
+  });
   const toast = useToast();
 
   useEffect(() => {
@@ -43,13 +90,22 @@ export default function BookingDetailPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [bookingData, shiftsData, agentsData, logsData, servicesData, perms] = await Promise.all([
+      const [
+        bookingData,
+        shiftsData,
+        agentsData,
+        logsData,
+        servicesData,
+        perms,
+      ] = await Promise.all([
         MockAPI.getBookingById(id),
-        MockAPI.getAvailableShiftsForDate(new Date().toISOString().split('T')[0]),
+        MockAPI.getAvailableShiftsForDate(
+          new Date().toISOString().split("T")[0],
+        ),
         MockAPI.getAgents(),
         MockAPI.getActivityLogs(100),
         MockAPI.getServiceOptions(),
-        MockAPI.getPermissions()
+        MockAPI.getPermissions(),
       ]);
 
       if (bookingData) {
@@ -58,19 +114,27 @@ export default function BookingDetailPage() {
       }
       setShifts(shiftsData);
       setAgents(agentsData);
-      setActivityLogs(logsData.filter((log: ActivityLog) => log.bookingId === id));
-      setServiceOptions(servicesData.map((o: any) => ({
-        id: o.id,
-        name: o.name,
-        description: o.description,
-        icon: o.icon,
-        price: o.price,
-        active: o.active
-      })));
+      setActivityLogs(
+        logsData.filter((log: ActivityLog) => log.bookingId === id),
+      );
+      setServiceOptions(
+        servicesData.map((o: any) => ({
+          id: o.id,
+          name: o.name,
+          description: o.description,
+          icon: o.icon,
+          price: o.price,
+          active: o.active,
+        })),
+      );
       setPermissions(perms);
     } catch (error) {
-      console.error('Error loading booking:', error);
-      toast.showToast({ title: 'Error', description: 'Failed to load booking details', type: 'error' });
+      console.error("Error loading booking:", error);
+      toast.showToast({
+        title: "Error",
+        description: "Failed to load booking details",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -81,28 +145,54 @@ export default function BookingDetailPage() {
     setSaving(true);
     try {
       await MockAPI.updateBooking(booking.id, form as Partial<Booking>);
-      await MockAPI.createActivityLog({ bookingId: booking.id, action: 'Booking Updated', user: 'Staff', details: `Booking updated` });
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: "Booking Updated",
+        user: "Staff",
+        details: `Booking updated`,
+      });
       setBooking({ ...booking, ...form });
       setEditing(false);
-      toast.showToast({ title: 'Updated', description: 'Booking updated successfully', type: 'success' });
+      toast.showToast({
+        title: "Updated",
+        description: "Booking updated successfully",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error updating booking:', error);
-      toast.showToast({ title: 'Update failed', description: String(error), type: 'error' });
+      console.error("Error updating booking:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: String(error),
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleStatusChange = async (newStatus: Booking['status']) => {
+  const handleStatusChange = async (newStatus: Booking["status"]) => {
     if (!booking) return;
     try {
       await MockAPI.updateBooking(booking.id, { status: newStatus });
-      await MockAPI.createActivityLog({ bookingId: booking.id, action: 'Status changed', user: 'Staff', details: `Status changed to ${newStatus}` });
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: "Status changed",
+        user: "Staff",
+        details: `Status changed to ${newStatus}`,
+      });
       setBooking({ ...booking, status: newStatus });
-      toast.showToast({ title: 'Status updated', description: `Status changed to ${newStatus}`, type: 'success' });
+      toast.showToast({
+        title: "Status updated",
+        description: `Status changed to ${newStatus}`,
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.showToast({ title: 'Update failed', description: String(error), type: 'error' });
+      console.error("Error updating status:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: String(error),
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -112,26 +202,53 @@ export default function BookingDetailPage() {
     if (!booking) return;
     try {
       await MockAPI.assignBookingToShift(booking.id, shiftId);
-      await MockAPI.createActivityLog({ bookingId: booking.id, action: 'Assigned to shift', user: 'Staff', details: `Assigned to shift ${shiftId}` });
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: "Assigned to shift",
+        user: "Staff",
+        details: `Assigned to shift ${shiftId}`,
+      });
       const updated = await MockAPI.getBookingById(id);
       setBooking(updated);
-      toast.showToast({ title: 'Assigned', description: 'Booking assigned to shift', type: 'success' });
+      toast.showToast({
+        title: "Assigned",
+        description: "Booking assigned to shift",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error assigning shift:', error);
-      toast.showToast({ title: 'Assignment failed', description: String(error), type: 'error' });
+      console.error("Error assigning shift:", error);
+      toast.showToast({
+        title: "Assignment failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
   const handleDelete = async () => {
-    if (!booking || !confirm('Are you sure you want to delete this booking?')) return;
+    if (!booking || !confirm("Are you sure you want to delete this booking?"))
+      return;
     try {
       await MockAPI.deleteBooking(booking.id);
-      await MockAPI.createActivityLog({ bookingId: booking.id, action: 'Booking Deleted', user: 'Staff', details: `Booking ${booking.id} deleted` });
-      toast.showToast({ title: 'Deleted', description: 'Booking deleted successfully', type: 'success' });
-      router.push('/admin/bookings');
+      await MockAPI.createActivityLog({
+        bookingId: booking.id,
+        action: "Booking Deleted",
+        user: "Staff",
+        details: `Booking ${booking.id} deleted`,
+      });
+      toast.showToast({
+        title: "Deleted",
+        description: "Booking deleted successfully",
+        type: "success",
+      });
+      router.push("/admin/bookings");
     } catch (error) {
-      console.error('Error deleting booking:', error);
-      toast.showToast({ title: 'Delete failed', description: String(error), type: 'error' });
+      console.error("Error deleting booking:", error);
+      toast.showToast({
+        title: "Delete failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
@@ -142,22 +259,34 @@ export default function BookingDetailPage() {
       await MockAPI.createActivityLog({
         bookingId: booking.id,
         action: activityForm.action,
-        user: activityForm.user || 'Staff',
-        details: activityForm.details
+        user: activityForm.user || "Staff",
+        details: activityForm.details,
       });
-      setActivityForm({ action: '', user: '', details: '' });
+      setActivityForm({ action: "", user: "", details: "" });
       setShowAddActivity(false);
       await loadData(); // Reload to get updated logs
-      toast.showToast({ title: 'Added', description: 'Activity log added successfully', type: 'success' });
+      toast.showToast({
+        title: "Added",
+        description: "Activity log added successfully",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error adding activity log:', error);
-      toast.showToast({ title: 'Add failed', description: String(error), type: 'error' });
+      console.error("Error adding activity log:", error);
+      toast.showToast({
+        title: "Add failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
   const handleEditActivity = (log: ActivityLog) => {
     setEditingActivity(log);
-    setActivityForm({ action: log.action, user: log.user, details: log.details });
+    setActivityForm({
+      action: log.action,
+      user: log.user,
+      details: log.details,
+    });
     setShowAddActivity(true);
   };
 
@@ -171,52 +300,79 @@ export default function BookingDetailPage() {
         bookingId: booking.id,
         action: activityForm.action,
         user: activityForm.user,
-        details: activityForm.details
+        details: activityForm.details,
       });
-      setActivityForm({ action: '', user: '', details: '' });
+      setActivityForm({ action: "", user: "", details: "" });
       setEditingActivity(null);
       setShowAddActivity(false);
       await loadData();
-      toast.showToast({ title: 'Updated', description: 'Activity log updated successfully', type: 'success' });
+      toast.showToast({
+        title: "Updated",
+        description: "Activity log updated successfully",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error updating activity log:', error);
-      toast.showToast({ title: 'Update failed', description: String(error), type: 'error' });
+      console.error("Error updating activity log:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
   const handleDeleteActivity = async (logId: string) => {
-    if (!confirm('Are you sure you want to delete this activity log?')) return;
+    if (!confirm("Are you sure you want to delete this activity log?")) return;
     try {
       await MockAPI.deleteActivityLog(logId);
       await loadData();
-      toast.showToast({ title: 'Deleted', description: 'Activity log deleted successfully', type: 'success' });
+      toast.showToast({
+        title: "Deleted",
+        description: "Activity log deleted successfully",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error deleting activity log:', error);
-      toast.showToast({ title: 'Delete failed', description: String(error), type: 'error' });
+      console.error("Error deleting activity log:", error);
+      toast.showToast({
+        title: "Delete failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
   const resetActivityForm = () => {
-    setActivityForm({ action: '', user: '', details: '' });
+    setActivityForm({ action: "", user: "", details: "" });
     setEditingActivity(null);
     setShowAddActivity(false);
   };
 
-  const getStatusColor = (status: Booking['status']) => {
+  const getStatusColor = (status: Booking["status"]) => {
     switch (status) {
-      case 'new': return 'default';
-      case 'contacted': return 'secondary';
-      case 'confirmed': return 'outline';
-      case 'in_progress': return 'destructive';
-      case 'completed': return 'outline';
-      case 'cancelled': return 'destructive';
-      default: return 'secondary';
+      case "new":
+        return "default";
+      case "contacted":
+        return "secondary";
+      case "confirmed":
+        return "outline";
+      case "in_progress":
+        return "destructive";
+      case "completed":
+        return "outline";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "secondary";
     }
   };
 
   // Alert for upcoming bookings
   useEffect(() => {
-    if (booking && booking.status !== 'completed' && booking.status !== 'cancelled') {
+    if (
+      booking &&
+      booking.status !== "completed" &&
+      booking.status !== "cancelled"
+    ) {
       const bookingTime = new Date(`${booking.date}T${booking.time}`);
       const now = new Date();
       const timeDiff = bookingTime.getTime() - now.getTime();
@@ -224,15 +380,15 @@ export default function BookingDetailPage() {
 
       if (daysDiff <= 1 && daysDiff > 0) {
         toast.showToast({
-          title: 'Upcoming Booking Alert',
+          title: "Upcoming Booking Alert",
           description: `Booking for ${booking.passengerName} (${booking.flightNumber}) is in ${Math.ceil(daysDiff * 24)} hours`,
-          type: 'info'
+          type: "info",
         });
-      } else if (daysDiff <= 0 && booking.status === 'new') {
+      } else if (daysDiff <= 0 && booking.status === "new") {
         toast.showToast({
-          title: 'Overdue Booking',
+          title: "Overdue Booking",
           description: `Booking for ${booking.passengerName} (${booking.flightNumber}) has passed scheduled time`,
-          type: 'error'
+          type: "error",
         });
       }
     }
@@ -244,8 +400,16 @@ export default function BookingDetailPage() {
         <div className="space-y-6">
           <div className="h-8 bg-muted rounded animate-pulse" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card><CardContent className="p-6"><div className="h-32 bg-muted rounded animate-pulse" /></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="h-32 bg-muted rounded animate-pulse" /></CardContent></Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="h-32 bg-muted rounded animate-pulse" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="h-32 bg-muted rounded animate-pulse" />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -266,8 +430,8 @@ export default function BookingDetailPage() {
     );
   }
 
-  const assignedShift = shifts.find(s => s.id === booking.shiftId);
-  const assignedAgent = agents.find(a => a.id === booking.assignedAgentId);
+  const assignedShift = shifts.find((s) => s.id === booking.shiftId);
+  const assignedAgent = agents.find((a) => a.id === booking.assignedAgentId);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -280,20 +444,29 @@ export default function BookingDetailPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Booking Details</h1>
-            <p className="text-muted-foreground">ID: {booking.id} • {booking.passengerName}</p>
+            <p className="text-muted-foreground">
+              ID: {booking.id} • {booking.passengerName}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           {permissions?.canUpdateBooking && (
-            <Button onClick={() => setEditing(!editing)} variant={editing ? "outline" : "default"}>
-              {editing ? <X className="h-4 w-4 mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
-              {editing ? 'Cancel' : 'Edit'}
+            <Button
+              onClick={() => setEditing(!editing)}
+              variant={editing ? "outline" : "default"}
+            >
+              {editing ? (
+                <X className="h-4 w-4 mr-2" />
+              ) : (
+                <Edit className="h-4 w-4 mr-2" />
+              )}
+              {editing ? "Cancel" : "Edit"}
             </Button>
           )}
           {editing && (
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? "Saving..." : "Save"}
             </Button>
           )}
           {permissions?.canDeleteBooking && (
@@ -312,25 +485,30 @@ export default function BookingDetailPage() {
             <CheckCircle2 className="h-5 w-5" />
             Booking Progress
           </CardTitle>
-          <CardDescription>Track the booking lifecycle from creation to completion</CardDescription>
+          <CardDescription>
+            Track the booking lifecycle from creation to completion
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
             <div className="flex items-center justify-between text-sm">
-              <span>Booking Date: {formatDateUTC(booking.date)} at {booking.time}</span>
-              <span className={`font-medium ${
-                new Date(`${booking.date}T${booking.time}`) > new Date()
-                  ? 'text-green-600'
-                  : booking.status === 'completed'
-                  ? 'text-blue-600'
-                  : 'text-orange-600'
-              }`}>
+              <span>
+                Booking Date: {formatDateUTC(booking.date)} at {booking.time}
+              </span>
+              <span
+                className={`font-medium ${
+                  new Date(`${booking.date}T${booking.time}`) > new Date()
+                    ? "text-green-600"
+                    : booking.status === "completed"
+                      ? "text-blue-600"
+                      : "text-orange-600"
+                }`}
+              >
                 {new Date(`${booking.date}T${booking.time}`) > new Date()
                   ? `${Math.ceil((new Date(`${booking.date}T${booking.time}`).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days until booking`
-                  : booking.status === 'completed'
-                  ? 'Service completed'
-                  : 'Booking date has passed'
-                }
+                  : booking.status === "completed"
+                    ? "Service completed"
+                    : "Booking date has passed"}
               </span>
             </div>
           </div>
@@ -340,30 +518,58 @@ export default function BookingDetailPage() {
             <div
               className="absolute top-6 left-0 h-0.5 bg-primary transition-all duration-500"
               style={{
-                width: `${Math.min(100, (['new', 'contacted', 'confirmed', 'in_progress', 'completed'].indexOf(booking.status) + 1) / 5 * 100)}%`
+                width: `${Math.min(100, ((["new", "contacted", "confirmed", "in_progress", "completed"].indexOf(booking.status) + 1) / 5) * 100)}%`,
               }}
             ></div>
 
             {/* Steps */}
             <div className="relative flex justify-between">
               {[
-                { key: 'new', label: 'New', desc: 'Booking created' },
-                { key: 'contacted', label: 'Contacted', desc: 'Passenger contacted' },
-                { key: 'confirmed', label: 'Confirmed', desc: 'Booking confirmed' },
-                { key: 'in_progress', label: 'In Progress', desc: 'Service active' },
-                { key: 'completed', label: 'Completed', desc: 'Service finished' }
+                { key: "new", label: "New", desc: "Booking created" },
+                {
+                  key: "contacted",
+                  label: "Contacted",
+                  desc: "Passenger contacted",
+                },
+                {
+                  key: "confirmed",
+                  label: "Confirmed",
+                  desc: "Booking confirmed",
+                },
+                {
+                  key: "in_progress",
+                  label: "In Progress",
+                  desc: "Service active",
+                },
+                {
+                  key: "completed",
+                  label: "Completed",
+                  desc: "Service finished",
+                },
               ].map((step, index) => {
-                const isCompleted = ['new', 'contacted', 'confirmed', 'in_progress', 'completed'].indexOf(booking.status) >= index;
+                const isCompleted =
+                  [
+                    "new",
+                    "contacted",
+                    "confirmed",
+                    "in_progress",
+                    "completed",
+                  ].indexOf(booking.status) >= index;
                 const isCurrent = booking.status === step.key;
                 return (
-                  <div key={step.key} className="flex flex-col items-center text-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                      isCompleted
-                        ? 'bg-primary border-primary text-primary-foreground'
-                        : isCurrent
-                        ? 'border-primary text-primary'
-                        : 'border-muted-foreground/30 text-muted-foreground'
-                    }`}>
+                  <div
+                    key={step.key}
+                    className="flex flex-col items-center text-center"
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                        isCompleted
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : isCurrent
+                            ? "border-primary text-primary"
+                            : "border-muted-foreground/30 text-muted-foreground"
+                      }`}
+                    >
                       {isCompleted ? (
                         <CheckCircle2 className="w-6 h-6" />
                       ) : (
@@ -371,10 +577,14 @@ export default function BookingDetailPage() {
                       )}
                     </div>
                     <div className="mt-3 max-w-20">
-                      <p className={`text-sm font-medium ${isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      <p
+                        className={`text-sm font-medium ${isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"}`}
+                      >
                         {step.label}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {step.desc}
+                      </p>
                     </div>
                   </div>
                 );
@@ -409,49 +619,93 @@ export default function BookingDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Passenger Name</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Passenger Name
+                  </label>
                   {editing ? (
-                    <Input value={form.passengerName || ''} onChange={(e) => setForm({ ...form, passengerName: e.target.value })} />
+                    <Input
+                      value={form.passengerName || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, passengerName: e.target.value })
+                      }
+                    />
                   ) : (
-                    <p className="text-lg font-medium">{booking.passengerName}</p>
+                    <p className="text-lg font-medium">
+                      {booking.passengerName}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Company</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Company
+                  </label>
                   {editing ? (
-                    <Input value={form.company || ''} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                    <Input
+                      value={form.company || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, company: e.target.value })
+                      }
+                    />
                   ) : (
                     <p>{booking.company}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Phone
+                  </label>
                   {editing ? (
-                    <Input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                    <Input
+                      value={form.phone || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, phone: e.target.value })
+                      }
+                    />
                   ) : (
                     <p>{booking.phone}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Email
+                  </label>
                   {editing ? (
-                    <Input value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    <Input
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
+                    />
                   ) : (
                     <p>{booking.email}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Flight Number</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Flight Number
+                  </label>
                   {editing ? (
-                    <Input value={form.flightNumber || ''} onChange={(e) => setForm({ ...form, flightNumber: e.target.value })} />
+                    <Input
+                      value={form.flightNumber || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, flightNumber: e.target.value })
+                      }
+                    />
                   ) : (
                     <p className="font-medium">{booking.flightNumber}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Airline</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Airline
+                  </label>
                   {editing ? (
-                    <Input value={form.airline || ''} onChange={(e) => setForm({ ...form, airline: e.target.value })} />
+                    <Input
+                      value={form.airline || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, airline: e.target.value })
+                      }
+                    />
                   ) : (
                     <p>{booking.airline}</p>
                   )}
@@ -459,7 +713,10 @@ export default function BookingDetailPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Date</label>
                   {editing ? (
-                    <DatePicker value={form.date || null} onChange={(d) => setForm({ ...form, date: d || '' })} />
+                    <DatePicker
+                      value={form.date || null}
+                      onChange={(d) => setForm({ ...form, date: d || "" })}
+                    />
                   ) : (
                     <p>{formatDateUTC(booking.date)}</p>
                   )}
@@ -467,48 +724,91 @@ export default function BookingDetailPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Time</label>
                   {editing ? (
-                    <TimePicker value={form.time || null} onChange={(t) => setForm({ ...form, time: t || '' })} />
+                    <TimePicker
+                      value={form.time || null}
+                      onChange={(t) => setForm({ ...form, time: t || "" })}
+                    />
                   ) : (
                     <p>{booking.time}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Terminal</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Terminal
+                  </label>
                   {editing ? (
-                    <Input value={form.terminal || ''} onChange={(e) => setForm({ ...form, terminal: e.target.value })} />
+                    <Input
+                      value={form.terminal || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, terminal: e.target.value })
+                      }
+                    />
                   ) : (
                     <p>{booking.terminal}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Passengers</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Passengers
+                  </label>
                   {editing ? (
-                    <Input type="number" min={1} value={form.passengerCount?.toString() || '1'} onChange={(e) => setForm({ ...form, passengerCount: Number(e.target.value) })} />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.passengerCount?.toString() || "1"}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          passengerCount: Number(e.target.value),
+                        })
+                      }
+                    />
                   ) : (
                     <p>{booking.passengerCount}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Service</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Service
+                  </label>
                   {editing ? (
-                    <Select value={form.serviceId || ''} onValueChange={(val) => setForm({ ...form, serviceId: val })}>
+                    <Select
+                      value={form.serviceId || ""}
+                      onValueChange={(val) =>
+                        setForm({ ...form, serviceId: val })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {serviceOptions.filter(opt => opt.active).map(opt => (
-                          <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                        ))}
+                        {serviceOptions
+                          .filter((opt) => opt.active)
+                          .map((opt) => (
+                            <SelectItem key={opt.id} value={opt.id}>
+                              {opt.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="outline">{serviceOptions.find(s => s.id === booking.serviceId)?.name || booking.serviceId}</Badge>
+                    <Badge variant="outline">
+                      {serviceOptions.find((s) => s.id === booking.serviceId)
+                        ?.name || booking.serviceId}
+                    </Badge>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Status</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Status
+                  </label>
                   {editing ? (
-                    <Select value={form.status || booking.status} onValueChange={(val) => setForm({ ...form, status: val as Booking['status'] })}>
+                    <Select
+                      value={form.status || booking.status}
+                      onValueChange={(val) =>
+                        setForm({ ...form, status: val as Booking["status"] })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -522,16 +822,25 @@ export default function BookingDetailPage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant={getStatusColor(booking.status)}>{booking.status.replace('_', ' ')}</Badge>
+                    <Badge variant={getStatusColor(booking.status)}>
+                      {booking.status.replace("_", " ")}
+                    </Badge>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Special Requests</label>
+                <label className="block text-sm font-medium mb-1">
+                  Special Requests
+                </label>
                 {editing ? (
-                  <Textarea value={form.specialRequests || ''} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} />
+                  <Textarea
+                    value={form.specialRequests || ""}
+                    onChange={(e) =>
+                      setForm({ ...form, specialRequests: e.target.value })
+                    }
+                  />
                 ) : (
-                  <p className="text-sm">{booking.specialRequests || 'None'}</p>
+                  <p className="text-sm">{booking.specialRequests || "None"}</p>
                 )}
               </div>
             </CardContent>
@@ -560,29 +869,51 @@ export default function BookingDetailPage() {
               {(showAddActivity || editingActivity) && (
                 <Card className="mb-4">
                   <CardContent className="pt-4">
-                    <form onSubmit={editingActivity ? handleUpdateActivity : handleAddActivity} className="space-y-4">
+                    <form
+                      onSubmit={
+                        editingActivity
+                          ? handleUpdateActivity
+                          : handleAddActivity
+                      }
+                      className="space-y-4"
+                    >
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
                           placeholder="Action (e.g., 'Passenger Met', 'Status Updated')"
                           value={activityForm.action}
-                          onChange={(e) => setActivityForm({ ...activityForm, action: e.target.value })}
+                          onChange={(e) =>
+                            setActivityForm({
+                              ...activityForm,
+                              action: e.target.value,
+                            })
+                          }
                           required
                         />
                         <Input
                           placeholder="User (e.g., 'Staff Member A')"
                           value={activityForm.user}
-                          onChange={(e) => setActivityForm({ ...activityForm, user: e.target.value })}
+                          onChange={(e) =>
+                            setActivityForm({
+                              ...activityForm,
+                              user: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <Textarea
                         placeholder="Details"
                         value={activityForm.details}
-                        onChange={(e) => setActivityForm({ ...activityForm, details: e.target.value })}
+                        onChange={(e) =>
+                          setActivityForm({
+                            ...activityForm,
+                            details: e.target.value,
+                          })
+                        }
                         required
                       />
                       <div className="flex gap-2">
                         <Button type="submit" size="sm">
-                          {editingActivity ? 'Update Activity' : 'Add Activity'}
+                          {editingActivity ? "Update Activity" : "Add Activity"}
                         </Button>
                         <Button
                           type="button"
@@ -600,16 +931,27 @@ export default function BookingDetailPage() {
 
               <div className="space-y-3">
                 {activityLogs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg group hover:bg-muted/50">
+                  <div
+                    key={log.id}
+                    className="flex items-start gap-3 p-3 border rounded-lg group hover:bg-muted/50"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">{log.action}</span>
-                        <Badge variant="outline" className="text-xs">{log.user}</Badge>
+                        <span className="font-medium text-sm">
+                          {log.action}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {log.user}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{log.details}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {log.details}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{formatDateTimeUTC(log.timestamp)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTimeUTC(log.timestamp)}
+                      </span>
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                         <Button
                           variant="ghost"
@@ -632,7 +974,9 @@ export default function BookingDetailPage() {
                   </div>
                 ))}
                 {activityLogs.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No activity logs for this booking</p>
+                  <p className="text-center text-muted-foreground py-4">
+                    No activity logs for this booking
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -653,12 +997,19 @@ export default function BookingDetailPage() {
               {assignedShift ? (
                 <div>
                   <p className="text-sm font-medium">Assigned Shift</p>
-                  <p className="text-sm">{assignedShift.shift} - {agents.find(a => a.id === assignedShift.agentId)?.name}</p>
-                  <p className="text-xs text-muted-foreground">{assignedShift.date}</p>
+                  <p className="text-sm">
+                    {assignedShift.shift} -{" "}
+                    {agents.find((a) => a.id === assignedShift.agentId)?.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {assignedShift.date}
+                  </p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Not assigned to a shift</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Not assigned to a shift
+                  </p>
                   <Select onValueChange={handleAssignShift}>
                     <SelectTrigger>
                       <SelectValue placeholder="Assign to shift" />
@@ -666,7 +1017,8 @@ export default function BookingDetailPage() {
                     <SelectContent>
                       {shifts.map((shift) => (
                         <SelectItem key={shift.id} value={shift.id}>
-                          {shift.shift} - {agents.find(a => a.id === shift.agentId)?.name}
+                          {shift.shift} -{" "}
+                          {agents.find((a) => a.id === shift.agentId)?.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -693,8 +1045,8 @@ export default function BookingDetailPage() {
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => handleStatusChange('contacted')}
-                disabled={booking.status === 'contacted'}
+                onClick={() => handleStatusChange("contacted")}
+                disabled={booking.status === "contacted"}
               >
                 Mark as Contacted
               </Button>
@@ -702,8 +1054,8 @@ export default function BookingDetailPage() {
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => handleStatusChange('confirmed')}
-                disabled={booking.status === 'confirmed'}
+                onClick={() => handleStatusChange("confirmed")}
+                disabled={booking.status === "confirmed"}
               >
                 Mark as Confirmed
               </Button>
@@ -711,8 +1063,8 @@ export default function BookingDetailPage() {
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => handleStatusChange('in_progress')}
-                disabled={booking.status === 'in_progress'}
+                onClick={() => handleStatusChange("in_progress")}
+                disabled={booking.status === "in_progress"}
               >
                 Mark as In Progress
               </Button>
@@ -720,8 +1072,8 @@ export default function BookingDetailPage() {
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => handleStatusChange('completed')}
-                disabled={booking.status === 'completed'}
+                onClick={() => handleStatusChange("completed")}
+                disabled={booking.status === "completed"}
               >
                 Mark as Completed
               </Button>

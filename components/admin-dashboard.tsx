@@ -1,17 +1,33 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
 import { SupervisorReviewPanel } from "@/components/supervisor-review-panel";
 
-export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
+export function AdminDashboard({
+  onNavigate,
+}: {
+  onNavigate?: (page: string) => void;
+}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<Booking[]>([]);
@@ -23,15 +39,15 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
       try {
         const [dashboardStats, bookings, schedule] = await Promise.all([
           MockAPI.getDashboardStats(),
-          MockAPI.getBookings('all', 5),
-          MockAPI.getTodaySchedule()
+          MockAPI.getBookings("all", 5),
+          MockAPI.getTodaySchedule(),
         ]);
 
         setStats(dashboardStats);
         setRecentBookings(bookings);
         setTodaySchedule(schedule);
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        console.error("Error loading dashboard data:", error);
       } finally {
         setLoading(false);
       }
@@ -45,15 +61,19 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
     try {
       const [dashboardStats, bookings, schedule] = await Promise.all([
         MockAPI.getDashboardStats(),
-        MockAPI.getBookings('all', 5),
-        MockAPI.getTodaySchedule()
+        MockAPI.getBookings("all", 5),
+        MockAPI.getTodaySchedule(),
       ]);
       setStats(dashboardStats);
       setRecentBookings(bookings);
       setTodaySchedule(schedule);
     } catch (error) {
-      console.error('Error refreshing dashboard data:', error);
-      toast.showToast({ title: 'Refresh failed', description: String(error), type: 'error' });
+      console.error("Error refreshing dashboard data:", error);
+      toast.showToast({
+        title: "Refresh failed",
+        description: String(error),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -61,13 +81,25 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
 
   const handleSync = async () => {
     try {
-      toast.showToast({ title: 'Sync started', description: 'Syncing data, this may take a moment', type: 'info' });
+      toast.showToast({
+        title: "Sync started",
+        description: "Syncing data, this may take a moment",
+        type: "info",
+      });
       await MockAPI.syncData();
       await refresh();
-      toast.showToast({ title: 'Sync complete', description: 'Data synced successfully', type: 'success' });
+      toast.showToast({
+        title: "Sync complete",
+        description: "Data synced successfully",
+        type: "success",
+      });
     } catch (error) {
-      console.error('Error syncing data:', error);
-      toast.showToast({ title: 'Sync failed', description: String(error), type: 'error' });
+      console.error("Error syncing data:", error);
+      toast.showToast({
+        title: "Sync failed",
+        description: String(error),
+        type: "error",
+      });
     }
   };
 
@@ -95,20 +127,29 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
     <div className="space-y-6">
       {/* Main Content Grid */}
       <div className="flex justify-end">
-        <Button variant="outline" onClick={refresh}>Refresh</Button>
-        <Button className="ml-2" onClick={handleSync}>Sync Data</Button>
+        <Button variant="outline" onClick={refresh}>
+          Refresh
+        </Button>
+        <Button className="ml-2" onClick={handleSync}>
+          Sync Data
+        </Button>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Bookings */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Bookings</CardTitle>
-            <CardDescription>Latest booking requests and updates</CardDescription>
+            <CardDescription>
+              Latest booking requests and updates
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentBookings.slice(0, 4).map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between space-x-4">
+                <div
+                  key={booking.id}
+                  className="flex items-center justify-between space-x-4"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {booking.passengerName}
@@ -117,18 +158,28 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
                       {booking.flightNumber} • 1 service
                     </p>
                   </div>
-                  <Badge variant={
-                    booking.status === 'new' ? 'default' :
-                    booking.status === 'confirmed' ? 'secondary' :
-                    booking.status === 'completed' ? 'outline' : 'destructive'
-                  }>
+                  <Badge
+                    variant={
+                      booking.status === "new"
+                        ? "default"
+                        : booking.status === "confirmed"
+                          ? "secondary"
+                          : booking.status === "completed"
+                            ? "outline"
+                            : "destructive"
+                    }
+                  >
                     {booking.status}
                   </Badge>
                 </div>
               ))}
             </div>
             <Separator className="my-4" />
-            <Button variant="outline" className="w-full" onClick={() => onNavigate?.('bookings')}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => onNavigate?.("bookings")}
+            >
               View All Bookings
             </Button>
           </CardContent>
@@ -145,7 +196,9 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
               {todaySchedule.slice(0, 4).map((booking) => (
                 <div key={booking.id} className="flex items-center space-x-4">
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{booking.passengerName}</p>
+                    <p className="text-sm font-medium">
+                      {booking.passengerName}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {booking.flightNumber} at {booking.time}
                     </p>
@@ -174,19 +227,31 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
-            <Button className="h-16 sm:h-20 flex-col touch-manipulation" onClick={() => onNavigate?.('bookings')}>
+            <Button
+              className="h-16 sm:h-20 flex-col touch-manipulation"
+              onClick={() => onNavigate?.("bookings")}
+            >
               <span className="text-xl sm:text-2xl mb-1 sm:mb-2">✈️</span>
               <span className="text-xs sm:text-sm">New Booking</span>
             </Button>
-            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+            <Button
+              variant="outline"
+              className="h-16 sm:h-20 flex-col touch-manipulation"
+            >
               <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🔍</span>
               <span className="text-xs sm:text-sm">Search Flights</span>
             </Button>
-            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+            <Button
+              variant="outline"
+              className="h-16 sm:h-20 flex-col touch-manipulation"
+            >
               <span className="text-xl sm:text-2xl mb-1 sm:mb-2">📋</span>
               <span className="text-xs sm:text-sm">View Reports</span>
             </Button>
-            <Button variant="outline" className="h-16 sm:h-20 flex-col touch-manipulation">
+            <Button
+              variant="outline"
+              className="h-16 sm:h-20 flex-col touch-manipulation"
+            >
               <span className="text-xl sm:text-2xl mb-1 sm:mb-2">⚙️</span>
               <span className="text-xs sm:text-sm">Settings</span>
             </Button>
@@ -198,7 +263,9 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
       <Card>
         <CardHeader>
           <CardTitle>System Status</CardTitle>
-          <CardDescription>Current system health and sync status</CardDescription>
+          <CardDescription>
+            Current system health and sync status
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -207,9 +274,14 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
               <span className="text-sm">Online - All systems operational</span>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium">{stats?.pendingSync || 0} items pending sync</p>
+              <p className="text-sm font-medium">
+                {stats?.pendingSync || 0} items pending sync
+              </p>
               <p className="text-xs text-muted-foreground">
-                Last synced: {stats ? new Date(stats.lastSyncTime).toLocaleTimeString() : 'Never'}
+                Last synced:{" "}
+                {stats
+                  ? new Date(stats.lastSyncTime).toLocaleTimeString()
+                  : "Never"}
               </p>
             </div>
           </div>
