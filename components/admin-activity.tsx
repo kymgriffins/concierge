@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MockAPI, ActivityLog } from "@/lib/mock-api";
+import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import { formatDateTimeUTC } from '@/lib/utils';
 
 export function AdminActivity() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -59,23 +61,13 @@ export function AdminActivity() {
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        {logs.map(log => (
-          <Card key={log.id}>
-            <CardContent>
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">{log.action}</div>
-                  <div className="text-sm text-muted-foreground">{log.details}</div>
-                </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  <div>{new Date(log.timestamp).toLocaleString()}</div>
-                  <div>{log.user}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        <DataTable columns={[
+          { key: 'action', header: 'Action', accessor: (l) => l.action, cell: (l) => (<div className="font-medium">{l.action}</div>), sortable: true },
+          { key: 'details', header: 'Details', accessor: (l) => l.details, cell: (l) => <div className="text-sm">{l.details}</div> },
+          { key: 'user', header: 'User', accessor: (l) => l.user },
+          { key: 'time', header: 'Timestamp', accessor: (l) => l.timestamp, cell: (l) => formatDateTimeUTC(l.timestamp), sortable: true }
+        ] as Column<ActivityLog>[]} data={logs} defaultPageSize={10} pageSizeOptions={[10,25,50]} />
       </div>
     </div>
   );

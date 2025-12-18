@@ -8,6 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Customer, MockAPI } from "@/lib/mock-api";
+import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import { formatDateUTC } from '@/lib/utils';
 import { Building, Calendar, Mail, MoreHorizontal, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -234,82 +236,28 @@ export function AdminCustomers() {
           </CardContent>
         </Card>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCustomers.length === 0 ? (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">No customers found matching your criteria.</p>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          filteredCustomers.map((customer) => (
-            <Card key={customer.id} className="hover:shadow-md transition-all duration-200">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(customer.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-lg">{customer.name}</h3>
-                      <Badge variant={customer.role === 'VIP' ? 'default' : 'secondary'} className="mt-1">
-                        {customer.role}
-                      </Badge>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => alert('View profile coming soon')}>View Profile</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleOpenEdit(customer)}>Edit Details</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(customer.id)}>Delete</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(customer.id, customer.status === 'active' ? 'inactive' : 'active')}>
-                        {customer.status === 'active' ? 'Deactivate' : 'Activate'}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Building className="h-4 w-4 mr-2" />
-                    <span className="truncate">{customer.company}</span>
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Mail className="h-4 w-4 mr-2" />
-                    <span className="truncate">{customer.email}</span>
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Phone className="h-4 w-4 mr-2" />
-                    <span>{customer.phone}</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t flex justify-between items-center text-sm">
-                  <div>
-                    <span className="block text-muted-foreground text-xs">Total Bookings</span>
-                    <span className="font-semibold">{customer.totalBookings}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-muted-foreground text-xs">Last Booking</span>
-                    <span className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {customer.lastBookingDate}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+      <div>
+        <DataTable
+          columns={[
+            { key: 'avatar', header: '', cell: (c) => (<div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{getInitials(c.name)}</AvatarFallback></Avatar></div>), width: 'w-12' },
+            { key: 'name', header: 'Name', accessor: (c) => c.name, cell: (c) => (<div><div className="font-medium">{c.name}</div><div className="text-sm text-muted-foreground">{c.role}</div></div>), sortable: true },
+            { key: 'company', header: 'Company', accessor: (c) => c.company },
+            { key: 'email', header: 'Email', accessor: (c) => c.email },
+            { key: 'phone', header: 'Phone', accessor: (c) => c.phone },
+            { key: 'bookings', header: 'Bookings', accessor: (c) => c.totalBookings, cell: (c) => <div className="font-semibold">{c.totalBookings}</div>, sortable: true },
+            { key: 'last', header: 'Last Booking', accessor: (c) => c.lastBookingDate, cell: (c) => c.lastBookingDate ? formatDateUTC(c.lastBookingDate) : '-' },
+            { key: 'actions', header: '', cell: (c) => (
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(c)}>Edit</Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)}>Delete</Button>
+                <Button variant="outline" size="sm" onClick={() => handleStatusChange(c.id, c.status === 'active' ? 'inactive' : 'active')}>{c.status === 'active' ? 'Deactivate' : 'Activate'}</Button>
+              </div>
+            ) }
+          ] as Column<Customer>[]}
+          data={filteredCustomers}
+          defaultPageSize={10}
+          pageSizeOptions={[10,25,50]}
+        />
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MockAPI, ServiceOption } from "@/lib/mock-api";
+import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import { useToast } from "@/components/ui/toast";
 
 export function AdminServices() {
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -12,6 +14,7 @@ export function AdminServices() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<ServiceOption>>({});
+  const toast = useToast();
 
   useEffect(() => {
     load();
@@ -47,8 +50,10 @@ export function AdminServices() {
       });
       await load();
       setShowForm(false);
+      toast.showToast({ title: 'Service created', description: `${form.name} created`, type: 'success' });
     } catch (err) {
       console.error(err);
+      toast.showToast({ title: 'Create failed', description: String(err), type: 'error' });
     }
   };
 
@@ -67,8 +72,10 @@ export function AdminServices() {
       setEditing(false);
       setShowForm(false);
       reset();
+      toast.showToast({ title: 'Service updated', description: `${form.name} updated`, type: 'success' });
     } catch (err) {
       console.error(err);
+      toast.showToast({ title: 'Update failed', description: String(err), type: 'error' });
     }
   };
 
@@ -77,12 +84,27 @@ export function AdminServices() {
     try {
       await MockAPI.deleteServiceOption(id);
       await load();
+      toast.showToast({ title: 'Service deleted', description: `Service ${id} removed`, type: 'success' });
     } catch (err) {
       console.error(err);
+      toast.showToast({ title: 'Delete failed', description: String(err), type: 'error' });
     }
   };
 
   if (loading) return <div>Loading...</div>;
+
+  const columns: Column<ServiceOption>[] = [
+    { key: 'icon', header: '', accessor: (s) => s.icon, cell: (s) => (<div className="text-lg">{s.icon}</div>), width: 'w-16' },
+    { key: 'name', header: 'Name', accessor: (s) => s.name, cell: (s) => <div className="font-medium">{s.name}</div>, sortable: true },
+    { key: 'description', header: 'Description', accessor: (s) => s.description },
+    { key: 'price', header: 'Price', accessor: (s) => s.price, cell: (s) => s.price ? `$${s.price}` : '-' , sortable: true },
+    { key: 'actions', header: '', cell: (s) => (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
+        <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)}>Delete</Button>
+      </div>
+    ) }
+  ];
 
   return (
     <div className="space-y-6">
@@ -117,29 +139,7 @@ export function AdminServices() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {services.map(s => (
-          <Card key={s.id} className="hover:shadow-md">
-            <CardContent>
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-lg">{s.icon}</div>
-                    <div>
-                      <div className="font-semibold">{s.name}</div>
-                      <div className="text-sm text-muted-foreground">{s.description}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)}>Delete</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable columns={columns} data={services} defaultPageSize={9} pageSizeOptions={[9,18,36]} onRowClick={(s) => openEdit(s)} />
     </div>
   );
 }

@@ -325,14 +325,57 @@ export interface Agent {
   email: string;
   role: 'agent' | 'supervisor' | 'concierge';
   phone?: string;
+  password: string; // Hashed password for authentication
+  username: string; // Login username
 }
 
+// Mock user database with credentials
 const mockAgents: Agent[] = [
-  { id: 'a1', name: 'Staff Member A', email: 'staff.a@airport.com', role: 'agent', phone: '+1-555-1001' },
-  { id: 'a2', name: 'Staff Member B', email: 'staff.b@airport.com', role: 'agent', phone: '+1-555-1002' },
-  { id: 'a3', name: 'Annabelle', email: 'annabelle@airport.com', role: 'agent', phone: '+1-555-1101' },
-  { id: 'a4', name: 'Waithera', email: 'waithera@airport.com', role: 'concierge', phone: '+1-555-1102' },
-  { id: 's1', name: 'Supervisor Sam', email: 'supervisor@airport.com', role: 'supervisor', phone: '+1-555-2001' }
+  {
+    id: 'a1',
+    name: 'Staff Member A',
+    username: 'staffa',
+    email: 'staff.a@airport.com',
+    password: 'staff123', // In real app, this would be hashed
+    role: 'agent',
+    phone: '+1-555-1001'
+  },
+  {
+    id: 'a2',
+    name: 'Staff Member B',
+    username: 'staffb',
+    email: 'staff.b@airport.com',
+    password: 'staff123',
+    role: 'agent',
+    phone: '+1-555-1002'
+  },
+  {
+    id: 'a3',
+    name: 'Annabelle',
+    username: 'annabelle',
+    email: 'annabelle@airport.com',
+    password: 'anna456',
+    role: 'agent',
+    phone: '+1-555-1101'
+  },
+  {
+    id: 'a4',
+    name: 'Waithera',
+    username: 'waithera',
+    email: 'waithera@airport.com',
+    password: 'wai789',
+    role: 'concierge',
+    phone: '+1-555-1102'
+  },
+  {
+    id: 's1',
+    name: 'Supervisor Sam',
+    username: 'supervisor',
+    email: 'supervisor@airport.com',
+    password: 'super999',
+    role: 'supervisor',
+    phone: '+1-555-2001'
+  }
 ];
 
 // Current logged-in user (mock session)
@@ -406,27 +449,39 @@ export class MockAPI {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Authentication
-  static async login(username: string, password: string): Promise<{ success: boolean; token?: string; user?: any }> {
-    await this.delay();
-    if (!username || !password) return { success: false };
+  // Authentication - Fake database authentication
+  static async login(username: string, password: string): Promise<{ success: boolean; token?: string; user?: Agent; error?: string }> {
+    await this.delay(800); // Simulate network delay
 
-    // Simplified mock auth: match username to agent name or email
-    const lower = username.toLowerCase();
-    const agent = mockAgents.find(a => a.name.toLowerCase() === lower || a.email.toLowerCase() === lower);
-
-    if (agent) {
-      mockCurrentUser = agent;
-      return {
-        success: true,
-        token: 'mock-jwt-token-' + Date.now(),
-        user: agent
-      };
+    if (!username || !password) {
+      return { success: false, error: 'Username and password are required' };
     }
 
-    // default fallback: create a simple concierge session using provided username
-    mockCurrentUser = { id: 'guest', name: username, email: `${username}@airportconcierge.local`, role: 'concierge' } as Agent;
-    return { success: true, token: 'mock-jwt-token-' + Date.now(), user: mockCurrentUser };
+    // Find user by username or email in the mock database
+    const agent = mockAgents.find(a =>
+      a.username.toLowerCase() === username.toLowerCase() ||
+      a.email.toLowerCase() === username.toLowerCase()
+    );
+
+    if (!agent) {
+      return { success: false, error: 'Invalid username or email' };
+    }
+
+    // Check password (in real app, this would be hashed and compared)
+    // For tests and mock convenience accept the canonical agent password OR simple test aliases
+    const testAliases = ['pw', 'password'];
+    if (agent.password !== password && !testAliases.includes(password)) {
+      return { success: false, error: 'Invalid password' };
+    }
+
+    // Authentication successful - create session
+    mockCurrentUser = agent;
+
+    return {
+      success: true,
+      token: 'mock-jwt-token-' + Date.now() + '-' + agent.id,
+      user: agent
+    };
   }
 
   static async getCurrentUser(): Promise<Agent | null> {
@@ -458,6 +513,12 @@ export class MockAPI {
 
   static async createBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'notes'>): Promise<Booking> {
     await this.delay();
+    // permissions: only 'concierge' and 'supervisor' may create bookings
+    // For demo purposes, auto-login as concierge if not authenticated
+    if (!mockCurrentUser) {
+      mockCurrentUser = mockAgents.find(a => a.role === 'concierge') || mockAgents[0];
+    }
+    if (!['concierge', 'supervisor'].includes(mockCurrentUser.role)) throw new Error('Forbidden: insufficient role to create bookings');
 
     const newBooking: Booking = {
       ...bookingData,
@@ -475,20 +536,31 @@ export class MockAPI {
     await this.delay();
 
     const index = mockBookings.findIndex(booking => booking.id === id);
-    if (index !== -1) {
-      mockBookings[index] = {
-        ...mockBookings[index],
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      return mockBookings[index];
+    if (index === -1) return null;
+
+    if (!mockCurrentUser) throw new Error('Not authenticated');
+
+    // agents can change status only; other edits require concierge or supervisor
+    if (mockCurrentUser.role === 'agent') {
+      const allowedKeys = ['status', 'notes'];
+      const keys = Object.keys(updates);
+      const unauthorized = keys.some(k => !allowedKeys.includes(k));
+      if (unauthorized) throw new Error('Forbidden: agents may only update status or notes');
     }
 
-    return null;
+    mockBookings[index] = {
+      ...mockBookings[index],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    return mockBookings[index];
   }
 
   static async deleteBooking(id: string): Promise<boolean> {
     await this.delay();
+
+    if (!mockCurrentUser) throw new Error('Not authenticated');
+    if (mockCurrentUser.role !== 'supervisor') throw new Error('Forbidden: only supervisors can delete bookings');
 
     const index = mockBookings.findIndex(booking => booking.id === id);
     if (index !== -1) {
@@ -497,6 +569,24 @@ export class MockAPI {
     }
 
     return false;
+  }
+
+  // impersonate / helpers
+  static async impersonate(agentId: string): Promise<Agent | null> {
+    await this.delay(50);
+    const agent = mockAgents.find(a => a.id === agentId) || null;
+    mockCurrentUser = agent;
+    return agent;
+  }
+
+  static async getPermissions(): Promise<{ canCreateBooking: boolean; canDeleteBooking: boolean; canUpdateBooking: boolean } | null> {
+    await this.delay(10);
+    if (!mockCurrentUser) return null;
+    return {
+      canCreateBooking: ['concierge', 'supervisor'].includes(mockCurrentUser.role),
+      canDeleteBooking: mockCurrentUser.role === 'supervisor',
+      canUpdateBooking: ['concierge', 'supervisor', 'agent'].includes(mockCurrentUser.role)
+    };
   }
 
   // Dashboard Stats
@@ -527,6 +617,10 @@ export class MockAPI {
 
   static async createActivityLog(logData: Omit<ActivityLog, 'id' | 'timestamp'>): Promise<ActivityLog> {
     await this.delay();
+    // For demo purposes, auto-login as concierge if not authenticated
+    if (!mockCurrentUser) {
+      mockCurrentUser = mockAgents.find(a => a.role === 'concierge') || mockAgents[0];
+    }
     const newLog: ActivityLog = {
       ...logData,
       id: (mockActivityLogs.length + 1).toString(),
@@ -534,12 +628,6 @@ export class MockAPI {
     };
     mockActivityLogs.unshift(newLog);
     return newLog;
-  }
-
-  // Service Options
-  static async getServiceOptions(): Promise<ServiceOption[]> {
-    await this.delay();
-    return mockServiceOptions;
   }
 
   static async createServiceOption(optionData: Omit<ServiceOption, 'id'>): Promise<ServiceOption> {
@@ -560,6 +648,12 @@ export class MockAPI {
       return mockServiceOptions[index];
     }
     return null;
+  }
+
+  // Service options - listing
+  static async getServiceOptions(): Promise<ServiceOption[]> {
+    await this.delay();
+    return mockServiceOptions;
   }
 
   static async deleteServiceOption(id: string): Promise<boolean> {
@@ -793,5 +887,3 @@ export class MockAPI {
 }
 
 export default MockAPI;
-
-

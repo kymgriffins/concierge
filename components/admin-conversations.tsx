@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, IncomingMessage, Booking } from "@/lib/mock-api";
+import { formatDateTimeUTC } from '@/lib/utils';
+import DataTable, { Column } from '@/components/ui/data-table/data-table';
+import { useToast } from "@/components/ui/toast";
 import DateTimePicker from "@/components/ui/date-time-picker";
 
 export function AdminConversations() {
@@ -16,6 +19,7 @@ export function AdminConversations() {
   const [selected, setSelected] = useState<IncomingMessage | null>(null);
   const [creating, setCreating] = useState(false);
   const [parsed, setParsed] = useState<Partial<Booking>>({});
+  const toast = useToast();
 
   useEffect(() => { load(); }, []);
 
@@ -33,6 +37,21 @@ export function AdminConversations() {
   const filtered = messages.filter(m => (filterSource === 'all' || m.source === filterSource) && (
     !search || m.message.toLowerCase().includes(search.toLowerCase()) || (m.senderName || '').toLowerCase().includes(search.toLowerCase())
   ));
+
+  const columns: Column<IncomingMessage>[] = [
+    { key: 'sender', header: 'Sender', accessor: (m) => m.senderName || m.senderContact, cell: (m) => (<div><div className="font-medium">{m.senderName || m.senderContact}</div><div className="text-sm text-muted-foreground">{m.senderContact}</div></div>), sortable: true },
+    { key: 'message', header: 'Message', accessor: (m) => m.message, cell: (m) => <div className="text-sm">{m.message}</div> },
+    { key: 'source', header: 'Source', accessor: (m) => m.source, sortable: true },
+    { key: 'receivedAt', header: 'Received', accessor: (m) => m.receivedAt, cell: (m) => formatDateTimeUTC(m.receivedAt), sortable: true },
+    { key: 'processed', header: 'Processed', accessor: (m) => m.processed, cell: (m) => m.processed ? 'Yes' : 'No' },
+    { key: 'actions', header: '', cell: (m) => (
+      <div className="flex gap-2">
+        <Button onClick={() => parseMessageToBooking(m)}>Parse & Book</Button>
+        <Button variant="outline" onClick={async () => { await MockAPI.markMessageProcessed(m.id, !m.processed); await load(); }}>{m.processed ? 'Unmark' : 'Mark'}</Button>
+        <Button variant="ghost" onClick={() => { setSelected(m); setParsed({}); }}>View</Button>
+      </div>
+    ) }
+  ];
 
   const parseMessageToBooking = (msg: IncomingMessage) => {
     // Simple heuristics for mock parsing: extract date YYYY-MM-DD and time HH:MM and flight code
@@ -88,8 +107,10 @@ export function AdminConversations() {
       await load();
       setSelected(null);
       setParsed({});
+      toast.showToast({ title: 'Booking created', description: `Created ${booking.passengerName}`, type: 'success' });
     } catch (err) {
       console.error(err);
+      toast.showToast({ title: 'Create failed', description: String(err), type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -121,26 +142,7 @@ export function AdminConversations() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map(m => (
-          <Card key={m.id} className={`p-4 ${m.processed ? 'opacity-70' : ''}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{m.senderName || m.senderContact}</span>
-                <span className="text-sm text-muted-foreground">{m.source} • {new Date(m.receivedAt).toLocaleString()}</span>
-              </CardTitle>
-              <CardDescription className="text-sm mt-2">{m.message}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button onClick={() => parseMessageToBooking(m)}>Parse & Book</Button>
-                <Button variant="outline" onClick={async () => { await MockAPI.markMessageProcessed(m.id, !m.processed); await load(); }}>{m.processed ? 'Unmark' : 'Mark processed'}</Button>
-                <Button variant="ghost" onClick={() => { setSelected(m); setParsed({}); }}>View</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable columns={columns} data={filtered} defaultPageSize={10} pageSizeOptions={[5,10,20]} onRowClick={(r) => setSelected(r)} />
 
       {selected && (
         <Card>

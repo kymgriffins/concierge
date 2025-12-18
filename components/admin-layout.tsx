@@ -19,10 +19,11 @@ import {
   Users,
   X
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MockAPI } from "@/lib/mock-api";
+import { MockAPI, Agent, Booking, Customer } from "@/lib/mock-api";
+import { useToast } from "@/components/ui/toast";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -48,7 +49,10 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ bookings: any[]; customers: any[] }>({ bookings: [], customers: [] });
+  const [results, setResults] = useState<{ bookings: Booking[]; customers: Customer[] }>({ bookings: [], customers: [] });
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [currentUser, setCurrentUser] = useState<Agent | null>(null);
+  const toast = useToast();
 
   const doSearch = async () => {
     try {
@@ -59,6 +63,33 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
       setResults({ bookings, customers });
     } catch (err) {
       console.error('Search error', err);
+      toast.showToast({ title: 'Search failed', description: String(err), type: 'error' } as any);
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      const a = await MockAPI.getAgents();
+      setAgents(a);
+      const u = await MockAPI.getCurrentUser();
+      setCurrentUser(u);
+    };
+    init();
+  }, []);
+
+  const impersonate = async (agentId: string) => {
+    try {
+      const agent = (await MockAPI.getAgents()).find((x: Agent) => x.id === agentId);
+      if (agent) {
+        // login by email to reuse existing login flow
+        await MockAPI.login(agent.email, 'pw');
+        const u = await MockAPI.getCurrentUser();
+        setCurrentUser(u);
+        toast.showToast({ title: 'Switched user', description: `Now impersonating ${agent.name}`, type: 'info' } as any);
+      }
+    } catch (err) {
+      console.error('Impersonation failed', err);
+      toast.showToast({ title: 'Impersonate failed', description: String(err), type: 'error' } as any);
     }
   };
 
@@ -211,11 +242,27 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback>SM</AvatarFallback>
+                      <AvatarFallback>{currentUser?.name ? currentUser.name.split(' ').map((n: string) => n[0]).slice(0,2).join('') : 'SM'}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <div className="p-3">
+                    <div className="text-sm font-medium">{currentUser?.name || 'Not signed in'}</div>
+                    <div className="text-xs text-muted-foreground">Role: {currentUser?.role || 'n/a'}</div>
+                  </div>
+                  <Separator />
+                  <div className="p-2">
+                    <div className="text-xs text-muted-foreground mb-2">Impersonate:</div>
+                    <div className="max-h-40 overflow-auto">
+                      {agents.map(a => (
+                        <div key={a.id} className="py-1">
+                          <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => impersonate(a.id)}>{a.name} <span className="ml-2 text-xs text-muted-foreground">{a.role}</span></Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Separator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <Separator />

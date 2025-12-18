@@ -9,6 +9,9 @@ import DateTimePicker from "@/components/ui/date-time-picker";
 import DatePicker from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking } from "@/lib/mock-api";
+import { useToast } from "@/components/ui/toast";
+import { formatDateUTC } from '@/lib/utils';
+import DataTable, { Column } from '@/components/ui/data-table/data-table';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -35,10 +38,13 @@ export function AdminBookings() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Booking>>({});
+  const toast = useToast();
+  const [permissions, setPermissions] = useState<{ canCreateBooking?: boolean; canDeleteBooking?: boolean; canUpdateBooking?: boolean } | null>(null);
 
   useEffect(() => {
     loadBookings();
     loadServiceOptions();
+    (async () => setPermissions(await MockAPI.getPermissions()))();
   }, []);
 
   const loadServiceOptions = async () => {
@@ -139,6 +145,11 @@ export function AdminBookings() {
   const resetForm = () => setForm({});
 
   const handleOpenCreate = () => {
+    if (permissions && !permissions.canCreateBooking) {
+      toast.showToast({ title: 'Permission denied', description: 'You are not allowed to create bookings', type: 'error' });
+      return;
+    }
+
     resetForm();
     setShowCreate(true);
     setEditing(false);
@@ -171,8 +182,10 @@ export function AdminBookings() {
       await loadBookings();
       setShowCreate(false);
       resetForm();
+      toast.showToast({ title: 'Booking created', description: `${payload.passengerName} created`, type: 'success' });
     } catch (error) {
       console.error('Error creating booking:', error);
+      toast.showToast({ title: 'Create failed', description: String(error), type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -197,8 +210,10 @@ export function AdminBookings() {
       setEditing(false);
       setSelectedBooking(null);
       resetForm();
+      toast.showToast({ title: 'Booking updated', description: `${form.passengerName || selectedBooking.passengerName} updated`, type: 'success' });
     } catch (error) {
       console.error('Error updating booking:', error);
+      toast.showToast({ title: 'Update failed', description: String(error), type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -210,17 +225,48 @@ export function AdminBookings() {
       await MockAPI.deleteBooking(id);
       await MockAPI.createActivityLog({ bookingId: id, action: 'Booking Deleted', user: 'Staff', details: `Booking ${id} deleted` });
       await loadBookings();
+      toast.showToast({ title: 'Booking deleted', description: `Booking ${id} removed`, type: 'success' });
     } catch (error) {
       console.error('Error deleting booking:', error);
+      toast.showToast({ title: 'Delete failed', description: String(error), type: 'error' });
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return formatDateUTC(dateString);
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / perPage));
   const paginated = filteredBookings.slice((page - 1) * perPage, page * perPage);
+
+  // DataTable columns
+  const columns: Column<Booking>[] = [
+    {
+      key: 'passenger',
+      header: 'Passenger',
+      accessor: (r) => r.passengerName,
+      cell: (r) => (
+        <div>
+          <div className="font-medium">{r.passengerName}</div>
+          <div className="text-sm text-muted-foreground">{r.phone} • {r.email}</div>
+        </div>
+      ),
+      sortable: true
+    },
+    { key: 'flight', header: 'Flight', accessor: (r) => r.flightNumber, cell: (r) => (<div>{r.flightNumber}<div className="text-sm text-muted-foreground">{r.airline} • {r.time}</div></div>), sortable: true },
+    { key: 'date', header: 'Date', accessor: (r) => r.date, cell: (r) => formatDateUTC(r.date), sortable: true },
+    { key: 'company', header: 'Company', accessor: (r) => r.company },
+    { key: 'services', header: 'Services', cell: (r) => (<div className="flex flex-wrap gap-1">{r.services.map(s => <Badge key={s} variant="outline" className="text-xs">{s.replace('_', ' ')}</Badge>)}</div>) },
+    { key: 'status', header: 'Status', cell: (r) => (<Badge variant={getStatusColor(r.status)}>{r.status.replace('_', ' ')}</Badge>), sortable: true },
+    { key: 'source', header: 'Source', accessor: (r) => r.source },
+    { key: 'actions', header: '', cell: (r) => (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(r)}>Edit</Button>
+        <Button variant="outline" size="sm" onClick={() => setSelectedBooking(r)}>View</Button>
+        <Button variant="destructive" size="sm" onClick={() => handleDelete(r.id)}>Delete</Button>
+      </div>
+    ) }
+  ];
 
   if (loading) {
     return (
@@ -360,8 +406,8 @@ export function AdminBookings() {
         </AlertDialogContent>
       </AlertDialog>
       <Card>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <label className="text-sm">Per page:</label>
               <Select value={perPage.toString()} onValueChange={(v) => setPerPage(Number(v))}>
@@ -394,50 +440,8 @@ export function AdminBookings() {
             </div>
           </div>
 
-          <div className="overflow-auto">
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="p-4">Passenger</th>
-                      <th className="p-4">Flight</th>
-                      <th className="p-4">Date</th>
-                      <th className="p-4">Company</th>
-                      <th className="p-4">Services</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Source</th>
-                      <th className="p-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No bookings found.</td></tr>
-                ) : paginated.map(booking => (
-                  <tr key={booking.id} className="border-b hover:bg-muted">
-                    <td className="p-4 align-top">
-                      <div className="font-medium">{booking.passengerName}</div>
-                      <div className="text-sm text-muted-foreground">{booking.phone} • {booking.email}</div>
-                    </td>
-                    <td className="p-4 align-top">{booking.flightNumber} <div className="text-sm text-muted-foreground">{booking.airline} • {booking.time}</div></td>
-                    <td className="p-4 align-top">{formatDate(booking.date)}</td>
-                    <td className="p-4 align-top">{booking.company}</td>
-                    <td className="p-4 align-top">
-                      <div className="flex flex-wrap gap-1">
-                        {booking.services.map(s => <Badge key={s} variant="outline" className="text-xs">{s.replace('_', ' ')}</Badge>)}
-                      </div>
-                    </td>
-                    <td className="p-4 align-top"><Badge variant={getStatusColor(booking.status)}>{booking.status.replace('_', ' ')}</Badge></td>
-                    <td className="p-4 align-top text-sm text-muted-foreground">{booking.source}</td>
-                    <td className="p-4 align-top">
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(booking)}>Edit</Button>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedBooking(booking)}>View</Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(booking.id)}>Delete</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <DataTable columns={columns} data={filteredBookings} defaultPageSize={perPage} pageSizeOptions={[10,25,50,100]} onRowClick={(r) => setSelectedBooking(r)} />
           </div>
         </CardContent>
       </Card>

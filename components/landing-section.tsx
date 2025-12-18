@@ -7,17 +7,33 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { MockAPI } from "@/lib/mock-api";
 
 export function LandingSection() {
   const [currentView, setCurrentView] = useState<"landing" | "login" | "dashboard">("landing");
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("password123");
+  const [username, setUsername] = useState("waithera");
+  const [password, setPassword] = useState("wai789");
+  const [loginError, setLoginError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in real app, integrate with auth provider
-    if (username && password) {
-      setCurrentView("dashboard");
+    setLoginError("");
+    setIsLoading(true);
+
+    try {
+      const result = await MockAPI.login(username, password);
+
+      if (result.success && result.user) {
+        setCurrentView("dashboard");
+      } else {
+        setLoginError(result.error || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setLoginError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -205,7 +221,9 @@ export function LandingSection() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
+                <p className="text-xs text-muted-foreground">Try: waithera, staffa, supervisor, annabelle</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -215,10 +233,17 @@ export function LandingSection() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
+                <p className="text-xs text-muted-foreground">Corresponding passwords: wai789, staff123, super999, anna456</p>
               </div>
-              <Button type="submit" className="w-full">
-                Login
+              {loginError && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                  {loginError}
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </CardContent>

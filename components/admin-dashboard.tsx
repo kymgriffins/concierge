@@ -8,12 +8,14 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
+import { useToast } from "@/components/ui/toast";
 
 export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -50,6 +52,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
       setTodaySchedule(schedule);
     } catch (error) {
       console.error('Error refreshing dashboard data:', error);
+      toast.showToast({ title: 'Refresh failed', description: String(error), type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -57,10 +60,13 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
 
   const handleSync = async () => {
     try {
+      toast.showToast({ title: 'Sync started', description: 'Syncing data, this may take a moment', type: 'info' });
       await MockAPI.syncData();
       await refresh();
+      toast.showToast({ title: 'Sync complete', description: 'Data synced successfully', type: 'success' });
     } catch (error) {
       console.error('Error syncing data:', error);
+      toast.showToast({ title: 'Sync failed', description: String(error), type: 'error' });
     }
   };
 
