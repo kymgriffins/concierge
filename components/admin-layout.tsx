@@ -17,13 +17,15 @@ import {
   Search,
   Settings,
   Users,
-  X
+  X,
+  Zap
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MockAPI, Agent, Booking, Customer } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
+import { AutoBookingSidebar } from "@/components/auto-booking-sidebar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -47,6 +49,7 @@ const navigation = [
 
 export function AdminLayout({ children, currentPage, onPageChange }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [autoBookingSidebarOpen, setAutoBookingSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ bookings: Booking[]; customers: Customer[] }>({ bookings: [], customers: [] });
@@ -177,6 +180,16 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Auto-Booking Sidebar Toggle */}
+              <Button
+                variant={autoBookingSidebarOpen ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setAutoBookingSidebarOpen(!autoBookingSidebarOpen)}
+                title="Toggle Auto-Booking"
+              >
+                <Zap className="h-4 w-4" />
+              </Button>
+
               {/* Search */}
               <div>
                 <Button variant="ghost" size="sm" className="hidden sm:flex" onClick={() => setSearchOpen(true)}>
@@ -277,9 +290,18 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
         </header>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6">
-          {children}
-        </main>
+        <div className="flex">
+          <main className={`flex-1 p-4 sm:p-6 ${autoBookingSidebarOpen ? 'lg:mr-96' : ''}`}>
+            {children}
+          </main>
+
+          {/* Auto-Booking Sidebar */}
+          {autoBookingSidebarOpen && (
+            <div className="fixed right-0 top-16 bottom-0 z-40">
+              <AutoBookingSidebar />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

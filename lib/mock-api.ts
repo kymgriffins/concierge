@@ -48,6 +48,7 @@ export interface ServiceOption {
   price?: number;
   availableDate?: string; // ISO date string (YYYY-MM-DD)
   availableTime?: string; // HH:MM format
+  active: boolean; // Whether the service is active/available
 }
 
 // Mock Data
@@ -203,42 +204,48 @@ const mockServiceOptions: ServiceOption[] = [
     name: 'Meet & Greet',
     description: 'Personalized airport assistance',
     icon: '✈️',
-    price: 150
+    price: 150,
+    active: true
   },
   {
     id: 'fast_track',
     name: 'Fast Track',
     description: 'Priority security and boarding',
     icon: '⚡',
-    price: 75
+    price: 75,
+    active: true
   },
   {
     id: 'lounge',
     name: 'Lounge Access',
     description: 'VIP lounge with amenities',
     icon: '🍸',
-    price: 120
+    price: 120,
+    active: true
   },
   {
     id: 'porter',
     name: 'Porter Service',
     description: 'Professional baggage handling',
     icon: '🛎️',
-    price: 50
+    price: 50,
+    active: true
   },
   {
     id: 'chauffeur',
     name: 'Chauffeur',
     description: 'Luxury ground transportation',
     icon: '🚗',
-    price: 200
+    price: 200,
+    active: false
   },
   {
     id: 'vip_package',
     name: 'VIP Package',
     description: 'Complete premium experience',
     icon: '👑',
-    price: 500
+    price: 500,
+    active: true
   }
 ];
 
@@ -412,6 +419,42 @@ const mockIncomingMessages: IncomingMessage[] = [
     message: 'Please arrange a porter and lounge access for DL 892 on 2025-01-15',
     receivedAt: '2025-01-12T07:10:00Z',
     processed: true
+  },
+  {
+    id: 'm3',
+    source: 'whatsapp',
+    senderName: 'Mike Wilson',
+    senderContact: '+1-555-0789',
+    message: 'Need meet and greet service tomorrow at 2pm for flight AA 234. Also need fast track.',
+    receivedAt: new Date().toISOString(),
+    processed: false
+  },
+  {
+    id: 'm4',
+    source: 'email',
+    senderName: 'Lisa Chen',
+    senderContact: 'lisa.chen@techcorp.com',
+    message: 'Hello, I would like to book lounge access and porter service for United Airlines flight UA 789 on January 16th at 12:10 PM. Please confirm.',
+    receivedAt: new Date().toISOString(),
+    processed: false
+  },
+  {
+    id: 'm5',
+    source: 'whatsapp',
+    senderName: 'David Brown',
+    senderContact: '+1-555-0321',
+    message: 'Hi there! Flying out next Monday on Southwest SW 567. Need fast track security. Thanks!',
+    receivedAt: new Date().toISOString(),
+    processed: false
+  },
+  {
+    id: 'm6',
+    source: 'email',
+    senderName: 'Emma Davis',
+    senderContact: 'emma.davis@startup.com',
+    message: 'Could you please arrange VIP package for my flight tomorrow morning at 9:20 AM? Flight number is SW 123.',
+    receivedAt: new Date().toISOString(),
+    processed: false
   }
 ];
 

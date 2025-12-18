@@ -50,7 +50,8 @@ export function AdminServices() {
         icon: form.icon || '',
         price: form.price,
         availableDate: form.availableDate,
-        availableTime: form.availableTime
+        availableTime: form.availableTime,
+        active: form.active ?? true
       });
       await load();
       setShowForm(false);
@@ -95,6 +96,21 @@ export function AdminServices() {
     }
   };
 
+  const toggleServiceStatus = async (service: ServiceOption) => {
+    try {
+      await MockAPI.updateServiceOption(service.id, { active: !service.active });
+      await load();
+      toast.showToast({
+        title: 'Service updated',
+        description: `${service.name} is now ${!service.active ? 'active' : 'inactive'}`,
+        type: 'success'
+      });
+    } catch (err) {
+      console.error(err);
+      toast.showToast({ title: 'Update failed', description: String(err), type: 'error' });
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   const columns: Column<ServiceOption>[] = [
@@ -102,10 +118,24 @@ export function AdminServices() {
     { key: 'name', header: 'Name', accessor: (s) => s.name, cell: (s) => <div className="font-medium">{s.name}</div>, sortable: true },
     { key: 'description', header: 'Description', accessor: (s) => s.description },
     { key: 'price', header: 'Price', accessor: (s) => s.price, cell: (s) => s.price ? `$${s.price}` : '-' , sortable: true },
+    { key: 'status', header: 'Status', accessor: (s) => s.active, cell: (s) => (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+        s.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+      }`}>
+        {s.active ? 'Active' : 'Inactive'}
+      </span>
+    ) },
     { key: 'availableDate', header: 'Available Date', accessor: (s) => s.availableDate, cell: (s) => s.availableDate || '-' },
     { key: 'availableTime', header: 'Available Time', accessor: (s) => s.availableTime, cell: (s) => s.availableTime || '-' },
     { key: 'actions', header: '', cell: (s) => (
       <div className="flex gap-2">
+        <Button
+          variant={s.active ? "secondary" : "default"}
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); toggleServiceStatus(s); }}
+        >
+          {s.active ? 'Deactivate' : 'Activate'}
+        </Button>
         <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
         <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)}>Delete</Button>
       </div>
