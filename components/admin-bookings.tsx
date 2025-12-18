@@ -245,6 +245,7 @@ export function AdminBookings() {
   // Custom DataTable with filters
   const BookingsDataTable = () => {
     const [tableFilters, setTableFilters] = useState<{ [key: string]: string }>({});
+    const [showDateFilters, setShowDateFilters] = useState(false);
 
     const columns: Column<Booking>[] = [
       {
@@ -277,25 +278,16 @@ export function AdminBookings() {
 
     return (
       <div className="space-y-4">
-        {/* Custom toolbar with date filters */}
-        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Date Range:</label>
-            <DatePicker
-              value={startDate}
-              onChange={setStartDate}
-              placeholder="From"
-              className="w-32"
-            />
-            <span className="text-muted-foreground">-</span>
-            <DatePicker
-              value={endDate}
-              onChange={setEndDate}
-              placeholder="To"
-              className="w-32"
-            />
-          </div>
-          {(startDate || endDate) && (
+        {/* Toggle button for date filters */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDateFilters(!showDateFilters)}
+          >
+            {showDateFilters ? 'Hide Date Filters' : 'Filter by Date'}
+          </Button>
+          {(startDate || endDate) && showDateFilters && (
             <Button
               variant="ghost"
               size="sm"
@@ -305,6 +297,28 @@ export function AdminBookings() {
             </Button>
           )}
         </div>
+
+        {/* Date range filters (shown when toggle is active) */}
+        {showDateFilters && (
+          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Date Range:</label>
+              <DatePicker
+                value={startDate}
+                onChange={setStartDate}
+                placeholder="From"
+                className="w-32"
+              />
+              <span className="text-muted-foreground">-</span>
+              <DatePicker
+                value={endDate}
+                onChange={setEndDate}
+                placeholder="To"
+                className="w-32"
+              />
+            </div>
+          </div>
+        )}
 
         <DataTable
           columns={columns}
