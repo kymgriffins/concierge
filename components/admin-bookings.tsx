@@ -8,7 +8,29 @@ import { Input } from "@/components/ui/input";
 import DatePicker from "@/components/ui/date-picker";
 import TimePicker from "@/components/ui/time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MockAPI, Booking } from "@/lib/mock-api";
+// Mock data removed - using empty implementations
+// Define interfaces locally since MockAPI is removed
+interface Booking {
+  id: string;
+  passengerName: string;
+  company: string;
+  phone: string;
+  email: string;
+  flightNumber: string;
+  airline: string;
+  date: string;
+  time: string;
+  terminal?: string;
+  passengerCount: number;
+  services: string[];
+  specialRequests: string;
+  status: 'new' | 'contacted' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  source: 'manual' | 'whatsapp' | 'email';
+  createdAt: string;
+  updatedAt: string;
+  notes: string[];
+}
+
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from '@/lib/utils';
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
@@ -45,16 +67,13 @@ export function AdminBookings() {
   useEffect(() => {
     loadBookings();
     loadServiceOptions();
-    (async () => setPermissions(await MockAPI.getPermissions()))();
+    // Mock data removed - set empty permissions
+    setPermissions({ canCreateBooking: false, canDeleteBooking: false, canUpdateBooking: false });
   }, []);
 
   const loadServiceOptions = async () => {
-    try {
-      const opts = await MockAPI.getServiceOptions();
-      setServiceOptions(opts.map(o => ({ id: o.id, name: o.name })));
-    } catch (error) {
-      console.error('Error loading service options:', error);
-    }
+    // Mock data removed - set empty service options
+    setServiceOptions([]);
   };
 
   useEffect(() => {
@@ -75,8 +94,8 @@ export function AdminBookings() {
 
   const loadBookings = async () => {
     try {
-      const data = await MockAPI.getBookings('all', 50);
-      setBookings(data);
+      // Mock data removed - set empty bookings
+      setBookings([]);
     } catch (error) {
       console.error('Error loading bookings:', error);
     } finally {
@@ -123,8 +142,8 @@ export function AdminBookings() {
 
   const handleStatusChange = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      await MockAPI.updateBooking(bookingId, { status: newStatus });
-      await MockAPI.createActivityLog({ bookingId, action: 'Status changed', user: 'Staff', details: `Status changed to ${newStatus}` });
+      await // MockAPI call removed: updateBooking(bookingId, { status: newStatus });
+      await // MockAPI call removed: createActivityLog({ bookingId, action: 'Status changed', user: 'Staff', details: `Status changed to ${newStatus}` });
       await loadBookings(); // Reload to get updated data
     } catch (error) {
       console.error('Error updating booking status:', error);
@@ -178,8 +197,8 @@ export function AdminBookings() {
         source: (form.source as Booking['source']) || 'manual'
       };
 
-      await MockAPI.createBooking(payload);
-      await MockAPI.createActivityLog({ bookingId: (bookings.length + 1).toString(), action: 'Booking Created', user: 'Staff', details: `Booking created for ${payload.passengerName}` });
+      await // MockAPI call removed: createBooking(payload);
+      await // MockAPI call removed: createActivityLog({ bookingId: (bookings.length + 1).toString(), action: 'Booking Created', user: 'Staff', details: `Booking created for ${payload.passengerName}` });
       await loadBookings();
       setShowCreate(false);
       resetForm();
@@ -204,8 +223,8 @@ export function AdminBookings() {
     if (!selectedBooking) return;
     setCreating(true);
     try {
-      await MockAPI.updateBooking(selectedBooking.id, form as Partial<Booking>);
-      await MockAPI.createActivityLog({ bookingId: selectedBooking.id, action: 'Booking Updated', user: 'Staff', details: `Booking updated for ${form.passengerName || selectedBooking.passengerName}` });
+      await // MockAPI call removed: updateBooking(selectedBooking.id, form as Partial<Booking>);
+      await // MockAPI call removed: createActivityLog({ bookingId: selectedBooking.id, action: 'Booking Updated', user: 'Staff', details: `Booking updated for ${form.passengerName || selectedBooking.passengerName}` });
       await loadBookings();
       setShowCreate(false);
       setEditing(false);
@@ -223,8 +242,8 @@ export function AdminBookings() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this booking?')) return;
     try {
-      await MockAPI.deleteBooking(id);
-      await MockAPI.createActivityLog({ bookingId: id, action: 'Booking Deleted', user: 'Staff', details: `Booking ${id} deleted` });
+      await // MockAPI call removed: deleteBooking(id);
+      await // MockAPI call removed: createActivityLog({ bookingId: id, action: 'Booking Deleted', user: 'Staff', details: `Booking ${id} deleted` });
       await loadBookings();
       toast.showToast({ title: 'Booking deleted', description: `Booking ${id} removed`, type: 'success' });
     } catch (error) {

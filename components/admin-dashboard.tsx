@@ -7,7 +7,37 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
+// Mock data removed - using empty implementations
+// Define interfaces locally since MockAPI is removed
+interface Booking {
+  id: string;
+  passengerName: string;
+  company: string;
+  phone: string;
+  email: string;
+  flightNumber: string;
+  airline: string;
+  date: string;
+  time: string;
+  terminal?: string;
+  passengerCount: number;
+  services: string[];
+  specialRequests: string;
+  status: 'new' | 'contacted' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  source: 'manual' | 'whatsapp' | 'email';
+  createdAt: string;
+  updatedAt: string;
+  notes: string[];
+}
+
+interface DashboardStats {
+  totalBookings: number;
+  completedBookings: number;
+  satisfactionRate: number;
+  todayBookings: number;
+  pendingSync: number;
+  lastSyncTime: string;
+}
 import { useToast } from "@/components/ui/toast";
 
 export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
@@ -18,56 +48,28 @@ export function AdminDashboard({ onNavigate }: { onNavigate?: (page: string) => 
   const toast = useToast();
 
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const [dashboardStats, bookings, schedule] = await Promise.all([
-          MockAPI.getDashboardStats(),
-          MockAPI.getBookings('all', 5),
-          MockAPI.getTodaySchedule()
-        ]);
-
-        setStats(dashboardStats);
-        setRecentBookings(bookings);
-        setTodaySchedule(schedule);
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboardData();
+    // Mock data removed - set empty state
+    setStats({
+      totalBookings: 0,
+      completedBookings: 0,
+      satisfactionRate: 0,
+      todayBookings: 0,
+      pendingSync: 0,
+      lastSyncTime: new Date().toISOString()
+    });
+    setRecentBookings([]);
+    setTodaySchedule([]);
+    setLoading(false);
   }, []);
 
   const refresh = async () => {
-    setLoading(true);
-    try {
-      const [dashboardStats, bookings, schedule] = await Promise.all([
-        MockAPI.getDashboardStats(),
-        MockAPI.getBookings('all', 5),
-        MockAPI.getTodaySchedule()
-      ]);
-      setStats(dashboardStats);
-      setRecentBookings(bookings);
-      setTodaySchedule(schedule);
-    } catch (error) {
-      console.error('Error refreshing dashboard data:', error);
-      toast.showToast({ title: 'Refresh failed', description: String(error), type: 'error' });
-    } finally {
-      setLoading(false);
-    }
+    // Mock data removed - functionality disabled
+    toast.showToast({ title: 'Refresh disabled', description: 'Mock data removed', type: 'info' });
   };
 
   const handleSync = async () => {
-    try {
-      toast.showToast({ title: 'Sync started', description: 'Syncing data, this may take a moment', type: 'info' });
-      await MockAPI.syncData();
-      await refresh();
-      toast.showToast({ title: 'Sync complete', description: 'Data synced successfully', type: 'success' });
-    } catch (error) {
-      console.error('Error syncing data:', error);
-      toast.showToast({ title: 'Sync failed', description: String(error), type: 'error' });
-    }
+    // Mock data removed - functionality disabled
+    toast.showToast({ title: 'Sync disabled', description: 'Mock data removed', type: 'info' });
   };
 
   if (loading) {

@@ -6,7 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
-import { MockAPI, ServiceOption } from "@/lib/mock-api";
+// Mock data removed - using empty implementations
+// Define interfaces locally since MockAPI is removed
+interface ServiceOption {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  price?: number;
+  availableDate?: string;
+  availableTime?: string;
+  active: boolean;
+}
+
 import DataTable, { Column } from '@/components/ui/data-table/data-table';
 import { useToast } from "@/components/ui/toast";
 
@@ -24,8 +36,8 @@ export function AdminServices() {
 
   const load = async () => {
     try {
-      const data = await MockAPI.getServiceOptions();
-      setServices(data);
+      // Mock data removed - set empty services
+      setServices([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -44,18 +56,10 @@ export function AdminServices() {
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await MockAPI.createServiceOption({
-        name: form.name || '',
-        description: form.description || '',
-        icon: form.icon || '',
-        price: form.price,
-        availableDate: form.availableDate,
-        availableTime: form.availableTime,
-        active: form.active ?? true
-      });
+      // Mock data removed - functionality disabled
       await load();
       setShowForm(false);
-      toast.showToast({ title: 'Service created', description: `${form.name} created`, type: 'success' });
+      toast.showToast({ title: 'Service creation disabled', description: 'Mock data removed', type: 'info' });
     } catch (err) {
       console.error(err);
       toast.showToast({ title: 'Create failed', description: String(err), type: 'error' });
@@ -72,7 +76,7 @@ export function AdminServices() {
     e.preventDefault();
     if (!form.id) return;
     try {
-      await MockAPI.updateServiceOption(form.id, form as Partial<ServiceOption>);
+      await // MockAPI call removed: updateServiceOption(form.id, form as Partial<ServiceOption>);
       await load();
       setEditing(false);
       setShowForm(false);
@@ -87,7 +91,7 @@ export function AdminServices() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete service option?')) return;
     try {
-      await MockAPI.deleteServiceOption(id);
+      await // MockAPI call removed: deleteServiceOption(id);
       await load();
       toast.showToast({ title: 'Service deleted', description: `Service ${id} removed`, type: 'success' });
     } catch (err) {
@@ -98,7 +102,7 @@ export function AdminServices() {
 
   const toggleServiceStatus = async (service: ServiceOption) => {
     try {
-      await MockAPI.updateServiceOption(service.id, { active: !service.active });
+      await // MockAPI call removed: updateServiceOption(service.id, { active: !service.active });
       await load();
       toast.showToast({
         title: 'Service updated',

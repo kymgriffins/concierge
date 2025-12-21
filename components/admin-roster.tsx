@@ -5,7 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MockAPI, RosterShift, Agent } from "@/lib/mock-api";
+// Mock data removed - using empty implementations
+// Define interfaces locally since MockAPI is removed
+interface RosterShift {
+  id: string;
+  date: string;
+  shift: 'morning' | 'afternoon' | 'night';
+  agentId: string;
+  notes?: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  role: 'agent' | 'supervisor' | 'concierge';
+  phone?: string;
+  password: string;
+  username: string;
+}
 
 export function AdminRoster() {
   const [roster, setRoster] = useState<RosterShift[]>([]);
@@ -19,8 +37,8 @@ export function AdminRoster() {
 
   const load = async () => {
     try {
-      const data = await MockAPI.getRoster();
-      setRoster(data);
+      // Mock data removed - set empty roster
+      setRoster([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -29,21 +47,21 @@ export function AdminRoster() {
   };
 
   const loadAgents = async () => {
-    try { const a = await MockAPI.getAgents(); setAgents(a); } catch (err) { console.error(err); }
+    try {
+      // Mock data removed - set empty agents
+      setAgents([]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editingId) {
-        await MockAPI.updateRosterShift(editingId, form as Partial<RosterShift>);
-      } else {
-        await MockAPI.createRosterShift(form as Omit<RosterShift, 'id'>);
-      }
+      // Mock data removed - functionality disabled
       setFormOpen(false);
       setEditingId(null);
       setForm({ date: new Date().toISOString().split('T')[0], shift: 'morning' });
-      await load();
     } catch (err) { console.error(err); }
   };
 
@@ -51,7 +69,7 @@ export function AdminRoster() {
 
   const remove = async (id: string) => {
     if (!confirm('Delete shift?')) return;
-    await MockAPI.deleteRosterShift(id);
+    // Mock data removed - functionality disabled
     await load();
   };
 
