@@ -10,6 +10,7 @@ import {
   X
 } from "lucide-react";
 import React, { useState } from "react";
+import Link from "next/link";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -95,6 +96,14 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
               <div className="hidden sm:block">
                 <h1 className="text-lg font-semibold capitalize">{currentPage}</h1>
               </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Link href="/">
+                <Button variant="outline" size="sm">
+                  ← Back to Home
+                </Button>
+              </Link>
             </div>
           </div>
         </header>

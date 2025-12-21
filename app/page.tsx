@@ -1,5 +1,10 @@
-import { AdminPanel } from "@/components/admin-panel";
+'use client';
+
+import { useLenis } from "@/lib/use-lenis";
+import { LandingPage } from "@/components/landing-page";
 
 export default function Page() {
-  return <AdminPanel />;
+  useLenis();
+
+  return <LandingPage />;
 }

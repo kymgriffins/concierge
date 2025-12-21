@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
+import { ResponsiveNavbar } from "@/components/responsive-navbar";
 
 const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
 
@@ -28,8 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={roboto.variable}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ResponsiveNavbar />
         <ToastProvider>
-          <main className="mx-auto max-w-7xl px-4 py-8">
+          <main className="pt-16 mx-auto max-w-7xl px-4 py-8">
             {children}
           </main>
         </ToastProvider>

@@ -5,6 +5,38 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Black & White Design Tokens - Colors */
+  --color-black: 0 0% 0%;       /* #000000 - Primary black for headings, text, icons */
+  --color-white: 0 0% 100%;     /* #FFFFFF - Primary white for backgrounds, cards */
+  --color-gray-light: 0 0% 96%; /* #F5F5F7 - Light gray for subtle backgrounds */
+  --color-gray-200: 0 0% 88%;   /* #E5E7EB - Borders, subtle dividers */
+  --color-gray-800: 0 0% 22%;   /* #1F2937 - Secondary text */
+
+  /* Black & White Design Tokens - Typography */
+  --font-family-display: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-body: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-hero: clamp(3.5rem, 7vw, 6rem);
+  --font-size-h1: 3rem;
+  --font-size-h2: 2.25rem;
+  --font-size-body: 1.125rem;
+  --font-size-caption: 0.875rem;
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.4;
+
+  /* Black & White Design Tokens - Layout */
+  --section-padding-y: 5rem;
+  --section-padding-x: clamp(1.5rem, 5vw, 6rem);
+  --hero-height: 70vh;
+  --card-gap: 2rem;
+  --card-shadow: 0 8px 32px rgb(0 0 0 / 0.08);
+  --gradient-hero: linear-gradient(135deg, hsl(var(--color-black)/0.6), transparent);
+
+  /* Black & White Design Tokens - Interactive */
+  --hover-scale: 1.05;
+  --transition-duration: 0.5s;
+  --pulse-duration: 2s;
+
+  /* Existing shadcn/ui tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -80,7 +112,7 @@
   --sidebar-accent-foreground: oklch(0.98 0.02 166);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
-  --font-sans: "Inter", "SF Pro Text", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-family-body);
   --font-mono: "JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
