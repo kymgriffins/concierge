@@ -7,7 +7,9 @@ import {
   Package,
   Home,
   Menu,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
@@ -28,6 +30,7 @@ const navigation = [
 
 export function AdminLayout({ children, currentPage, onPageChange }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,22 +43,32 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b">
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center ${sidebarCollapsed ? 'lg:justify-center' : 'space-x-3'}`}>
               <div className="text-2xl">✈️</div>
-              <h1 className="text-xl font-bold">Willis Concierge</h1>
+              {!sidebarCollapsed && <h1 className="text-xl font-bold hidden lg:block">Willis Concierge</h1>}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Navigation */}
@@ -66,14 +79,15 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
                 <Button
                   key={item.id}
                   variant={currentPage === item.id ? "default" : "ghost"}
-                  className="w-full justify-start"
+                  className={`w-full ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : 'justify-start'}`}
                   onClick={() => {
                     onPageChange(item.id);
                     setSidebarOpen(false);
                   }}
+                  title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.name}
+                  <Icon className={`h-4 w-4 ${sidebarCollapsed ? 'lg:mr-0' : 'mr-2'}`} />
+                  {!sidebarCollapsed && <span className="hidden lg:inline">{item.name}</span>}
                 </Button>
               );
             })}
@@ -82,7 +96,7 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Header */}
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6">
