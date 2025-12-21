@@ -44,7 +44,10 @@ export function AdminLayout({ children, currentPage, onPageChange }: AdminLayout
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b">
-            <h1 className="text-xl font-bold">Airport Concierge</h1>
+            <div className="flex items-center space-x-3">
+              <div className="text-2xl">✈️</div>
+              <h1 className="text-xl font-bold">Willis Concierge</h1>
+            </div>
             <Button
               variant="ghost"
               size="sm"
