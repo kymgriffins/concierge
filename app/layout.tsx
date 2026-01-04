@@ -1,7 +1,10 @@
+import { authClient } from '@/lib/auth/client'; 
+import { NeonAuthUIProvider } from '@neondatabase/auth/react'; 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
+import { ConditionalHeader } from "@/components/conditional-header";
 
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -28,15 +31,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={roboto.variable}>
+    <html lang="en" className={roboto.variable} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ToastProvider>
-          <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-            {children}
-          </main>
-        </ToastProvider>
+        <NeonAuthUIProvider
+          authClient={authClient} 
+          redirectTo="/account/settings"
+          emailOTP
+        >
+          <ToastProvider>
+            <ConditionalHeader />
+            <main>
+              {children}
+            </main>
+          </ToastProvider>
+        </NeonAuthUIProvider>
       </body>
     </html>
   );
