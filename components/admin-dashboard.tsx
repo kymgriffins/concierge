@@ -39,32 +39,152 @@ export function AdminDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
+    console.log("Starting loadDashboardData");
+    setLoading(true);
     try {
-      setLoading(true);
+      // Fetch all raw data
+      const [bookingsResult, servicesResult, agentsResult] = await Promise.allSettled([
+        fetch("/api/bookings").then(r => r.ok ? r.json() : Promise.reject(r.status)),
+        fetch("/api/services").then(r => r.ok ? r.json() : Promise.reject(r.status)),
+        fetch("/api/agents").then(r => r.ok ? r.json() : Promise.reject(r.status)),
+      ]);
 
-      // Load dashboard stats
-      const statsResponse = await fetch("/api/dashboard-stats");
-      const statsResult = await statsResponse.json();
-      setStats(statsResult.stats);
+      // Process bookings
+      let bookings = [];
+      if (bookingsResult.status === 'fulfilled') {
+        bookings = bookingsResult.value?.bookings ?? [];
+        console.log("Fetched bookings:", bookings.length);
+      } else {
+        console.error("Failed to fetch bookings:", bookingsResult.reason);
+        toast.showToast({
+          title: "Failed to load bookings",
+          description: "Could not fetch booking data",
+          type: "error",
+        });
+      }
 
-      // Load recent bookings
-      const bookingsResponse = await fetch("/api/bookings");
-      const bookingsResult = await bookingsResponse.json();
-      const bookings = bookingsResult.bookings.slice(0, 3); // Limit to 3 for minimalism
+      // Process services
+      let services = [];
+      if (servicesResult.status === 'fulfilled') {
+        services = servicesResult.value?.services ?? [];
+        console.log("Fetched services:", services.length);
+      } else {
+        console.error("Failed to fetch services:", servicesResult.reason);
+        toast.showToast({
+          title: "Failed to load services",
+          description: "Could not fetch service data",
+          type: "error",
+        });
+      }
 
-      const transformedBookings = bookings.map((b: any) => ({
-        id: b.id,
-        passengerName: b.traveler_name || "",
-        flightNumber: b.flight_number || "",
-        date: b.flight_date || "",
-        time: "",
-        status: b.status || "pending",
-        createdAt: b.created_at || new Date().toISOString(),
-      }));
+      // Process agents
+      let agents: any[] = [];
+      if (agentsResult.status === 'fulfilled') {
+        agents = agentsResult.value?.agents ?? [];
+        console.log("Fetched agents:", agents.length);
+      } else {
+        console.warn("Failed to fetch agents (expected with Neon Auth setup):", agentsResult.reason);
+        // Continue with empty agents array - dashboard will show 0 for user counts
+        console.log("Continuing with empty agents data");
+      }
 
-      setRecentBookings(transformedBookings);
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      // Calculate stats from raw data
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const currentMonth = now.toISOString().slice(0, 7);
+
+      const totalBookings = bookings.length;
+      const pendingBookings = bookings.filter((b: any) => b.status === 'pending').length;
+      const todayBookings = bookings.filter((b: any) => b.created_at?.startsWith(today)).length;
+      const totalServices = services.length;
+      const totalTravelers = agents.filter((a: any) => a.role === 'traveler').length;
+      const totalAgents = agents.filter((a: any) => a.role === 'agent' || a.role === 'super_admin').length;
+
+      const completedBookings = bookings.filter((b: any) => b.status === 'completed').length;
+      const cancelledBookings = bookings.filter((b: any) => b.status === 'cancelled').length;
+
+      // Calculate earnings
+      const completedBookingsData = bookings.filter((b: any) => b.status === 'completed');
+      const totalEarnings = completedBookingsData.reduce((sum: number, booking: any) => {
+        const service = services.find((s: any) => s.id === booking.service_id);
+        return sum + (Number(service?.price) || 0);
+      }, 0);
+
+      const monthlyCompletedBookings = completedBookingsData.filter((booking: any) => {
+        const bookingDate = new Date(booking.created_at);
+        const bookingMonth = bookingDate.toISOString().slice(0, 7);
+        return bookingMonth === currentMonth;
+      });
+
+      const monthlyEarnings = monthlyCompletedBookings.reduce((sum: number, booking: any) => {
+        const service = services.find((s: any) => s.id === booking.service_id);
+        return sum + (Number(service?.price) || 0);
+      }, 0);
+
+      // Unique customers
+      const uniqueEmails = new Set(
+        completedBookingsData
+          .map((b: any) => b.traveler_email)
+          .filter((email: any) => email)
+      );
+      const customersServiced = uniqueEmails.size;
+
+      // Completion percentage
+      const totalProcessed = completedBookings + cancelledBookings;
+      const completionPercentage = totalProcessed > 0 ? Math.round((completedBookings / totalProcessed) * 10000) / 100 : 0;
+
+      const calculatedStats = {
+        totalBookings,
+        pendingBookings,
+        todayBookings,
+        totalServices,
+        totalTravelers,
+        totalAgents,
+        completedBookings,
+        totalEarnings,
+        monthlyEarnings,
+        customersServiced,
+        completionPercentage,
+      };
+
+      console.log("Calculated stats:", calculatedStats);
+      setStats(calculatedStats);
+
+      // Fetch bookings with robust checks and resilient mapping
+      try {
+        const bookingsResponse = await fetch("/api/bookings");
+        if (!bookingsResponse.ok) throw new Error(`Bookings fetch failed: ${bookingsResponse.status}`);
+        const bookingsResult = await bookingsResponse.json();
+        console.log("Bookings response:", bookingsResult);
+        const rawBookings = bookingsResult?.bookings ?? bookingsResult ?? [];
+        const bookings = Array.isArray(rawBookings) ? rawBookings.slice(0, 3) : [];
+
+        const transformedBookings = bookings.map((b: any) => {
+          const passengerName = b.traveler_name ?? b.travelerName ?? b.passengerName ?? b.passenger_name ?? b.name ?? "";
+          const flightNumber = b.flight_number ?? b.flightNumber ?? b.flight ?? "";
+          const date = b.flight_date ?? b.flightDate ?? b.date ?? "";
+          const time = b.flight_time ?? b.flightTime ?? b.time ?? "";
+          const status = b.status ?? b.state ?? "pending";
+          return {
+            id: b.id ?? b.booking_id ?? Math.random().toString(36).slice(2, 9),
+            passengerName,
+            flightNumber,
+            date,
+            time,
+            status,
+            createdAt: b.created_at ?? b.createdAt ?? new Date().toISOString(),
+          };
+        });
+
+        setRecentBookings(transformedBookings);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        toast.showToast({
+          title: "Failed to load bookings",
+          description: String(err),
+          type: "error",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -185,7 +305,44 @@ export function AdminDashboard() {
       </div>
 
       {/* Bookings Overview */}
-   
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalBookings || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              All time bookings
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.pendingBookings || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting confirmation
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.todayBookings || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Bookings created today
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Earnings Overview */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -193,7 +350,7 @@ export function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Monthly Earnings</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(stats?.monthlyEarnings || 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold">${Number(stats?.monthlyEarnings || 0).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               This month's earnings
             </p>
@@ -205,7 +362,7 @@ export function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(stats?.totalEarnings || 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold">${Number(stats?.totalEarnings || 0).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               All time earnings
             </p>
@@ -239,7 +396,17 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-      
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Services</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalServices || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Available services
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* AI Insights */}
@@ -252,9 +419,9 @@ export function AdminDashboard() {
           <div className="space-y-3">
             {stats && (
               <>
-                {stats.completionPercentage < 0 && (
+                {stats.completionPercentage < 75 && stats.totalBookings > 0 && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <p className="text-sm font-medium text-yellow-800">Completion Rate Alert</p>
+                    <p className="text-sm font-medium text-yellow-800">Low Completion Rate Alert</p>
                     <p className="text-sm text-yellow-700">
                       Your completion rate is {stats.completionPercentage}%. Consider reviewing cancellation patterns to improve service delivery.
                     </p>
@@ -276,11 +443,11 @@ export function AdminDashboard() {
                     </p>
                   </div>
                 )}
-                {stats.customersServiced < 0 && (
+                {stats.customersServiced === 0 && stats.totalBookings > 0 && (
                   <div className="p-3 bg-orange-50 border border-orange-200 rounded-md">
                     <p className="text-sm font-medium text-orange-800">Customer Acquisition</p>
                     <p className="text-sm text-orange-700">
-                      Only {stats.customersServiced} unique customers serviced. Consider marketing strategies to attract more clients.
+                      You have bookings but no completed services. Focus on processing pending bookings to start earning.
                     </p>
                   </div>
                 )}

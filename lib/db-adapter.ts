@@ -187,7 +187,7 @@ export async function deleteBookingById(id: string) {
 export async function listProfiles() {
   const client = await pool.connect();
   try {
-    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM neon_auth.users ORDER BY created_at DESC`);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users ORDER BY created_at DESC`);
     return res.rows.map(row => ({
       id: row.user_id,
       user_id: row.user_id,
@@ -205,8 +205,8 @@ export async function listProfiles() {
 export async function updateProfileRole(profileId: string, role: string) {
   const client = await pool.connect();
   try {
-    await client.query(`UPDATE neon_auth.users SET raw_user_meta_data = raw_user_meta_data || $2::jsonb WHERE id = $1`, [profileId, JSON.stringify({ role })]);
-    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM neon_auth.users WHERE id = $1`, [profileId]);
+    await client.query(`UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || $2::jsonb WHERE id = $1`, [profileId, JSON.stringify({ role })]);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users WHERE id = $1`, [profileId]);
     if (res.rowCount === 0) return null;
     const row = res.rows[0];
     return {
@@ -340,7 +340,7 @@ export async function getAgents() {
         au.raw_user_meta_data->>'phone' as phone,
         au.created_at,
         COALESCE(p.role, 'traveler') as role
-      FROM neon_auth.users au
+      FROM auth.users au
       LEFT JOIN profiles p ON au.id = p.user_id
       ORDER BY COALESCE(au.raw_user_meta_data->>'name', au.email) ASC
     `);
@@ -405,10 +405,10 @@ export async function getDashboardStats() {
     const queries = await Promise.all([
       client.query(`SELECT COUNT(*) as total FROM bookings`),
       client.query(`SELECT COUNT(*) as pending FROM bookings WHERE status = 'pending'`),
-      client.query(`SELECT COUNT(*) as today FROM bookings WHERE status = 'confirmed' AND flight_date = $1`, [today]),
+      client.query(`SELECT COUNT(*) as today FROM bookings WHERE DATE(created_at) = $1`, [today]),
       client.query(`SELECT COUNT(*) as services FROM services WHERE active = true`),
-      client.query(`SELECT COUNT(*) as users FROM neon_auth.users`), // All users
-      client.query(`SELECT COUNT(*) as users FROM neon_auth.users`), // Same count for agents (now all users)
+      client.query(`SELECT COUNT(*) as travelers FROM auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') = 'traveler'`),
+      client.query(`SELECT COUNT(*) as agents FROM auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') IN ('agent', 'super_admin')`),
       client.query(`SELECT COUNT(*) as completed FROM bookings WHERE status = 'completed'`),
       // Total earnings from completed bookings
       client.query(`SELECT COALESCE(SUM(s.price), 0) as total_earnings FROM bookings b LEFT JOIN services s ON b.service_id = s.id WHERE b.status = 'completed'`),
