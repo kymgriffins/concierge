@@ -1,10 +1,10 @@
-# Mock JSON Backend (local)
+# Local JSON Backend (dev)
 
-This project includes a small JSON-backed mock backend and Next.js API routes for local development.
+This project includes a small JSON-backed local backend and Next.js API routes for local development.
 
 ## Files added
 
-- `data/mockdb.json` — seed data (agents, bookings, sessions)
+- `data/db.json` — seed data (agents, bookings, sessions)
 - `lib/json-db.ts` — helper to read/write the JSON file
 - `app/api/auth/route.ts` — login (POST `/api/auth`), me (GET `/api/auth`), logout (DELETE `/api/auth`)
 - `app/api/bookings/route.ts` — GET `/api/bookings`, POST `/api/bookings` (requires concierge or supervisor)
@@ -32,6 +32,6 @@ This project includes a small JSON-backed mock backend and Next.js API routes fo
 
 Notes:
 
-- This is a development-only mock backend. Data is persisted to `data/mockdb.json`.
+- This is a development-only JSON backend for local testing. Data is persisted to `data/db.json`.
 - Passwords are stored in plain text for convenience (do not use in production).
 - Cookies are HTTP-only and persisted for 24 hours.

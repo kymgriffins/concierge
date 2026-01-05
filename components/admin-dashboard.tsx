@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MockAPI, Booking } from "@/lib/mock-api";
+import { Booking } from "@/lib/client-api";
 import { useToast } from "@/components/ui/toast";
 import { formatRelativeTime } from "@/lib/utils";
 

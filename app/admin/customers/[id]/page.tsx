@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MockAPI, Customer, Booking } from "@/lib/mock-api";
+import ClientAPI, { Booking } from "@/lib/client-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC } from "@/lib/utils";
 import {
@@ -55,10 +55,9 @@ export default function CustomerDetailPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [customerData, bookingsData] = await Promise.all([
-        MockAPI.getCustomerById(id),
-        MockAPI.getBookings(),
-      ]);
+      const customerRes = await fetch(`/api/customers/${id}`);
+      const customerData = customerRes.ok ? await customerRes.json() : null;
+      const bookingsData = await ClientAPI.getBookings();
 
       if (customerData) {
         setCustomer(customerData);
@@ -88,7 +87,11 @@ export default function CustomerDetailPage() {
     if (!customer) return;
     setSaving(true);
     try {
-      await MockAPI.updateCustomer(customer.id, form as Partial<Customer>);
+      await fetch(`/api/customers/${customer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
       setCustomer({ ...customer, ...form });
       setEditing(false);
       toast.showToast({
@@ -111,7 +114,11 @@ export default function CustomerDetailPage() {
   const handleStatusChange = async (newStatus: Customer["status"]) => {
     if (!customer) return;
     try {
-      await MockAPI.updateCustomer(customer.id, { status: newStatus });
+      await fetch(`/api/customers/${customer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
       setCustomer({ ...customer, status: newStatus });
       toast.showToast({
         title: "Status updated",
@@ -132,7 +139,7 @@ export default function CustomerDetailPage() {
     if (!customer || !confirm("Are you sure you want to delete this customer?"))
       return;
     try {
-      await MockAPI.deleteCustomer(customer.id);
+      await fetch(`/api/customers/${customer.id}`, { method: "DELETE" });
       toast.showToast({
         title: "Deleted",
         description: "Customer deleted successfully",
@@ -426,7 +433,7 @@ export default function CustomerDetailPage() {
                           size="sm"
                           className="ml-2"
                           onClick={() =>
-                            router.push(`/admin/bookings/${booking.id}`)
+                            router.push(`/admin/bookings/${encodeURIComponent(booking.id)}`)
                           }
                         >
                           View

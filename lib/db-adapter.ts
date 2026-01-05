@@ -2,7 +2,65 @@ import { Pool } from 'pg';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-function mapProfileRow(row: any) {
+interface ProfileRow {
+  id: string;
+  user_id: string;
+  role: string;
+  name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+}
+
+interface BookingPayload {
+  traveler_name?: string;
+  passengerName?: string;
+  traveler_email?: string;
+  email?: string;
+  traveler_phone?: string;
+  phone?: string;
+  service_id?: string;
+  communication_channel?: string;
+  flight_date?: string;
+  date?: string;
+  flight_number?: string;
+  flightNumber?: string;
+  airport?: string;
+  flight_type?: string;
+  flightType?: string;
+  special_requests?: string;
+  specialRequests?: string;
+  status?: string;
+  assigned_agent_profile_id?: string;
+}
+
+interface ServiceData {
+  slug: string;
+  name: string;
+  description: string;
+  icon: string;
+  price: number;
+  active?: boolean;
+}
+
+interface ActivityLogData {
+  bookingId?: string;
+  actorProfileId?: string;
+  action: string;
+  message: string;
+  meta?: Record<string, unknown>;
+}
+
+interface MessageData {
+  bookingId?: string;
+  profileId?: string;
+  channel: string;
+  origin: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+}
+
+function mapProfileRow(row: ProfileRow): ProfileRow {
   return {
     id: row.id,
     user_id: row.user_id,
@@ -34,7 +92,7 @@ export async function getOrCreateProfileForUser(user: { id?: string; email?: str
   }
 }
 
-export async function listBookingsForProfile(profile: any) {
+export async function listBookingsForProfile(profile: ProfileRow | null) {
   const client = await pool.connect();
   try {
     if (!profile) {
@@ -55,7 +113,7 @@ export async function listBookingsForProfile(profile: any) {
   }
 }
 
-export async function createBookingForProfile(profile: any, payload: any) {
+export async function createBookingForProfile(profile: ProfileRow | null, payload: BookingPayload) {
   const client = await pool.connect();
   try {
     const query = `INSERT INTO bookings (
@@ -95,7 +153,7 @@ export async function getBookingById(id: string) {
   }
 }
 
-export async function updateBookingById(id: string, patch: any) {
+export async function updateBookingById(id: string, patch: Partial<BookingPayload>) {
   const client = await pool.connect();
   try {
     const fields: string[] = [];
@@ -167,7 +225,7 @@ export async function updateProfileRole(profileId: string, role: string) {
   const client = await pool.connect();
   try {
     // First check if profile exists, if not create it from auth.users data
-    let profileRes = await client.query(`SELECT * FROM profiles WHERE user_id = $1`, [profileId]);
+    const profileRes = await client.query(`SELECT * FROM profiles WHERE user_id = $1`, [profileId]);
     if (profileRes.rowCount === 0) {
       // Get user data from auth.users
       const userRes = await client.query(`
@@ -250,7 +308,7 @@ export async function getServiceById(id: string) {
   }
 }
 
-export async function createService(service: any) {
+export async function createService(service: ServiceData) {
   const client = await pool.connect();
   try {
     const res = await client.query(
@@ -263,13 +321,13 @@ export async function createService(service: any) {
   }
 }
 
-export async function updateService(id: string, updates: any) {
+export async function updateService(id: string, updates: Partial<ServiceData>) {
   const client = await pool.connect();
   try {
     const fields: string[] = [];
     const vals: any[] = [];
     let idx = 1;
-    for (const k of ['slug', 'name', 'description', 'icon', 'price', 'active']) {
+    for (const k of ['slug', 'name', 'description', 'icon', 'price', 'active'] as const) {
       if (Object.prototype.hasOwnProperty.call(updates, k)) {
         fields.push(`${k} = $${idx++}`);
         vals.push(updates[k]);
@@ -315,7 +373,7 @@ export async function getActivityLogs(bookingId?: string, limit = 50) {
   }
 }
 
-export async function createActivityLog(log: any) {
+export async function createActivityLog(log: ActivityLogData) {
   const client = await pool.connect();
   try {
     const res = await client.query(
@@ -411,7 +469,7 @@ export async function getMessages(bookingId?: string, limit = 50) {
   }
 }
 
-export async function createMessage(message: any) {
+export async function createMessage(message: MessageData) {
   const client = await pool.connect();
   try {
     const res = await client.query(

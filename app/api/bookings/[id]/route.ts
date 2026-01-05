@@ -7,9 +7,9 @@ import {
   deleteBookingById,
 } from '../../../../lib/db-adapter';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const booking = await getBookingById(id);
     if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ booking }, { status: 200 });
@@ -18,13 +18,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { session, user } = await neonAuth();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     const profile = await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name });
 
-    const id = params.id;
+    const { id } = await params;
     const existing = await getBookingById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -40,13 +40,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { session, user } = await neonAuth();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     const profile = await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name });
 
-    const id = params.id;
+    const { id } = await params;
     const existing = await getBookingById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

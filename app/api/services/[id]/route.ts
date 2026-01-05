@@ -7,9 +7,9 @@ import {
   deleteService,
 } from '../../../../lib/db-adapter';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const service = await getServiceById(id);
     if (!service) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ service }, { status: 200 });
@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { session, user } = await neonAuth();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -28,7 +28,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (profile.role !== 'admin' && profile.role !== 'super_admin')
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const id = params.id;
+    const { id } = await params;
     const existing = await getServiceById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -40,7 +40,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { session, user } = await neonAuth();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -50,7 +50,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (profile.role !== 'admin' && profile.role !== 'super_admin')
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const id = params.id;
+    const { id } = await params;
     const existing = await getServiceById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

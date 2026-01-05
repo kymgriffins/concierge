@@ -1,4 +1,4 @@
-// Script to generate 200 mock passenger bookings
+// Script to generate 200 sample passenger bookings (dev helper)
 // Run with: node scripts/generate-mock-data.js
 
 const fs = require("fs");
@@ -1099,18 +1099,18 @@ function analyzeCapacity(bookings) {
 // Main execution
 const bookings = generateBookings(200);
 
-// Load existing mockdb.json
-const mockdbPath = path.join(__dirname, "..", "data", "mockdb.json");
-let mockdb = JSON.parse(fs.readFileSync(mockdbPath, "utf8"));
+// Load existing db.json
+const dbPath = path.join(__dirname, "..", "data", "db.json");
+let mockdb = JSON.parse(fs.readFileSync(dbPath, "utf8"));
 
 // Replace bookings array
 mockdb.bookings = bookings;
 
 // Write back to file
-fs.writeFileSync(mockdbPath, JSON.stringify(mockdb, null, 2));
+  fs.writeFileSync(dbPath, JSON.stringify(mockdb, null, 2));
 
-console.log(`✅ Generated ${bookings.length} mock passenger bookings`);
-console.log(`📁 Updated ${mockdbPath}`);
+  console.log(`✅ Generated ${bookings.length} passenger bookings`);
+  console.log(`📁 Updated ${dbPath}`);
 
 // Analyze capacity
 analyzeCapacity(bookings);

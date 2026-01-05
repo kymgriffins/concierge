@@ -96,7 +96,6 @@ export default function FullBookingsCRUDPage() {
   const [airlineOptions, setAirlineOptions] = useState<string[]>([]);
   const [terminalOptions, setTerminalOptions] = useState<string[]>([]);
   const [sourceOptions, setSourceOptions] = useState<string[]>([]);
-  const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editing, setEditing] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -376,20 +375,7 @@ export default function FullBookingsCRUDPage() {
 
   const resetForm = () => setForm({});
 
-  const handleOpenCreate = () => {
-    if (permissions && !permissions.canCreateBooking) {
-      toast.showToast({
-        title: "Permission denied",
-        description: "You are not allowed to create bookings",
-        type: "error",
-      });
-      return;
-    }
 
-    resetForm();
-    setShowCreate(true);
-    setEditing(false);
-  };
 
   const handleOpenEdit = (booking: Booking) => {
     setForm({ ...booking });
@@ -398,59 +384,7 @@ export default function FullBookingsCRUDPage() {
     setEditing(true);
   };
 
-  const handleSubmitCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // Prepare payload for database API
-      const payload: any = {
-        traveler_name: form.passengerName || "",
-        traveler_email: form.email || "",
-        traveler_phone: form.phone || "",
-        flight_number: form.flightNumber || "",
-        flight_date: form.date || new Date().toISOString().split("T")[0],
-        airport: form.terminal || "",
-        flight_type: "arrival",
-        special_requests: form.specialRequests || "",
-        status: (form.status as Booking["status"]) || "pending",
-        service_id: form.serviceId || null,
-        communication_channel: (form.source as Booking["source"]) || "manual",
-      };
 
-      // Post to real database API
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create booking");
-      }
-
-      const result = await response.json();
-      await loadBookings();
-      setShowCreate(false);
-      resetForm();
-      toast.showToast({
-        title: "Booking created",
-        description: `Booking for ${payload.traveler_name} created successfully`,
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error creating booking:", error);
-      toast.showToast({
-        title: "Create failed",
-        description: String(error),
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -598,10 +532,25 @@ export default function FullBookingsCRUDPage() {
         header: "Booking Date & Time",
         accessor: (r) => `${r.date} ${r.time}`,
         cell: (r) => {
-          const { text, color } = formatRelativeTime(r.date || "", r.status || "new");
+          const formattedDate = formatDateUTC(r.date || "");
+          let color: string;
+          const status = r.status || "new";
+          if (status === "completed") {
+            color = "text-green-600";
+          } else if (status === "in_progress") {
+            color = "text-orange-600";
+          } else if (status === "cancelled") {
+            color = "text-red-600";
+          } else if (status === "new" || status === "contacted" || status === "confirmed") {
+            color = "text-blue-600";
+          } else if (status === "pending_review") {
+            color = "text-yellow-600";
+          } else {
+            color = "text-muted-foreground";
+          }
           return (
             <div>
-              <div className={color}>{text}</div>
+              <div className={color}>{formattedDate}</div>
               <div className="text-sm text-muted-foreground">{r.time}</div>
             </div>
           );
@@ -638,7 +587,14 @@ export default function FullBookingsCRUDPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push(`/admin/bookings/${r.id}`)}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem(`booking_cache_${r.id}`, JSON.stringify(r));
+                  } catch (e) {
+                    // ignore storage errors
+                  }
+                  router.push(`/admin/bookings/${encodeURIComponent(r.id)}`);
+                }}
               >
                 <Eye className="h-4 w-4" />
               </Button>
@@ -672,7 +628,14 @@ export default function FullBookingsCRUDPage() {
         data={filteredBookings}
         defaultPageSize={perPage}
         pageSizeOptions={[10, 25, 50, 100]}
-        onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
+        onRowClick={(r) => {
+          try {
+            sessionStorage.setItem(`booking_cache_${r.id}`, JSON.stringify(r));
+          } catch (e) {
+            // ignore
+          }
+          router.push(`/admin/bookings/${encodeURIComponent(r.id)}`);
+        }}
         searchable={true}
         exportable={true}
         emptyMessage="No bookings found matching your criteria"
@@ -716,7 +679,7 @@ export default function FullBookingsCRUDPage() {
             Refresh
           </Button>
           <Button
-            onClick={handleOpenCreate}
+            onClick={() => router.push("/admin/bookings/new")}
             className="flex-1 sm:flex-initial"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -740,204 +703,7 @@ export default function FullBookingsCRUDPage() {
         </CardContent>
       </Card>
 
-      {/* Create Booking Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold">Create New Booking</h2>
-                    <p className="text-muted-foreground">
-                      Add a new booking to the system
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowCreate(false);
-                      resetForm();
-                    }}
-                  >
-                    ✕
-                  </Button>
-                </div>
 
-                <form onSubmit={handleSubmitCreate} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      placeholder="Passenger name *"
-                      value={form.passengerName || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, passengerName: e.target.value })
-                      }
-                      required
-                    />
-                    <Input
-                      placeholder="Company"
-                      value={form.company || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, company: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Phone *"
-                      value={form.phone || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, phone: e.target.value })
-                      }
-                      required
-                    />
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      value={form.email || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, email: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Flight number *"
-                      value={form.flightNumber || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, flightNumber: e.target.value })
-                      }
-                      required
-                    />
-                    <Input
-                      placeholder="Airline *"
-                      value={form.airline || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, airline: e.target.value })
-                      }
-                      required
-                    />
-                    <DatePicker
-                      value={form.date || null}
-                      onChange={(d) => setForm({ ...form, date: d || "" })}
-                      placeholder="Select date *"
-                    />
-                    <TimePicker
-                      value={form.time || null}
-                      onChange={(t) => setForm({ ...form, time: t || "" })}
-                      placeholder="Select time *"
-                    />
-                    <Input
-                      placeholder="Terminal"
-                      value={form.terminal || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, terminal: e.target.value })
-                      }
-                    />
-                    <Input
-                      type="number"
-                      min={1}
-                      placeholder="Passengers"
-                      value={form.passengerCount?.toString() || "1"}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          passengerCount: Number(e.target.value),
-                        })
-                      }
-                    />
-                    <Select
-                      value={form.status || "new"}
-                      onValueChange={(val: string) =>
-                        setForm({ ...form, status: val as Booking["status"] })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="contacted">Contacted</SelectItem>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-3">
-                      Service *
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {serviceOptions
-                        .filter((opt) => opt.active)
-                        .map((opt) => (
-                          <label
-                            key={opt.id}
-                            className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                          >
-                            <input
-                              type="radio"
-                              name="service"
-                              value={opt.id}
-                              checked={form.serviceId === opt.id}
-                              onChange={(e) =>
-                                setForm({ ...form, serviceId: e.target.value })
-                              }
-                              required
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{opt.icon}</span>
-                                <span className="text-sm font-medium">
-                                  {opt.name}
-                                </span>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {opt.description}
-                              </p>
-                              <p className="text-xs font-semibold text-primary mt-1">
-                                ${opt.price}
-                              </p>
-                            </div>
-                          </label>
-                        ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Special Requests
-                    </label>
-                    <Input
-                      placeholder="Any special requests or notes"
-                      value={form.specialRequests || ""}
-                      onChange={(e) =>
-                        setForm({ ...form, specialRequests: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button type="submit" disabled={loading}>
-                      {loading ? "Creating..." : "Create Booking"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      type="button"
-                      onClick={() => {
-                        setShowCreate(false);
-                        resetForm();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Booking Modal */}
       {showEdit && (

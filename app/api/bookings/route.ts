@@ -12,8 +12,9 @@ export async function GET() {
     const profile = user ? await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name }) : null;
     const bookings = await listBookingsForProfile(profile);
     return NextResponse.json({ bookings }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const booking = await createBookingForProfile(profile, body);
     return NextResponse.json({ booking }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

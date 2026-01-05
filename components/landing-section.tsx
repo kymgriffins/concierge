@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MockAPI } from "@/lib/mock-api";
+import ClientAPI from "@/lib/client-api";
 
 export function LandingSection() {
   const [currentView, setCurrentView] = useState<
@@ -30,12 +30,12 @@ export function LandingSection() {
     setIsLoading(true);
 
     try {
-      const result = await MockAPI.login(username, password);
-
-      if (result.success && result.user) {
+      // attempt to fetch current user; replace with real sign-in flow as needed
+      const user = await ClientAPI.getCurrentUser();
+      if (user) {
         setCurrentView("dashboard");
       } else {
-        setLoginError(result.error || "Login failed");
+        setLoginError("Login not implemented");
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
-import { MockAPI, Booking, Agent } from "@/lib/mock-api";
+import ClientAPI, { Booking, Agent } from "@/lib/client-api";
 import { useToast } from "@/components/ui/toast";
 import {
   CheckCircle2,
@@ -70,7 +70,7 @@ export function ServiceLifecycleManager({
 
   const loadLifecycleStatus = async () => {
     try {
-      const status = await MockAPI.getServiceLifecycleStatus(booking.id);
+      const status = await ClientAPI.getServiceLifecycleStatus(booking.id);
       setLifecycleStatus(status);
     } catch (error) {
       console.error("Error loading lifecycle status:", error);
@@ -79,7 +79,7 @@ export function ServiceLifecycleManager({
 
   const loadCurrentUser = async () => {
     try {
-      const user = await MockAPI.getCurrentUser();
+      const user = await ClientAPI.getCurrentUser();
       setCurrentUser(user);
     } catch (error) {
       console.error("Error loading current user:", error);
@@ -92,7 +92,7 @@ export function ServiceLifecycleManager({
       let updatedBooking: Booking | null = null;
 
       if (newStatus === "pending_review") {
-        updatedBooking = await MockAPI.submitForSupervisorReview(
+        updatedBooking = await ClientAPI.submitForSupervisorReview(
           booking.id,
           reviewNotes,
         );
@@ -102,14 +102,14 @@ export function ServiceLifecycleManager({
         newStatus === "completed" &&
         booking.status === "pending_review"
       ) {
-        updatedBooking = await MockAPI.approveSupervisorReview(
+        updatedBooking = await ClientAPI.approveSupervisorReview(
           booking.id,
           reviewNotes,
         );
         setShowReviewDialog(false);
         setReviewNotes("");
       } else {
-        updatedBooking = await MockAPI.updateBooking(booking.id, {
+        updatedBooking = await ClientAPI.updateBooking(booking.id, {
           status: newStatus,
         });
       }
@@ -138,10 +138,10 @@ export function ServiceLifecycleManager({
   const handleAutoTransitionCheck = async () => {
     setLoading(true);
     try {
-      const result = await MockAPI.checkAndUpdateServiceLifecycles();
+      const result = await ClientAPI.checkAndUpdateServiceLifecycles();
       if (result.updatedBookings > 0) {
         // Reload the booking data
-        const updatedBooking = await MockAPI.getBookingById(booking.id);
+        const updatedBooking = await ClientAPI.getBookingById(booking.id);
         if (updatedBooking) {
           onStatusChange?.(updatedBooking);
           await loadLifecycleStatus();

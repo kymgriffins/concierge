@@ -16,7 +16,7 @@ export function formatDateUTC(
     const defaultOpts: Intl.DateTimeFormatOptions = {
       dateStyle: "medium",
       timeStyle: undefined,
-    } as any;
+    };
     const merged = {
       ...defaultOpts,
       ...opts,
@@ -38,7 +38,7 @@ export function formatDateTimeUTC(
     const defaultOpts: Intl.DateTimeFormatOptions = {
       dateStyle: "medium",
       timeStyle: "short",
-    } as any;
+    };
     const merged = {
       ...defaultOpts,
       ...opts,

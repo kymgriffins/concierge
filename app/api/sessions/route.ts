@@ -15,7 +15,7 @@ function parseCookies(cookieHeader: string | null) {
 async function getSession(req: NextRequest) {
   const cookieHeader = req.headers.get("cookie");
   const cookies = parseCookies(cookieHeader);
-  const token = cookies["mock_sess"];
+  const token = cookies["sess"];
   if (!token) return null;
   return await getSessionByToken(token);
 }

@@ -21,7 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MockAPI, Booking, RosterShift, Agent } from "@/lib/mock-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import ClientAPI, { Booking, RosterShift, Agent } from "@/lib/client-api";
 import { useToast } from "@/components/ui/toast";
 import { formatDateUTC, formatRelativeTime } from "@/lib/utils";
 import DataTable, { Column } from "@/components/ui/data-table/data-table";
@@ -455,12 +462,14 @@ export function AdminBookings() {
     canUpdateBooking?: boolean;
   } | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState<Booking | null>(null);
+  const [showBookingDetail, setShowBookingDetail] = useState(false);
 
   useEffect(() => {
     loadBookings();
     loadServiceOptions();
     loadAgents();
-    (async () => setPermissions(await MockAPI.getPermissions()))();
+    (async () => setPermissions(await ClientAPI.getPermissions()))();
   }, []);
 
   useEffect(() => {
@@ -480,9 +489,9 @@ export function AdminBookings() {
 
   const loadServiceOptions = async () => {
     try {
-      const opts = await MockAPI.getServiceOptions();
+      const opts = await ClientAPI.getServiceOptions();
       setServiceOptions(
-        opts.map((o) => ({
+        opts.map((o: any) => ({
           id: o.id,
           name: o.name,
           description: o.description,
@@ -498,7 +507,7 @@ export function AdminBookings() {
 
   const loadAgents = async () => {
     try {
-      const agentsData = await MockAPI.getAgents();
+      const agentsData = await ClientAPI.getAgents();
       setAgents(agentsData);
     } catch (error) {
       console.error("Error loading agents:", error);
@@ -533,7 +542,7 @@ export function AdminBookings() {
 
   const loadBookings = async () => {
     try {
-      const data = await MockAPI.getBookings("all", 1000); // Load all bookings (up to 1000)
+      const data = await ClientAPI.getBookings(); // Load all bookings
       setBookings(data);
     } catch (error) {
       console.error("Error loading bookings:", error);
@@ -554,10 +563,10 @@ export function AdminBookings() {
     if (searchTerm) {
       filtered = filtered.filter(
         (booking) =>
-          booking.passengerName
+          (booking.passengerName || "")
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          booking.flightNumber
+          (booking.flightNumber || "")
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           (booking.company && booking.company.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -602,10 +611,10 @@ export function AdminBookings() {
     filtered = filtered.sort((a, b) => {
       let v = 0;
       if (sortBy === "date")
-        v = (a.date + " " + a.time).localeCompare(b.date + " " + b.time);
+        v = (a.date + " " + (a.time || "")).localeCompare(b.date + " " + (b.time || ""));
       if (sortBy === "passenger")
-        v = a.passengerName.localeCompare(b.passengerName);
-      if (sortBy === "flight") v = a.flightNumber.localeCompare(b.flightNumber);
+        v = (a.passengerName || "").localeCompare(b.passengerName || "");
+      if (sortBy === "flight") v = (a.flightNumber || "").localeCompare(b.flightNumber || "");
       return sortDir === "asc" ? v : -v;
     });
 
@@ -617,8 +626,8 @@ export function AdminBookings() {
     newStatus: Booking["status"],
   ) => {
     try {
-      await MockAPI.updateBooking(bookingId, { status: newStatus });
-      await MockAPI.createActivityLog({
+      await ClientAPI.updateBooking(bookingId, { status: newStatus });
+      await ClientAPI.createActivityLog({
         bookingId,
         action: "Status changed",
         user: "Staff",
@@ -690,8 +699,8 @@ export function AdminBookings() {
         source: (form.source as Booking["source"]) || "manual",
       };
 
-      await MockAPI.createBooking(payload);
-      await MockAPI.createActivityLog({
+      await ClientAPI.createBooking(payload);
+      await ClientAPI.createActivityLog({
         bookingId: (bookings.length + 1).toString(),
         action: "Booking Created",
         user: "Staff",
@@ -729,8 +738,8 @@ export function AdminBookings() {
     if (!selectedBooking) return;
     setCreating(true);
     try {
-      await MockAPI.updateBooking(selectedBooking.id, form as Partial<Booking>);
-      await MockAPI.createActivityLog({
+      await ClientAPI.updateBooking(selectedBooking.id, form as Partial<Booking>);
+      await ClientAPI.createActivityLog({
         bookingId: selectedBooking.id,
         action: "Booking Updated",
         user: "Staff",
@@ -761,8 +770,8 @@ export function AdminBookings() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
-      await MockAPI.deleteBooking(id);
-      await MockAPI.createActivityLog({
+      await ClientAPI.deleteBooking(id);
+      await ClientAPI.createActivityLog({
         bookingId: id,
         action: "Booking Deleted",
         user: "Staff",
@@ -779,6 +788,21 @@ export function AdminBookings() {
       toast.showToast({
         title: "Delete failed",
         description: String(error),
+        type: "error",
+      });
+    }
+  };
+
+  const handleShowBookingDetail = (bookingId: string) => {
+    // Find the booking in the existing data instead of making an API call
+    const booking = filteredBookings.find(b => b.id === bookingId);
+    if (booking) {
+      setSelectedBookingDetail(booking);
+      setShowBookingDetail(true);
+    } else {
+      toast.showToast({
+        title: "Error",
+        description: "Booking not found",
         type: "error",
       });
     }
@@ -1011,18 +1035,87 @@ export function AdminBookings() {
         header: "",
         cell: (r) => (
           <div className="flex gap-2">
-            <Tooltip
-              content={`${r.passengerName} - ${r.flightNumber} ${r.airline} - ${formatDateUTC(r.date)} ${r.time} - ${r.company || "N/A"} - Status: ${r.status.replace("_", " ")}`}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedBooking(r)}
-                className="touch-manipulation min-h-[44px] min-w-[44px]"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </Tooltip>
+            <Dialog open={showBookingDetail} onOpenChange={setShowBookingDetail}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleShowBookingDetail(r.id)}
+                  className="touch-manipulation min-h-[44px] min-w-[44px]"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Booking Details</DialogTitle>
+                </DialogHeader>
+                {selectedBookingDetail ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Passenger</label>
+                        <p className="text-sm">{selectedBookingDetail.passengerName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Company</label>
+                        <p className="text-sm">{selectedBookingDetail.company || "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                        <p className="text-sm">{selectedBookingDetail.phone}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Email</label>
+                        <p className="text-sm">{selectedBookingDetail.email}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Flight</label>
+                        <p className="text-sm">{selectedBookingDetail.flightNumber} {selectedBookingDetail.airline}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Terminal</label>
+                        <p className="text-sm">{selectedBookingDetail.terminal || "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Date & Time</label>
+                        <p className="text-sm">{formatDateUTC(selectedBookingDetail.date)} at {selectedBookingDetail.time}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Status</label>
+                        <Badge variant={getStatusColor(selectedBookingDetail.status)}>
+                          {selectedBookingDetail.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Service</label>
+                      <p className="text-sm">
+                        {serviceOptions.find((s) => s.id === selectedBookingDetail.serviceId)?.name || selectedBookingDetail.serviceId}
+                      </p>
+                    </div>
+                    {selectedBookingDetail.specialRequests && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Special Requests</label>
+                        <p className="text-sm">{selectedBookingDetail.specialRequests}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-end pt-4">
+                      <Button onClick={() => {
+                        setShowBookingDetail(false);
+                        router.push(`/admin/bookings/${encodeURIComponent(selectedBookingDetail.id)}`);
+                      }}>
+                        View Full Details
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Failed to load booking details
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         ),
       },
@@ -1158,7 +1251,7 @@ export function AdminBookings() {
           data={filteredBookings}
           defaultPageSize={perPage}
           pageSizeOptions={[10, 25, 50, 100]}
-          onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
+          onRowClick={(r) => router.push(`/admin/bookings/${encodeURIComponent(r.id)}`)}
           searchable={true}
           exportable={true}
           emptyMessage="No bookings found matching your criteria"
@@ -1188,7 +1281,7 @@ export function AdminBookings() {
       <MobileBookingsView
         bookings={bookings}
         filteredBookings={filteredBookings}
-        onBookingClick={(booking) => router.push(`/admin/bookings/${booking.id}`)}
+        onBookingClick={(booking) => router.push(`/admin/bookings/${encodeURIComponent(booking.id)}`)}
         onStatusChange={handleStatusChange}
         serviceOptions={serviceOptions}
         agents={agents}
