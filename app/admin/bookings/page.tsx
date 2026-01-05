@@ -134,15 +134,19 @@ export default function FullBookingsCRUDPage() {
 
   useEffect(() => {
     filterBookings();
-  }, [bookings, searchTerm, statusFilter]);
-
-  useEffect(() => {
-    filterBookings();
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    filterBookings();
-  }, [sortBy, sortDir]);
+  }, [
+    bookings,
+    searchTerm,
+    statusFilter,
+    startDate,
+    endDate,
+    serviceFilter,
+    airlineFilter,
+    terminalFilter,
+    sourceFilter,
+    sortBy,
+    sortDir
+  ]);
 
   useEffect(() => {
     setPage(1); // reset page when filters change
@@ -189,31 +193,7 @@ export default function FullBookingsCRUDPage() {
     }
   };
 
-  useEffect(() => {
-    filterBookings();
-  }, [bookings, searchTerm, statusFilter]);
 
-  useEffect(() => {
-    filterBookings();
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    filterBookings();
-  }, [sortBy, sortDir]);
-
-  useEffect(() => {
-    setPage(1); // reset page when filters change
-  }, [
-    searchTerm,
-    statusFilter,
-    startDate,
-    endDate,
-    serviceFilter,
-    airlineFilter,
-    terminalFilter,
-    sourceFilter,
-    perPage,
-  ]);
 
   const loadBookings = async () => {
     try {
@@ -556,6 +536,7 @@ export default function FullBookingsCRUDPage() {
           );
         },
         sortable: true,
+        filterable: true,
       },
       {
         key: "service",
@@ -689,6 +670,8 @@ export default function FullBookingsCRUDPage() {
       </div>
 
      
+
+
 
       {/* Bookings Table */}
       <Card>
