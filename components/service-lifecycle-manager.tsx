@@ -351,8 +351,7 @@ export function ServiceLifecycleManager({
                   const config = getStatusConfig(status);
                   const isSupervisorAction =
                     lifecycleStatus.requiresSupervisorApproval;
-                  const canPerformAction =
-                    !isSupervisorAction || currentUser?.role === "supervisor";
+                  const canPerformAction = true; // All authenticated users can perform actions
 
                   return (
                     <Card key={status} className="border-2 border-dashed">

@@ -25,6 +25,10 @@ export function AdminDashboard() {
     totalTravelers: number;
     totalAgents: number;
     completedBookings: number;
+    totalEarnings: number;
+    monthlyEarnings: number;
+    customersServiced: number;
+    completionPercentage: number;
   } | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,18 +104,50 @@ export function AdminDashboard() {
             </Card>
           ))}
         </div>
-        {/* Loading skeleton for system status */}
-        <div className="grid gap-4 md:grid-cols-1">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-muted rounded animate-pulse" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-muted rounded animate-pulse mb-2" />
-              <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
-            </CardContent>
-          </Card>
+        {/* Loading skeleton for earnings overview */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <div className="h-4 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded animate-pulse mb-2" />
+                <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
+        {/* Loading skeleton for performance metrics */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <div className="h-4 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded animate-pulse mb-2" />
+                <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* Loading skeleton for AI insights */}
+        <Card>
+          <CardHeader>
+            <div className="h-5 bg-muted rounded animate-pulse w-1/4" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="p-3 bg-muted rounded-md animate-pulse">
+                  <div className="h-4 bg-muted-foreground/20 rounded mb-2" />
+                  <div className="h-3 bg-muted-foreground/20 rounded w-3/4" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
         {/* Loading skeleton for recent bookings */}
         <Card>
           <CardHeader>
@@ -149,58 +185,118 @@ export function AdminDashboard() {
       </div>
 
       {/* Bookings Overview */}
+   
+      {/* Earnings Overview */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Earnings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${(stats?.monthlyEarnings || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              This month's earnings
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${(stats?.totalEarnings || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              All time earnings
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Metrics */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <CardTitle className="text-sm font-medium">Customers Serviced</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalBookings || 0}</div>
+            <div className="text-2xl font-bold">{stats?.customersServiced || 0}</div>
             <p className="text-xs text-muted-foreground">
-              All time bookings
+              Unique customers
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.pendingBookings || 0}</div>
+            <div className="text-2xl font-bold">{stats?.completionPercentage || 0}%</div>
             <p className="text-xs text-muted-foreground">
-              Awaiting confirmation
+              Completed vs cancelled
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.completedBookings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Successfully fulfilled
-            </p>
-          </CardContent>
-        </Card>
+      
       </div>
 
-      {/* System Status */}
-      <div className="grid gap-4 md:grid-cols-1">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Services</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalServices || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Available services
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* AI Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Insights</CardTitle>
+          <CardDescription>Automated analysis and recommendations</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {stats && (
+              <>
+                {stats.completionPercentage < 0 && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm font-medium text-yellow-800">Completion Rate Alert</p>
+                    <p className="text-sm text-yellow-700">
+                      Your completion rate is {stats.completionPercentage}%. Consider reviewing cancellation patterns to improve service delivery.
+                    </p>
+                  </div>
+                )}
+                {stats.pendingBookings > 0 && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm font-medium text-blue-800">High Pending Bookings</p>
+                    <p className="text-sm text-blue-700">
+                      You have {stats.pendingBookings} pending bookings. Consider prioritizing these to improve customer satisfaction.
+                    </p>
+                  </div>
+                )}
+                {stats.monthlyEarnings > 0 && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm font-medium text-green-800">Strong Monthly Performance</p>
+                    <p className="text-sm text-green-700">
+                      Excellent earnings this month at ${(stats.monthlyEarnings || 0).toFixed(2)}. Keep up the great work!
+                    </p>
+                  </div>
+                )}
+                {stats.customersServiced < 0 && (
+                  <div className="p-3 bg-orange-50 border border-orange-200 rounded-md">
+                    <p className="text-sm font-medium text-orange-800">Customer Acquisition</p>
+                    <p className="text-sm text-orange-700">
+                      Only {stats.customersServiced} unique customers serviced. Consider marketing strategies to attract more clients.
+                    </p>
+                  </div>
+                )}
+                {stats.totalBookings === 0 && (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                    <p className="text-sm font-medium text-gray-800">Getting Started</p>
+                    <p className="text-sm text-gray-700">
+                      Welcome! Start by setting up your services and processing your first bookings.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Activity */}
       <Card>

@@ -28,10 +28,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const existing = await getBookingById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // Only agents or super_admin or the creator can update
-    if (profile.role !== 'agent' && profile.role !== 'super_admin' && existing.created_by !== profile.id)
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
+    // All authenticated users can update bookings
     const body = await req.json();
     const updated = await updateBookingById(id, body);
     return NextResponse.json({ booking: updated }, { status: 200 });
@@ -50,10 +47,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const existing = await getBookingById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // Only agent or super_admin or creator can delete
-    if (profile.role !== 'agent' && profile.role !== 'super_admin' && existing.created_by !== profile.id)
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
+    // All authenticated users can delete bookings
     const ok = await deleteBookingById(id);
     return NextResponse.json({ success: ok }, { status: 200 });
   } catch (err: any) {

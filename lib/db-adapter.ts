@@ -96,17 +96,11 @@ export async function listBookingsForProfile(profile: ProfileRow | null) {
   const client = await pool.connect();
   try {
     if (!profile) {
-      const res = await client.query(`SELECT * FROM bookings ORDER BY created_at DESC LIMIT 1000`);
-      return res.rows;
+      // No bookings for non-authenticated users
+      return [];
     }
-    if (profile.role === 'super_admin' || profile.role === 'agent') {
-      const res = await client.query(`SELECT * FROM bookings ORDER BY created_at DESC LIMIT 1000`);
-      return res.rows;
-    }
-    const res = await client.query(
-      `SELECT * FROM bookings WHERE created_by = $1 OR traveler_email = $2 ORDER BY created_at DESC`,
-      [profile.id, profile.email || null],
-    );
+    // All authenticated users can see all bookings
+    const res = await client.query(`SELECT * FROM bookings ORDER BY created_at DESC LIMIT 1000`);
     return res.rows;
   } finally {
     client.release();
@@ -333,7 +327,7 @@ export async function createActivityLog(log: ActivityLogData) {
   }
 }
 
-// Agents (profiles with role 'agent' or 'admin')
+// All users (agents and travelers combined)
 export async function getAgents() {
   const client = await pool.connect();
   try {
@@ -348,7 +342,6 @@ export async function getAgents() {
         COALESCE(p.role, 'traveler') as role
       FROM neon_auth.users au
       LEFT JOIN profiles p ON au.id = p.user_id
-      WHERE COALESCE(p.role, 'traveler') IN ('agent', 'admin', 'super_admin')
       ORDER BY COALESCE(au.raw_user_meta_data->>'name', au.email) ASC
     `);
     return res.rows.map(row => ({
@@ -365,36 +358,9 @@ export async function getAgents() {
   }
 }
 
-// Travelers (profiles with role 'traveler')
+// All users (same as getAgents for backward compatibility)
 export async function getTravelers() {
-  const client = await pool.connect();
-  try {
-    const res = await client.query(`
-      SELECT
-        au.id,
-        au.id as user_id,
-        au.email,
-        au.raw_user_meta_data->>'name' as name,
-        au.raw_user_meta_data->>'phone' as phone,
-        au.created_at,
-        COALESCE(p.role, 'traveler') as role
-      FROM neon_auth.users au
-      LEFT JOIN profiles p ON au.id = p.user_id
-      WHERE COALESCE(p.role, 'traveler') = 'traveler'
-      ORDER BY COALESCE(au.raw_user_meta_data->>'name', au.email) ASC
-    `);
-    return res.rows.map(row => ({
-      id: row.user_id,
-      user_id: row.user_id,
-      role: row.role,
-      name: row.name || row.email || 'Guest',
-      email: row.email,
-      phone: row.phone,
-      created_at: row.created_at,
-    }));
-  } finally {
-    client.release();
-  }
+  return getAgents();
 }
 
 // Messages functions
@@ -434,15 +400,30 @@ export async function getDashboardStats() {
   const client = await pool.connect();
   try {
     const today = new Date().toISOString().split('T')[0];
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+
     const queries = await Promise.all([
       client.query(`SELECT COUNT(*) as total FROM bookings`),
       client.query(`SELECT COUNT(*) as pending FROM bookings WHERE status = 'pending'`),
       client.query(`SELECT COUNT(*) as today FROM bookings WHERE status = 'confirmed' AND flight_date = $1`, [today]),
       client.query(`SELECT COUNT(*) as services FROM services WHERE active = true`),
-      client.query(`SELECT COUNT(*) as travelers FROM neon_auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') = 'traveler'`),
-      client.query(`SELECT COUNT(*) as agents FROM neon_auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') IN ('agent', 'admin', 'super_admin')`),
-      client.query(`SELECT COUNT(*) as completed FROM bookings WHERE status = 'completed'`)
+      client.query(`SELECT COUNT(*) as users FROM neon_auth.users`), // All users
+      client.query(`SELECT COUNT(*) as users FROM neon_auth.users`), // Same count for agents (now all users)
+      client.query(`SELECT COUNT(*) as completed FROM bookings WHERE status = 'completed'`),
+      // Total earnings from completed bookings
+      client.query(`SELECT COALESCE(SUM(s.price), 0) as total_earnings FROM bookings b LEFT JOIN services s ON b.service_id = s.id WHERE b.status = 'completed'`),
+      // Monthly earnings for current month
+      client.query(`SELECT COALESCE(SUM(s.price), 0) as monthly_earnings FROM bookings b LEFT JOIN services s ON b.service_id = s.id WHERE b.status = 'completed' AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE)`),
+      // Unique customers serviced (unique traveler emails or profile ids)
+      client.query(`SELECT COUNT(DISTINCT COALESCE(b.traveler_email, b.traveler_profile_id::text)) as unique_customers FROM bookings b WHERE b.status = 'completed'`),
+      // Cancelled bookings
+      client.query(`SELECT COUNT(*) as cancelled FROM bookings WHERE status = 'cancelled'`)
     ]);
+
+    const completedBookings = parseInt(queries[6].rows[0].completed);
+    const cancelledBookings = parseInt(queries[10].rows[0].cancelled);
+    const totalProcessed = completedBookings + cancelledBookings;
+    const completionPercentage = totalProcessed > 0 ? (completedBookings / totalProcessed) * 100 : 0;
 
     return {
       totalBookings: parseInt(queries[0].rows[0].total),
@@ -451,7 +432,11 @@ export async function getDashboardStats() {
       totalServices: parseInt(queries[3].rows[0].services),
       totalTravelers: parseInt(queries[4].rows[0].travelers),
       totalAgents: parseInt(queries[5].rows[0].agents),
-      completedBookings: parseInt(queries[6].rows[0].completed),
+      completedBookings,
+      totalEarnings: parseFloat(queries[7].rows[0].total_earnings),
+      monthlyEarnings: parseFloat(queries[8].rows[0].monthly_earnings),
+      customersServiced: parseInt(queries[9].rows[0].unique_customers),
+      completionPercentage: Math.round(completionPercentage * 100) / 100, // Round to 2 decimal places
     };
   } finally {
     client.release();

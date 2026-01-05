@@ -21,10 +21,7 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
     const profile = await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name });
-    // Only admins can create services
-    if (profile.role !== 'admin' && profile.role !== 'super_admin')
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
+    // All authenticated users can create services
     const body = await req.json();
     const service = await createService(body);
     return NextResponse.json({ service }, { status: 201 });
