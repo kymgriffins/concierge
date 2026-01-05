@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import DatePicker from "@/components/ui/date-picker";
+import DateRangePicker from "@/components/ui/date-range-picker";
 import TimePicker from "@/components/ui/time-picker";
 import {
   Select,
@@ -88,8 +89,7 @@ export default function FullBookingsCRUDPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [startDate, setStartDate] = useState<string | null>(null);
-  const [endDate, setEndDate] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [serviceFilter, setServiceFilter] = useState("all");
   const [airlineFilter, setAirlineFilter] = useState("all");
   const [terminalFilter, setTerminalFilter] = useState("all");
@@ -140,8 +140,7 @@ export default function FullBookingsCRUDPage() {
     activeTab,
     searchTerm,
     statusFilter,
-    startDate,
-    endDate,
+    dateRange,
     serviceFilter,
     airlineFilter,
     terminalFilter,
@@ -156,8 +155,7 @@ export default function FullBookingsCRUDPage() {
     activeTab,
     searchTerm,
     statusFilter,
-    startDate,
-    endDate,
+    dateRange,
     serviceFilter,
     airlineFilter,
     terminalFilter,
@@ -274,11 +272,11 @@ export default function FullBookingsCRUDPage() {
     }
 
     // Date range filter
-    if (startDate) {
-      filtered = filtered.filter((b) => (b.date || "") >= startDate);
+    if (dateRange.from) {
+      filtered = filtered.filter((b) => (b.date || "") >= dateRange.from!);
     }
-    if (endDate) {
-      filtered = filtered.filter((b) => (b.date || "") <= endDate);
+    if (dateRange.to) {
+      filtered = filtered.filter((b) => (b.date || "") <= dateRange.to!);
     }
 
     // Service filter
@@ -779,6 +777,107 @@ export default function FullBookingsCRUDPage() {
           </div>
         </div>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Date Range</label>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                placeholder="Select date range"
+                className="w-64"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Service</label>
+              <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Services" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {serviceOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Airline</label>
+              <Select value={airlineFilter} onValueChange={setAirlineFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Airlines</SelectItem>
+                  {airlineOptions.map((airline) => (
+                    <SelectItem key={airline} value={airline}>
+                      {airline}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Terminal</label>
+              <Select value={terminalFilter} onValueChange={setTerminalFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Terminals</SelectItem>
+                  {terminalOptions.map((terminal) => (
+                    <SelectItem key={terminal} value={terminal}>
+                      {terminal}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Source</label>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  {sourceOptions.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {source}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {((dateRange.from || dateRange.to) || serviceFilter !== "all" || airlineFilter !== "all" || terminalFilter !== "all" || sourceFilter !== "all") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setDateRange({ from: null, to: null });
+                  setServiceFilter("all");
+                  setAirlineFilter("all");
+                  setTerminalFilter("all");
+                  setSourceFilter("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Bookings Table */}
       <Card>
