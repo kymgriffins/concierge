@@ -25,7 +25,6 @@ interface AdminLayoutProps {
 const navigation = [
   { name: "Dashboard", id: "dashboard", icon: Home },
   { name: "Bookings", id: "bookings", icon: Calendar },
-  { name: "Customers", id: "customers", icon: Users, href: "/admin/customers" },
   { name: "Users", id: "users", icon: Users, href: "/admin/manage/users" },
 ];
 

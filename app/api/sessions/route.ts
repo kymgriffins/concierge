@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const res = await getSession(req);
     if (!res)
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    if (res.agent.role !== "supervisor")
+    if (!res.agent || res.agent.role !== "supervisor")
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const sessions = await listSessions();

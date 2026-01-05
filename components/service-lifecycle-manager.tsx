@@ -218,7 +218,7 @@ export function ServiceLifecycleManager({
     return configs[status] || configs.new;
   };
 
-  const getServiceTypeIcon = (serviceId: string) => {
+  const getServiceTypeIcon = (serviceId: string | undefined) => {
     const icons = {
       arrival: "🛬",
       departure: "🛫",

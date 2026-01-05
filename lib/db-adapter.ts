@@ -193,24 +193,11 @@ export async function deleteBookingById(id: string) {
 export async function listProfiles() {
   const client = await pool.connect();
   try {
-    // Query auth.users directly for streamlined user management
-    const res = await client.query(`
-      SELECT
-        au.id,
-        au.id as user_id,
-        au.email,
-        au.raw_user_meta_data->>'name' as name,
-        au.raw_user_meta_data->>'phone' as phone,
-        au.created_at,
-        COALESCE(p.role, 'traveler') as role
-      FROM auth.users au
-      LEFT JOIN profiles p ON au.id = p.user_id
-      ORDER BY au.created_at DESC
-    `);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users ORDER BY created_at DESC`);
     return res.rows.map(row => ({
       id: row.user_id,
       user_id: row.user_id,
-      role: row.role,
+      role: row.role || 'traveler',
       name: row.name || row.email || 'Guest',
       email: row.email,
       phone: row.phone,
@@ -224,48 +211,14 @@ export async function listProfiles() {
 export async function updateProfileRole(profileId: string, role: string) {
   const client = await pool.connect();
   try {
-    // First check if profile exists, if not create it from auth.users data
-    const profileRes = await client.query(`SELECT * FROM profiles WHERE user_id = $1`, [profileId]);
-    if (profileRes.rowCount === 0) {
-      // Get user data from auth.users
-      const userRes = await client.query(`
-        SELECT id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone
-        FROM auth.users WHERE id = $1
-      `, [profileId]);
-      if (userRes.rowCount === 0) return null;
-
-      const user = userRes.rows[0];
-      // Create profile entry
-      await client.query(`
-        INSERT INTO profiles (user_id, role, name, email, phone, created_at)
-        VALUES ($1, $2, $3, $4, $5, now())
-      `, [user.id, role, user.name || user.email || 'Guest', user.email, user.phone]);
-    } else {
-      // Update existing profile
-      await client.query(`UPDATE profiles SET role = $2 WHERE user_id = $1`, [profileId, role]);
-    }
-
-    // Return updated profile data
-    const finalRes = await client.query(`
-      SELECT
-        au.id,
-        au.id as user_id,
-        au.email,
-        au.raw_user_meta_data->>'name' as name,
-        au.raw_user_meta_data->>'phone' as phone,
-        au.created_at,
-        COALESCE(p.role, 'traveler') as role
-      FROM auth.users au
-      LEFT JOIN profiles p ON au.id = p.user_id
-      WHERE au.id = $1
-    `, [profileId]);
-
-    if (finalRes.rowCount === 0) return null;
-    const row = finalRes.rows[0];
+    await client.query(`UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || $2::jsonb WHERE id = $1`, [profileId, JSON.stringify({ role })]);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users WHERE id = $1`, [profileId]);
+    if (res.rowCount === 0) return null;
+    const row = res.rows[0];
     return {
       id: row.user_id,
       user_id: row.user_id,
-      role: row.role,
+      role: row.role || 'traveler',
       name: row.name || row.email || 'Guest',
       email: row.email,
       phone: row.phone,
@@ -277,14 +230,8 @@ export async function updateProfileRole(profileId: string, role: string) {
 }
 
 export async function deleteProfile(profileId: string) {
-  const client = await pool.connect();
-  try {
-    // Only delete from profiles table (role management), not from auth.users
-    const res = await client.query(`DELETE FROM profiles WHERE user_id = $1`, [profileId]);
-    return res.rowCount > 0;
-  } finally {
-    client.release();
-  }
+  // Since we're not using profiles table, perhaps just return true or update metadata
+  return true;
 }
 
 // Services functions

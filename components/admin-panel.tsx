@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import { AdminBookings } from "./admin-bookings";
-import { AdminBookingAssignments } from "./admin-booking-assignments";
-import { AdminCustomers } from "./admin-customers";
 import { AdminDashboard } from "./admin-dashboard";
-import { AdminServices } from "./admin-services";
-import { AdminActivity } from "./admin-activity";
-import { AdminConversations } from "./admin-conversations";
-import { AdminRoster } from "./admin-roster";
-import { AdminTasks } from "./admin-tasks";
+
 import { AdminLayout } from "./admin-layout";
 
 export function AdminPanel() {
@@ -21,20 +15,11 @@ export function AdminPanel() {
         return <AdminDashboard />;
       case "bookings":
         return <AdminBookings />;
-      case "booking-assignments":
-        return <AdminBookingAssignments />;
-      case "customers":
-        return <AdminCustomers />;
-      case "services":
-        return <AdminServices />;
-      case "conversations":
-        return <AdminConversations />;
-      case "roster":
-        return <AdminRoster />;
-      case "tasks":
-        return <AdminTasks />;
-      case "activity":
-        return <AdminActivity />;
+      
+      
+      
+      
+      
       case "analytics":
         return (
           <div className="space-y-6">

@@ -20,7 +20,7 @@ interface Profile {
 export default function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("staff"); // Default to staff (agents and super_admins)
   const toast = useToast();
 
   async function load() {
@@ -207,7 +207,11 @@ export default function AdminUsersPage() {
     },
   ];
 
-  const filteredData = roleFilter === "all" ? profiles : profiles.filter(p => p.role === roleFilter);
+  const filteredData = roleFilter === "all"
+    ? profiles
+    : roleFilter === "staff"
+    ? profiles.filter(p => p.role === "agent" || p.role === "super_admin")
+    : profiles.filter(p => p.role === roleFilter);
 
   if (loading) {
     return (
@@ -226,10 +230,10 @@ export default function AdminUsersPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            User Management
+            Staff Management
           </CardTitle>
           <CardDescription>
-            Manage user roles and permissions across the system
+            Manage staff roles and permissions (Agents and Super Admins)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -241,6 +245,7 @@ export default function AdminUsersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="staff">Staff (Agents & Admins)</SelectItem>
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="super_admin">Super Admin</SelectItem>
                   <SelectItem value="agent">Agent</SelectItem>
@@ -259,7 +264,7 @@ export default function AdminUsersPage() {
             data={filteredData}
             searchable={true}
             defaultPageSize={25}
-            emptyMessage="No users found"
+            emptyMessage="No staff members found"
           />
         </CardContent>
       </Card>

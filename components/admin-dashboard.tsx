@@ -258,14 +258,7 @@ export function AdminDashboard() {
               <span className="text-xl mb-2">✈️</span>
               <span className="text-sm">Manage Bookings</span>
             </Button>
-            <Button
-              variant="outline"
-              className="h-16 flex-col"
-              onClick={() => router.push("/admin/customers")}
-            >
-              <span className="text-xl mb-2">👥</span>
-              <span className="text-sm">View Customers</span>
-            </Button>
+            {/* Customers view removed */}
           </div>
         </CardContent>
       </Card>
