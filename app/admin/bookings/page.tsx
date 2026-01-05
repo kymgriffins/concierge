@@ -1,5 +1,1146 @@
-import { AdminBookings } from "@/components/admin-bookings";
+"use client";
 
-export default function BookingsPage() {
-  return <AdminBookings />;
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import DatePicker from "@/components/ui/date-picker";
+import TimePicker from "@/components/ui/time-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { useToast } from "@/components/ui/toast";
+import { formatDateUTC, formatRelativeTime } from "@/lib/utils";
+import DataTable, { Column } from "@/components/ui/data-table/data-table";
+import { Tooltip } from "@/components/ui/tooltip";
+import {
+  List,
+  Plus,
+  Clock,
+  CheckCircle,
+  Eye,
+  Edit,
+  Trash2,
+  Filter,
+  Search as SearchIcon,
+  RefreshCw
+} from "lucide-react";
+
+interface Booking {
+  id: string;
+  passengerName?: string;
+  flightNumber?: string;
+  airline?: string;
+  date?: string;
+  time?: string;
+  status?: "new" | "contacted" | "confirmed" | "in_progress" | "completed" | "pending_review" | "cancelled" | "pending";
+  serviceId?: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+  terminal?: string;
+  passengerCount?: number;
+  source?: "email" | "whatsapp" | "call" | "app" | "sms";
+  specialRequests?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  supervisedBy?: string;
+}
+
+interface Agent {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
+export default function FullBookingsCRUDPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState<"date" | "passenger" | "flight">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [serviceOptions, setServiceOptions] = useState<
+    {
+      id: string;
+      name: string;
+      description: string;
+      icon: string;
+      price?: number;
+      active: boolean;
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [serviceFilter, setServiceFilter] = useState("all");
+  const [airlineFilter, setAirlineFilter] = useState("all");
+  const [terminalFilter, setTerminalFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [airlineOptions, setAirlineOptions] = useState<string[]>([]);
+  const [terminalOptions, setTerminalOptions] = useState<string[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<string[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [form, setForm] = useState<Partial<Booking>>({});
+  const toast = useToast();
+  const router = useRouter();
+  const [permissions, setPermissions] = useState<{
+    canCreateBooking?: boolean;
+    canDeleteBooking?: boolean;
+    canUpdateBooking?: boolean;
+  } | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+
+  useEffect(() => {
+    loadBookings();
+    loadServiceOptions();
+    loadAgents();
+    // Set default permissions for now
+    setPermissions({ canCreateBooking: true, canDeleteBooking: true, canUpdateBooking: true });
+  }, []);
+
+  useEffect(() => {
+    const airlines = [
+      ...new Set(bookings.map((b) => b.airline).filter(Boolean) as string[]),
+    ].sort();
+    setAirlineOptions(airlines);
+    const terminals = [
+      ...new Set(bookings.map((b) => b.terminal).filter(Boolean) as string[]),
+    ].sort();
+    setTerminalOptions(terminals);
+    const sources = [
+      ...new Set(bookings.map((b) => b.source).filter(Boolean) as string[]),
+    ].sort();
+    setSourceOptions(sources);
+  }, [bookings]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [bookings, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [sortBy, sortDir]);
+
+  useEffect(() => {
+    setPage(1); // reset page when filters change
+  }, [
+    searchTerm,
+    statusFilter,
+    startDate,
+    endDate,
+    serviceFilter,
+    airlineFilter,
+    terminalFilter,
+    sourceFilter,
+    perPage,
+  ]);
+
+  const loadServiceOptions = async () => {
+    try {
+      const response = await fetch("/api/services");
+      if (!response.ok) return;
+      const result = await response.json();
+      setServiceOptions(
+        result.services.map((o: any) => ({
+          id: o.id,
+          name: o.name,
+          description: o.description,
+          icon: o.icon,
+          price: o.price,
+          active: o.active,
+        })),
+      );
+    } catch (error) {
+      console.error("Error loading service options:", error);
+    }
+  };
+
+  const loadAgents = async () => {
+    try {
+      const response = await fetch("/api/agents");
+      if (!response.ok) return;
+      const result = await response.json();
+      setAgents(result.agents);
+    } catch (error) {
+      console.error("Error loading agents:", error);
+    }
+  };
+
+  useEffect(() => {
+    filterBookings();
+  }, [bookings, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    filterBookings();
+  }, [sortBy, sortDir]);
+
+  useEffect(() => {
+    setPage(1); // reset page when filters change
+  }, [
+    searchTerm,
+    statusFilter,
+    startDate,
+    endDate,
+    serviceFilter,
+    airlineFilter,
+    terminalFilter,
+    sourceFilter,
+    perPage,
+  ]);
+
+  const loadBookings = async () => {
+    try {
+      // Load from real database API
+      const response = await fetch("/api/bookings");
+      if (!response.ok) {
+        throw new Error("Failed to load bookings");
+      }
+      const result = await response.json();
+      // Transform database format to component format
+      const transformedBookings = result.bookings.map((b: any) => ({
+        id: b.id,
+        passengerName: b.traveler_name || "",
+        company: "",
+        phone: b.traveler_phone || "",
+        email: b.traveler_email || "",
+        flightNumber: b.flight_number || "",
+        airline: "",
+        date: b.flight_date || "",
+        time: "",
+        terminal: b.airport || "",
+        passengerCount: 1,
+        serviceId: b.service_id || "",
+        specialRequests: b.special_requests || "",
+        status: b.status || "pending",
+        source: b.communication_channel || "manual",
+        createdAt: b.created_at || new Date().toISOString(),
+        updatedAt: b.updated_at || new Date().toISOString(),
+      }));
+      setBookings(transformedBookings);
+    } catch (error) {
+      console.error("Error loading bookings:", error);
+      // Fallback to empty array if API fails
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterBookings = () => {
+    let filtered = bookings;
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((booking) => booking.status === statusFilter);
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (booking) =>
+          (booking.passengerName || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (booking.flightNumber || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (booking.company && booking.company.toLowerCase().includes(searchTerm.toLowerCase())),
+      );
+    }
+
+    // Date range filter
+    if (startDate) {
+      filtered = filtered.filter((b) => (b.date || "") >= startDate);
+    }
+    if (endDate) {
+      filtered = filtered.filter((b) => (b.date || "") <= endDate);
+    }
+
+    // Service filter
+    if (serviceFilter !== "all") {
+      filtered = filtered.filter(
+        (booking) => booking.serviceId === serviceFilter,
+      );
+    }
+
+    // Airline filter
+    if (airlineFilter !== "all") {
+      filtered = filtered.filter(
+        (booking) => booking.airline === airlineFilter,
+      );
+    }
+
+    // Terminal filter
+    if (terminalFilter !== "all") {
+      filtered = filtered.filter(
+        (booking) => booking.terminal === terminalFilter,
+      );
+    }
+
+    // Source filter
+    if (sourceFilter !== "all") {
+      filtered = filtered.filter((booking) => booking.source === sourceFilter);
+    }
+
+    // sort
+    filtered = filtered.sort((a, b) => {
+      let v = 0;
+      if (sortBy === "date")
+        v = ((a.date || "") + " " + (a.time || "")).localeCompare((b.date || "") + " " + (b.time || ""));
+      if (sortBy === "passenger")
+        v = (a.passengerName || "").localeCompare(b.passengerName || "");
+      if (sortBy === "flight") v = (a.flightNumber || "").localeCompare(b.flightNumber || "");
+      return sortDir === "asc" ? v : -v;
+    });
+
+    setFilteredBookings(filtered);
+  };
+
+  const handleStatusChange = async (
+    bookingId: string,
+    newStatus: Booking["status"],
+  ) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) throw new Error('Failed to update booking status');
+
+      // Create activity log
+      await fetch('/api/activity-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          action: "Status changed",
+          message: `Status changed to ${newStatus}`,
+        }),
+      });
+
+      await loadBookings(); // Reload to get updated data
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+    }
+  };
+
+  const getStatusColor = (status: Booking["status"]): "default" | "secondary" | "outline" | "destructive" => {
+    switch (status) {
+      case "new":
+        return "default";
+      case "contacted":
+        return "secondary";
+      case "confirmed":
+        return "outline";
+      case "in_progress":
+        return "destructive";
+      case "completed":
+        return "outline";
+      case "pending_review":
+        return "secondary";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  };
+
+  const resetForm = () => setForm({});
+
+  const handleOpenCreate = () => {
+    if (permissions && !permissions.canCreateBooking) {
+      toast.showToast({
+        title: "Permission denied",
+        description: "You are not allowed to create bookings",
+        type: "error",
+      });
+      return;
+    }
+
+    resetForm();
+    setShowCreate(true);
+    setEditing(false);
+  };
+
+  const handleOpenEdit = (booking: Booking) => {
+    setForm({ ...booking });
+    setSelectedBooking(booking);
+    setShowEdit(true);
+    setEditing(true);
+  };
+
+  const handleSubmitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // Prepare payload for database API
+      const payload: any = {
+        traveler_name: form.passengerName || "",
+        traveler_email: form.email || "",
+        traveler_phone: form.phone || "",
+        flight_number: form.flightNumber || "",
+        flight_date: form.date || new Date().toISOString().split("T")[0],
+        airport: form.terminal || "",
+        flight_type: "arrival",
+        special_requests: form.specialRequests || "",
+        status: (form.status as Booking["status"]) || "pending",
+        service_id: form.serviceId || null,
+        communication_channel: (form.source as Booking["source"]) || "manual",
+      };
+
+      // Post to real database API
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create booking");
+      }
+
+      const result = await response.json();
+      await loadBookings();
+      setShowCreate(false);
+      resetForm();
+      toast.showToast({
+        title: "Booking created",
+        description: `Booking for ${payload.traveler_name} created successfully`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      toast.showToast({
+        title: "Create failed",
+        description: String(error),
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    setLoading(true);
+    try {
+      // Prepare payload for database API
+      const payload: any = {
+        traveler_name: form.passengerName || "",
+        traveler_email: form.email || "",
+        traveler_phone: form.phone || "",
+        flight_number: form.flightNumber || "",
+        flight_date: form.date || new Date().toISOString().split("T")[0],
+        airport: form.terminal || "",
+        flight_type: "arrival",
+        special_requests: form.specialRequests || "",
+        status: (form.status as Booking["status"]) || "pending",
+        service_id: form.serviceId || null,
+        communication_channel: (form.source as Booking["source"]) || "manual",
+      };
+
+      const response = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('Failed to update booking');
+
+      // Create activity log
+      await fetch('/api/activity-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: selectedBooking.id,
+          action: "Booking Updated",
+          message: `Booking updated for ${payload.traveler_name}`,
+        }),
+      });
+
+      await loadBookings();
+      setShowEdit(false);
+      setEditing(false);
+      setSelectedBooking(null);
+      resetForm();
+      toast.showToast({
+        title: "Booking updated",
+        description: `${payload.traveler_name} updated`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: String(error),
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/bookings/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete booking');
+
+      // Create activity log
+      await fetch('/api/activity-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: id,
+          action: "Booking Deleted",
+          message: `Booking ${id} deleted`,
+        }),
+      });
+
+      await loadBookings();
+      toast.showToast({
+        title: "Booking deleted",
+        description: `Booking ${id} removed`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      toast.showToast({
+        title: "Delete failed",
+        description: String(error),
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return formatDateUTC(dateString);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / perPage));
+  const paginated = filteredBookings.slice(
+    (page - 1) * perPage,
+    page * perPage,
+  );
+
+  // Custom DataTable with filters
+  const BookingsDataTable = () => {
+    const columns: Column<Booking>[] = [
+      {
+        key: "passenger",
+        header: "Passenger",
+        accessor: (r) => r.passengerName,
+        cell: (r) => (
+          <div>
+            <div className="font-medium">{r.passengerName}</div>
+            <div className="text-sm text-muted-foreground">
+              {r.phone} • {r.email}
+            </div>
+          </div>
+        ),
+        sortable: true,
+        filterable: true,
+      },
+      {
+        key: "flight",
+        header: "Flight",
+        accessor: (r) => r.flightNumber,
+        cell: (r) => (
+          <div>
+            {r.flightNumber}
+            <div className="text-sm text-muted-foreground">
+              {r.airline} • {r.time}
+            </div>
+          </div>
+        ),
+        sortable: true,
+        filterable: true,
+      },
+      {
+        key: "date",
+        header: "Booking Date & Time",
+        accessor: (r) => `${r.date} ${r.time}`,
+        cell: (r) => {
+          const { text, color } = formatRelativeTime(r.date || "", r.status || "new");
+          return (
+            <div>
+              <div className={color}>{text}</div>
+              <div className="text-sm text-muted-foreground">{r.time}</div>
+            </div>
+          );
+        },
+        sortable: true,
+      },
+      {
+        key: "service",
+        header: "Service",
+        cell: (r) => (
+          <Badge variant="outline" className="text-xs">
+            {serviceOptions.find((s) => s.id === r.serviceId)?.name ||
+              r.serviceId}
+          </Badge>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (r) => (
+          <Badge variant={getStatusColor(r.status || "pending")}>
+            {(r.status || "pending").replace("_", " ")}
+          </Badge>
+        ),
+        sortable: true,
+        filterable: true,
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        cell: (r) => (
+          <div className="flex gap-2">
+            <Tooltip content="View Details">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push(`/admin/bookings/${r.id}`)}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Edit Booking">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenEdit(r)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Delete Booking">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(r.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </Tooltip>
+          </div>
+        ),
+      },
+    ];
+
+    return (
+      <DataTable
+        columns={columns}
+        data={filteredBookings}
+        defaultPageSize={perPage}
+        pageSizeOptions={[10, 25, 50, 100]}
+        onRowClick={(r) => router.push(`/admin/bookings/${r.id}`)}
+        searchable={true}
+        exportable={true}
+        emptyMessage="No bookings found matching your criteria"
+      />
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="h-4 bg-muted rounded animate-pulse mb-2" />
+              <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold">Full Bookings CRUD</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Complete Create, Read, Update, Delete operations for all bookings
+          </p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadBookings}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={handleOpenCreate}
+            className="flex-1 sm:flex-initial"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Booking
+          </Button>
+        </div>
+      </div>
+
+     
+
+      {/* Bookings Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bookings ({filteredBookings.length})</CardTitle>
+          <CardDescription>
+            Showing {paginated.length} of {filteredBookings.length} bookings
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BookingsDataTable />
+        </CardContent>
+      </Card>
+
+      {/* Create Booking Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold">Create New Booking</h2>
+                    <p className="text-muted-foreground">
+                      Add a new booking to the system
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreate(false);
+                      resetForm();
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </div>
+
+                <form onSubmit={handleSubmitCreate} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Passenger name *"
+                      value={form.passengerName || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, passengerName: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      placeholder="Company"
+                      value={form.company || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, company: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Phone *"
+                      value={form.phone || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, phone: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Flight number *"
+                      value={form.flightNumber || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, flightNumber: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      placeholder="Airline *"
+                      value={form.airline || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, airline: e.target.value })
+                      }
+                      required
+                    />
+                    <DatePicker
+                      value={form.date || null}
+                      onChange={(d) => setForm({ ...form, date: d || "" })}
+                      placeholder="Select date *"
+                    />
+                    <TimePicker
+                      value={form.time || null}
+                      onChange={(t) => setForm({ ...form, time: t || "" })}
+                      placeholder="Select time *"
+                    />
+                    <Input
+                      placeholder="Terminal"
+                      value={form.terminal || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, terminal: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Passengers"
+                      value={form.passengerCount?.toString() || "1"}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          passengerCount: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <Select
+                      value={form.status || "new"}
+                      onValueChange={(val: string) =>
+                        setForm({ ...form, status: val as Booking["status"] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="contacted">Contacted</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-3">
+                      Service *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {serviceOptions
+                        .filter((opt) => opt.active)
+                        .map((opt) => (
+                          <label
+                            key={opt.id}
+                            className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                          >
+                            <input
+                              type="radio"
+                              name="service"
+                              value={opt.id}
+                              checked={form.serviceId === opt.id}
+                              onChange={(e) =>
+                                setForm({ ...form, serviceId: e.target.value })
+                              }
+                              required
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{opt.icon}</span>
+                                <span className="text-sm font-medium">
+                                  {opt.name}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {opt.description}
+                              </p>
+                              <p className="text-xs font-semibold text-primary mt-1">
+                                ${opt.price}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Special Requests
+                    </label>
+                    <Input
+                      placeholder="Any special requests or notes"
+                      value={form.specialRequests || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, specialRequests: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Creating..." : "Create Booking"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => {
+                        setShowCreate(false);
+                        resetForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Booking Modal */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold">Edit Booking</h2>
+                    <p className="text-muted-foreground">
+                      Update booking details
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowEdit(false);
+                      setEditing(false);
+                      setSelectedBooking(null);
+                      resetForm();
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </div>
+
+                <form onSubmit={handleSubmitEdit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Passenger name *"
+                      value={form.passengerName || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, passengerName: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      placeholder="Company"
+                      value={form.company || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, company: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Phone *"
+                      value={form.phone || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, phone: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Flight number *"
+                      value={form.flightNumber || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, flightNumber: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      placeholder="Airline *"
+                      value={form.airline || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, airline: e.target.value })
+                      }
+                      required
+                    />
+                    <DatePicker
+                      value={form.date || null}
+                      onChange={(d) => setForm({ ...form, date: d || "" })}
+                      placeholder="Select date *"
+                    />
+                    <TimePicker
+                      value={form.time || null}
+                      onChange={(t) => setForm({ ...form, time: t || "" })}
+                      placeholder="Select time *"
+                    />
+                    <Input
+                      placeholder="Terminal"
+                      value={form.terminal || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, terminal: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Passengers"
+                      value={form.passengerCount?.toString() || "1"}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          passengerCount: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <Select
+                      value={form.status || "new"}
+                      onValueChange={(val: string) =>
+                        setForm({ ...form, status: val as Booking["status"] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="contacted">Contacted</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-3">
+                      Service *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {serviceOptions
+                        .filter((opt) => opt.active)
+                        .map((opt) => (
+                          <label
+                            key={opt.id}
+                            className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                          >
+                            <input
+                              type="radio"
+                              name="service"
+                              value={opt.id}
+                              checked={form.serviceId === opt.id}
+                              onChange={(e) =>
+                                setForm({ ...form, serviceId: e.target.value })
+                              }
+                              required
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{opt.icon}</span>
+                                <span className="text-sm font-medium">
+                                  {opt.name}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {opt.description}
+                              </p>
+                              <p className="text-xs font-semibold text-primary mt-1">
+                                ${opt.price}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Special Requests
+                    </label>
+                    <Input
+                      placeholder="Any special requests or notes"
+                      value={form.specialRequests || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, specialRequests: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Updating..." : "Update Booking"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => {
+                        setShowEdit(false);
+                        setEditing(false);
+                        setSelectedBooking(null);
+                        resetForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

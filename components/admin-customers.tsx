@@ -4,201 +4,73 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Customer, MockAPI } from "@/lib/mock-api";
 import DataTable, { Column } from "@/components/ui/data-table/data-table";
 import { formatDateUTC } from "@/lib/utils";
-import {
-  Building,
-  Calendar,
-  Mail,
-  MoreHorizontal,
-  Phone,
-  Eye,
-} from "lucide-react";
+import { Eye, Mail, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+interface Traveler {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  created_at?: string;
+}
+
 export function AdminCustomers() {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [travelers, setTravelers] = useState<Traveler[]>([]);
+  const [filteredTravelers, setFilteredTravelers] = useState<Traveler[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [showCreate, setShowCreate] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<Partial<Customer>>({});
-  const [searchResults, setSearchResults] = useState<Customer[]>([]);
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   useEffect(() => {
-    loadCustomers();
+    loadTravelers();
   }, []);
 
   useEffect(() => {
-    filterCustomers();
-    searchCustomers();
-  }, [customers, searchTerm, statusFilter]);
+    filterTravelers();
+  }, [travelers, searchTerm]);
 
-  useEffect(() => {
-    searchCustomers();
-  }, [searchTerm]);
-
-  const loadCustomers = async () => {
+  const loadTravelers = async () => {
     try {
-      const data = await MockAPI.getCustomers();
-      setCustomers(data);
+      const response = await fetch("/api/travelers");
+      if (!response.ok) throw new Error("Failed to load travelers");
+      const result = await response.json();
+      setTravelers(result.travelers);
     } catch (error) {
-      console.error("Error loading customers:", error);
+      console.error("Error loading travelers:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterCustomers = () => {
-    let filtered = customers;
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(
-        (customer) => customer.status === statusFilter,
-      );
-    }
+  const filterTravelers = () => {
+    let filtered = travelers;
 
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (customer) =>
-          customer.name.toLowerCase().includes(lowerTerm) ||
-          customer.email.toLowerCase().includes(lowerTerm) ||
-          customer.company.toLowerCase().includes(lowerTerm),
+        (traveler) =>
+          (traveler.name || "").toLowerCase().includes(lowerTerm) ||
+          (traveler.email || "").toLowerCase().includes(lowerTerm)
       );
     }
 
-    setFilteredCustomers(filtered);
+    setFilteredTravelers(filtered);
   };
 
-  const searchCustomers = () => {
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
-      setShowSearchDropdown(false);
-      return;
-    }
-
-    const lowerTerm = searchTerm.toLowerCase();
-    const results = customers
-      .filter(
-        (customer) =>
-          customer.name.toLowerCase().includes(lowerTerm) ||
-          customer.email.toLowerCase().includes(lowerTerm) ||
-          customer.company.toLowerCase().includes(lowerTerm),
-      )
-      .slice(0, 5); // Limit to 5 results
-
-    setSearchResults(results);
-    setShowSearchDropdown(results.length > 0);
-  };
-
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const handleStatusChange = async (
-    customerId: string,
-    newStatus: Customer["status"],
-  ) => {
-    try {
-      await MockAPI.updateCustomer(customerId, { status: newStatus });
-      await loadCustomers();
-    } catch (error) {
-      console.error("Error updating customer status:", error);
-    }
-  };
-
-  const resetForm = () => setForm({});
-
-  const handleOpenCreate = () => {
-    resetForm();
-    setShowCreate(true);
-    setEditing(false);
-  };
-
-  const handleSubmitCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      const payload: any = {
-        name: form.name || "",
-        email: form.email || "",
-        phone: form.phone || "",
-        company: form.company || "",
-        role: form.role || "Regular",
-        status: (form.status as Customer["status"]) || "active",
-        totalBookings: form.totalBookings || 0,
-        lastBookingDate: form.lastBookingDate || "",
-        notes: form.notes || "",
-      };
-      await MockAPI.createCustomer(payload);
-      await loadCustomers();
-      setShowCreate(false);
-      resetForm();
-    } catch (error) {
-      console.error("Error creating customer:", error);
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleOpenEdit = (customer: Customer) => {
-    setForm({ ...customer });
-    setEditing(true);
-    setShowCreate(true);
-  };
-
-  const handleSubmitEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.id) return;
-    setCreating(true);
-    try {
-      await MockAPI.updateCustomer(form.id, form as Partial<Customer>);
-      await loadCustomers();
-      setShowCreate(false);
-      setEditing(false);
-      resetForm();
-    } catch (error) {
-      console.error("Error updating customer:", error);
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete customer?")) return;
-    try {
-      await MockAPI.deleteCustomer(id);
-      await loadCustomers();
-    } catch (error) {
-      console.error("Error deleting customer:", error);
-    }
   };
 
   if (loading) {
@@ -226,173 +98,30 @@ export function AdminCustomers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Customers</h1>
+          <h1 className="text-2xl font-bold">Customers (Travelers)</h1>
           <p className="text-muted-foreground">
-            Manage your relationships with passengers and bookers
+            View and manage traveler profiles and their booking history
           </p>
         </div>
-        <Button onClick={handleOpenCreate}>
-          <span className="mr-2">+</span>
-          Add Customer
-        </Button>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
+          <div className="flex gap-4">
+            <div className="flex-1">
               <Input
-                placeholder="Search customers to view details..."
+                placeholder="Search travelers by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() =>
-                  searchTerm &&
-                  searchResults.length > 0 &&
-                  setShowSearchDropdown(true)
-                }
-                onBlur={() =>
-                  setTimeout(() => setShowSearchDropdown(false), 200)
-                }
                 className="w-full"
               />
-              {/* Search Results Dropdown */}
-              {showSearchDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {searchResults.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
-                      onClick={() => {
-                        console.log(
-                          "Clicked customer:",
-                          customer.id,
-                          customer.name,
-                        );
-                        console.log(
-                          "Navigating to:",
-                          `/admin/customers/${customer.id}`,
-                        );
-                        try {
-                          router.push(`/admin/customers/${customer.id}`);
-                          console.log("Router push executed successfully");
-                        } catch (error) {
-                          console.error("Error during navigation:", error);
-                        }
-                        setSearchTerm("");
-                        setShowSearchDropdown(false);
-                      }}
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {getInitials(customer.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
-                          {customer.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {customer.email} • {customer.company}
-                        </div>
-                      </div>
-                      <Badge
-                        variant={
-                          customer.status === "active" ? "default" : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {customer.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Customers List */}
-      {/* Create/Edit form */}
-      {showCreate && (
-        <Card>
-          <CardContent>
-            <form
-              onSubmit={editing ? handleSubmitEdit : handleSubmitCreate}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Name"
-                  value={form.name || ""}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-                <Input
-                  placeholder="Company"
-                  value={form.company || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, company: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Email"
-                  value={form.email || ""}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-                <Input
-                  placeholder="Phone"
-                  value={form.phone || ""}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-                <Select
-                  value={form.status || "active"}
-                  onValueChange={(v) =>
-                    setForm({ ...form, status: v as Customer["status"] })
-                  }
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" disabled={creating}>
-                  {creating
-                    ? "Saving..."
-                    : editing
-                      ? "Save changes"
-                      : "Create customer"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreate(false);
-                    setEditing(false);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+      {/* Travelers List */}
       <div>
         <DataTable
           columns={
@@ -400,10 +129,10 @@ export function AdminCustomers() {
               {
                 key: "avatar",
                 header: "",
-                cell: (c) => (
+                cell: (t) => (
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>{getInitials(c.name)}</AvatarFallback>
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>{getInitials(t.name)}</AvatarFallback>
                     </Avatar>
                   </div>
                 ),
@@ -412,83 +141,67 @@ export function AdminCustomers() {
               {
                 key: "name",
                 header: "Name",
-                accessor: (c) => c.name,
-                cell: (c) => (
+                accessor: (t) => t.name,
+                cell: (t) => (
                   <div>
-                    <div className="font-medium">{c.name}</div>
+                    <div className="font-medium">{t.name || "Unnamed Traveler"}</div>
                     <div className="text-sm text-muted-foreground">
-                      {c.role}
+                      {t.role || "traveler"}
                     </div>
                   </div>
                 ),
                 sortable: true,
               },
-              { key: "company", header: "Company", accessor: (c) => c.company },
-              { key: "email", header: "Email", accessor: (c) => c.email },
-              { key: "phone", header: "Phone", accessor: (c) => c.phone },
               {
-                key: "bookings",
-                header: "Bookings",
-                accessor: (c) => c.totalBookings,
-                cell: (c) => (
-                  <div className="font-semibold">{c.totalBookings}</div>
+                key: "contact",
+                header: "Contact",
+                cell: (t) => (
+                  <div className="space-y-1">
+                    {t.email && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <Mail className="h-3 w-3" />
+                        {t.email}
+                      </div>
+                    )}
+                    {t.phone && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <Phone className="h-3 w-3" />
+                        {t.phone}
+                      </div>
+                    )}
+                  </div>
                 ),
-                sortable: true,
               },
               {
-                key: "last",
-                header: "Last Booking",
-                accessor: (c) => c.lastBookingDate,
-                cell: (c) =>
-                  c.lastBookingDate ? formatDateUTC(c.lastBookingDate) : "-",
+                key: "joined",
+                header: "Joined",
+                accessor: (t) => t.created_at,
+                cell: (t) =>
+                  t.created_at ? formatDateUTC(t.created_at) : "-",
+                sortable: true,
               },
               {
                 key: "actions",
                 header: "",
-                cell: (c) => (
+                cell: (t) => (
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/admin/customers/${c.id}`)}
+                      onClick={() => router.push(`/admin/customers/${t.id}`)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleOpenEdit(c)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(c.id)}
-                    >
-                      Delete
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleStatusChange(
-                          c.id,
-                          c.status === "active" ? "inactive" : "active",
-                        )
-                      }
-                    >
-                      {c.status === "active" ? "Deactivate" : "Activate"}
+                      View Profile
                     </Button>
                   </div>
                 ),
               },
-            ] as Column<Customer>[]
+            ] as Column<Traveler>[]
           }
-          data={filteredCustomers}
+          data={filteredTravelers}
           defaultPageSize={10}
           pageSizeOptions={[10, 25, 50]}
+          emptyMessage="No travelers found matching your criteria"
         />
       </div>
     </div>

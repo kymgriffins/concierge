@@ -2,16 +2,14 @@ import { NextResponse } from 'next/server';
 import { neonAuth } from '@neondatabase/auth/next/server';
 import {
   getOrCreateProfileForUser,
-  listBookingsForProfile,
-  createBookingForProfile,
+  getServices,
+  createService,
 } from '../../../lib/db-adapter';
 
 export async function GET() {
   try {
-    const { session, user } = await neonAuth();
-    const profile = user ? await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name }) : null;
-    const bookings = await listBookingsForProfile(profile);
-    return NextResponse.json({ bookings }, { status: 200 });
+    const services = await getServices();
+    return NextResponse.json({ services }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -23,10 +21,13 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
     const profile = await getOrCreateProfileForUser({ id: user.id, email: user.email, name: user.name });
-    // allow agents and travellers to create bookings; stricter rules can be added
+    // Only admins can create services
+    if (profile.role !== 'admin' && profile.role !== 'super_admin')
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     const body = await req.json();
-    const booking = await createBookingForProfile(profile, body);
-    return NextResponse.json({ booking }, { status: 201 });
+    const service = await createService(body);
+    return NextResponse.json({ service }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

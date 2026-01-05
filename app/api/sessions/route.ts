@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { readDB } from "../../../lib/json-db";
+import { getSessionByToken, listSessions } from '../../../lib/db-adapter';
 
 function parseCookies(cookieHeader: string | null) {
   const map: Record<string, string> = {};
@@ -17,13 +17,7 @@ async function getSession(req: NextRequest) {
   const cookies = parseCookies(cookieHeader);
   const token = cookies["mock_sess"];
   if (!token) return null;
-  const db = await readDB();
-  const session = (db.sessions || []).find(
-    (s: any) => s.token === token && s.expiresAt > Date.now(),
-  );
-  if (!session) return null;
-  const agent = db.agents.find((a: any) => a.id === session.agentId);
-  return { session, agent };
+  return await getSessionByToken(token);
 }
 
 export async function GET(req: NextRequest) {
@@ -34,8 +28,8 @@ export async function GET(req: NextRequest) {
     if (res.agent.role !== "supervisor")
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const db = await readDB();
-    return NextResponse.json({ sessions: db.sessions || [] }, { status: 200 });
+    const sessions = await listSessions();
+    return NextResponse.json({ sessions: sessions || [] }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

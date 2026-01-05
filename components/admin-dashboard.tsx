@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -11,25 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MockAPI, Booking, DashboardStats } from "@/lib/mock-api";
+import { MockAPI, Booking } from "@/lib/mock-api";
 import { useToast } from "@/components/ui/toast";
-import { SupervisorReviewPanel } from "@/components/supervisor-review-panel";
 import { formatRelativeTime } from "@/lib/utils";
 
-export function AdminDashboard({
-  onNavigate,
-}: {
-  onNavigate?: (page: string) => void;
-}) {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+export function AdminDashboard() {
+  const router = useRouter();
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,15 +26,39 @@ export function AdminDashboard({
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [dashboardStats, bookings, schedule] = await Promise.all([
-          MockAPI.getDashboardStats(),
-          MockAPI.getBookings("all", 5),
-          MockAPI.getTodaySchedule(),
-        ]);
+        // Load recent bookings from database API
+        const bookingsResponse = await fetch("/api/bookings");
+        const bookingsResult = await bookingsResponse.json();
+        const bookings = bookingsResult.bookings.slice(0, 5);
 
-        setStats(dashboardStats);
-        setRecentBookings(bookings);
-        setTodaySchedule(schedule);
+        // Transform database format to component format
+        const transformedBookings = bookings.map((b: any) => ({
+          id: b.id,
+          passengerName: b.traveler_name || "",
+          flightNumber: b.flight_number || "",
+          date: b.flight_date || "",
+          time: "",
+          status: b.status || "pending",
+          createdAt: b.created_at || new Date().toISOString(),
+        }));
+
+        // For today schedule, filter bookings for today
+        const today = new Date().toISOString().split('T')[0];
+        const todayBookings = bookingsResult.bookings
+          .filter((b: any) => b.flight_date === today && b.status === 'confirmed')
+          .slice(0, 5);
+
+        const transformedTodayBookings = todayBookings.map((b: any) => ({
+          id: b.id,
+          passengerName: b.traveler_name || "",
+          flightNumber: b.flight_number || "",
+          date: b.flight_date || "",
+          time: "",
+          status: b.status || "confirmed",
+        }));
+
+        setRecentBookings(transformedBookings);
+        setTodaySchedule(transformedTodayBookings);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -60,14 +72,39 @@ export function AdminDashboard({
   const refresh = async () => {
     setLoading(true);
     try {
-      const [dashboardStats, bookings, schedule] = await Promise.all([
-        MockAPI.getDashboardStats(),
-        MockAPI.getBookings("all", 5),
-        MockAPI.getTodaySchedule(),
-      ]);
-      setStats(dashboardStats);
-      setRecentBookings(bookings);
-      setTodaySchedule(schedule);
+      // Load recent bookings from database API
+      const bookingsResponse = await fetch("/api/bookings");
+      const bookingsResult = await bookingsResponse.json();
+      const bookings = bookingsResult.bookings.slice(0, 5);
+
+      // Transform database format to component format
+      const transformedBookings = bookings.map((b: any) => ({
+        id: b.id,
+        passengerName: b.traveler_name || "",
+        flightNumber: b.flight_number || "",
+        date: b.flight_date || "",
+        time: "",
+        status: b.status || "pending",
+        createdAt: b.created_at || new Date().toISOString(),
+      }));
+
+      // For today schedule, filter bookings for today
+      const today = new Date().toISOString().split('T')[0];
+      const todayBookings = bookingsResult.bookings
+        .filter((b: any) => b.flight_date === today && b.status === 'confirmed')
+        .slice(0, 5);
+
+      const transformedTodayBookings = todayBookings.map((b: any) => ({
+        id: b.id,
+        passengerName: b.traveler_name || "",
+        flightNumber: b.flight_number || "",
+        date: b.flight_date || "",
+        time: "",
+        status: b.status || "confirmed",
+      }));
+
+      setRecentBookings(transformedBookings);
+      setTodaySchedule(transformedTodayBookings);
     } catch (error) {
       console.error("Error refreshing dashboard data:", error);
       toast.showToast({
@@ -80,35 +117,11 @@ export function AdminDashboard({
     }
   };
 
-  const handleSync = async () => {
-    try {
-      toast.showToast({
-        title: "Sync started",
-        description: "Syncing data, this may take a moment",
-        type: "info",
-      });
-      await MockAPI.syncData();
-      await refresh();
-      toast.showToast({
-        title: "Sync complete",
-        description: "Data synced successfully",
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error syncing data:", error);
-      toast.showToast({
-        title: "Sync failed",
-        description: String(error),
-        type: "error",
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
                 <div className="h-4 bg-muted rounded animate-pulse" />
@@ -131,10 +144,8 @@ export function AdminDashboard({
         <Button variant="outline" onClick={refresh}>
           Refresh
         </Button>
-        <Button className="ml-2" onClick={handleSync}>
-          Sync Data
-        </Button>
       </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Bookings */}
         <Card>
@@ -148,8 +159,8 @@ export function AdminDashboard({
             <div className="space-y-4">
               {recentBookings.slice(0, 4).map((booking) => {
                 const { text: createdTimeText, color: createdTimeColor } = formatRelativeTime(
-                  booking.createdAt.split('T')[0],
-                  booking.status
+                  booking.createdAt?.split('T')[0] || booking.date || new Date().toISOString().split('T')[0],
+                  booking.status || "new"
                 );
                 return (
                   <div
@@ -161,10 +172,10 @@ export function AdminDashboard({
                         {booking.passengerName}
                       </p>
                       <p className="text-sm text-muted-foreground truncate">
-                        {booking.flightNumber} • Created <span className={createdTimeColor}>{createdTimeText}</span>
+                        {booking.flightNumber} • <span className={createdTimeColor}>{createdTimeText}</span>
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(booking.createdAt).toLocaleDateString()} at {new Date(booking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                     <Badge
@@ -178,7 +189,7 @@ export function AdminDashboard({
                               : "destructive"
                       }
                     >
-                      {booking.status}
+                      {booking.status?.replace("_", " ")}
                     </Badge>
                   </div>
                 );
@@ -188,7 +199,7 @@ export function AdminDashboard({
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => onNavigate?.("bookings")}
+              onClick={() => router.push("/admin/bookings")}
             >
               View All Bookings
             </Button>
@@ -205,8 +216,8 @@ export function AdminDashboard({
             <div className="space-y-4">
               {todaySchedule.slice(0, 4).map((booking) => {
                 const { text: bookingTimeText, color: bookingTimeColor } = formatRelativeTime(
-                  booking.date,
-                  booking.status
+                  booking.date || new Date().toISOString().split('T')[0],
+                  booking.status || "new"
                 );
                 return (
                   <div key={booking.id} className="flex items-center space-x-4">
@@ -232,81 +243,29 @@ export function AdminDashboard({
         </Card>
       </div>
 
-      {/* Supervisor Reviews */}
-      <SupervisorReviewPanel />
-
-      {/* Quick Actions */}
+      {/* Quick Actions - MVP Focused */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common tasks and shortcuts</CardDescription>
+          <CardDescription>Essential booking management tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <Button
-              className="h-16 sm:h-20 flex-col touch-manipulation"
-              onClick={() => onNavigate?.("bookings")}
+              className="h-16 flex-col"
+              onClick={() => router.push("/admin/bookings")}
             >
-              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">✈️</span>
-              <span className="text-xs sm:text-sm">New Booking</span>
+              <span className="text-xl mb-2">✈️</span>
+              <span className="text-sm">Manage Bookings</span>
             </Button>
             <Button
               variant="outline"
-              className="h-16 sm:h-20 flex-col touch-manipulation"
+              className="h-16 flex-col"
+              onClick={() => router.push("/admin/customers")}
             >
-              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🔍</span>
-              <span className="text-xs sm:text-sm">Search Flights</span>
+              <span className="text-xl mb-2">👥</span>
+              <span className="text-sm">View Customers</span>
             </Button>
-            <Button
-              variant="outline"
-              className="h-16 sm:h-20 flex-col touch-manipulation"
-            >
-              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">📋</span>
-              <span className="text-xs sm:text-sm">View Reports</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-16 sm:h-20 flex-col touch-manipulation"
-            >
-              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">⚙️</span>
-              <span className="text-xs sm:text-sm">Settings</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Status</CardTitle>
-          <CardDescription>
-            Current system health and sync status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Online - All systems operational</span>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium">
-                {stats?.pendingSync || 0} items pending sync
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Last synced:{" "}
-                {stats ? (
-                  (() => {
-                    const { text: syncTimeText, color: syncTimeColor } = formatRelativeTime(
-                      stats.lastSyncTime.split('T')[0]
-                    );
-                    return <span className={syncTimeColor}>{syncTimeText}</span>;
-                  })()
-                ) : (
-                  "Never"
-                )}
-              </p>
-            </div>
           </div>
         </CardContent>
       </Card>
