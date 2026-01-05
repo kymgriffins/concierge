@@ -549,7 +549,7 @@ export default function FullBookingsCRUDPage() {
       {
         key: "date",
         header: "Booking Date & Time",
-        accessor: (r) => `${r.date} ${r.time}`,
+        accessor: (r) => r.date || "",
         cell: (r) => {
           const formattedDate = formatDateUTC(r.date || "");
           let color: string;
@@ -648,6 +648,7 @@ export default function FullBookingsCRUDPage() {
         data={filteredBookings}
         defaultPageSize={perPage}
         pageSizeOptions={[10, 25, 50, 100]}
+        defaultSort={{ key: "date", dir: "asc" }}
         onRowClick={(r) => {
           try {
             sessionStorage.setItem(`booking_cache_${r.id}`, JSON.stringify(r));
