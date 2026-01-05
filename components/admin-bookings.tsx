@@ -610,8 +610,32 @@ export function AdminBookings() {
     // sort
     filtered = filtered.sort((a, b) => {
       let v = 0;
-      if (sortBy === "date")
-        v = (a.date + " " + (a.time || "")).localeCompare(b.date + " " + (b.time || ""));
+      if (sortBy === "date") {
+        // Custom sorting: prioritize today's date and future dates at the top
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+        const dateA = new Date(`${a.date}T${a.time || "00:00"}`);
+        const dateB = new Date(`${b.date}T${b.time || "00:00"}`);
+
+        const dateAStart = new Date(dateA);
+        dateAStart.setHours(0, 0, 0, 0);
+        const dateBStart = new Date(dateB);
+        dateBStart.setHours(0, 0, 0, 0);
+
+        // Determine if dates are today, future, or past
+        const aIsTodayOrFuture = dateAStart >= today;
+        const bIsTodayOrFuture = dateBStart >= today;
+
+        if (aIsTodayOrFuture && !bIsTodayOrFuture) {
+          v = -1; // a comes first (today/future before past)
+        } else if (!aIsTodayOrFuture && bIsTodayOrFuture) {
+          v = 1; // b comes first (today/future before past)
+        } else {
+          // Both in same category (both today/future or both past), sort chronologically
+          v = dateA.getTime() - dateB.getTime();
+        }
+      }
       if (sortBy === "passenger")
         v = (a.passengerName || "").localeCompare(b.passengerName || "");
       if (sortBy === "flight") v = (a.flightNumber || "").localeCompare(b.flightNumber || "");
@@ -903,7 +927,7 @@ export function AdminBookings() {
       },
       {
         key: "date",
-        header: "Booking Date & Time",
+        header: "Flight Date & Time",
         accessor: (r) => `${r.date} ${r.time}`,
         cell: (r) => {
           const { text, color } = formatRelativeTime(r.date, r.status);

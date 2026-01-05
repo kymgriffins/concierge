@@ -86,6 +86,7 @@ export default function FullBookingsCRUDPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [statusFilter, setStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export default function FullBookingsCRUDPage() {
     filterBookings();
   }, [
     bookings,
+    activeTab,
     searchTerm,
     statusFilter,
     startDate,
@@ -151,6 +153,7 @@ export default function FullBookingsCRUDPage() {
   useEffect(() => {
     setPage(1); // reset page when filters change
   }, [
+    activeTab,
     searchTerm,
     statusFilter,
     startDate,
@@ -236,6 +239,21 @@ export default function FullBookingsCRUDPage() {
   const filterBookings = () => {
     let filtered = bookings;
 
+    // First filter by active tab
+    if (activeTab === "active") {
+      // Show active bookings (not completed or cancelled)
+      filtered = filtered.filter(
+        (booking) =>
+          booking.status !== "completed" && booking.status !== "cancelled"
+      );
+    } else if (activeTab === "completed") {
+      // Show completed/cancelled bookings
+      filtered = filtered.filter(
+        (booking) =>
+          booking.status === "completed" || booking.status === "cancelled"
+      );
+    }
+
     // Filter by status
     if (statusFilter !== "all") {
       filtered = filtered.filter((booking) => booking.status === statusFilter);
@@ -292,8 +310,19 @@ export default function FullBookingsCRUDPage() {
     // sort
     filtered = filtered.sort((a, b) => {
       let v = 0;
-      if (sortBy === "date")
-        v = ((a.date || "") + " " + (a.time || "")).localeCompare((b.date || "") + " " + (b.time || ""));
+      if (sortBy === "date") {
+        // Sort by booking time and date, showing most imminent first
+        const now = new Date();
+        const aDateTime = new Date(`${a.date || ""}T${a.time || "00:00"}`);
+        const bDateTime = new Date(`${b.date || ""}T${b.time || "00:00"}`);
+
+        // Calculate time difference from now
+        const aDiff = Math.abs(aDateTime.getTime() - now.getTime());
+        const bDiff = Math.abs(bDateTime.getTime() - now.getTime());
+
+        // Sort by closest to current time (smallest difference first)
+        v = aDiff - bDiff;
+      }
       if (sortBy === "passenger")
         v = (a.passengerName || "").localeCompare(b.passengerName || "");
       if (sortBy === "flight") v = (a.flightNumber || "").localeCompare(b.flightNumber || "");
@@ -327,8 +356,18 @@ export default function FullBookingsCRUDPage() {
       });
 
       await loadBookings(); // Reload to get updated data
+      toast.showToast({
+        title: "Status updated",
+        description: `Booking status changed to ${newStatus?.replace("_", " ") || "unknown"}`,
+        type: "success",
+      });
     } catch (error) {
       console.error("Error updating booking status:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: "Failed to update booking status",
+        type: "error",
+      });
     }
   };
 
@@ -653,7 +692,22 @@ export default function FullBookingsCRUDPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadBookings}
+            onClick={async () => {
+              try {
+                await loadBookings();
+                toast.showToast({
+                  title: "Bookings refreshed",
+                  description: "Data updated successfully",
+                  type: "success",
+                });
+              } catch (error) {
+                toast.showToast({
+                  title: "Refresh failed",
+                  description: "Failed to update bookings data",
+                  type: "error",
+                });
+              }
+            }}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -669,9 +723,61 @@ export default function FullBookingsCRUDPage() {
         </div>
       </div>
 
-     
-
-
+      {/* Tabs */}
+      <div className="w-full">
+        <div className="flex overflow-x-auto scrollbar-hide pb-2">
+          <div className="flex gap-1 sm:gap-2 min-w-max">
+            <button
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                activeTab === "active"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
+              }`}
+              onClick={() => setActiveTab("active")}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Active Bookings
+                </span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === "active"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {bookings.filter(b => b.status !== "completed" && b.status !== "cancelled").length}
+                </span>
+              </div>
+            </button>
+            <button
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                activeTab === "completed"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
+              }`}
+              onClick={() => setActiveTab("completed")}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Completed/Cancelled
+                </span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === "completed"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {bookings.filter(b => b.status === "completed" || b.status === "cancelled").length}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Bookings Table */}
       <Card>

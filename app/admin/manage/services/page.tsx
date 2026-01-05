@@ -32,6 +32,11 @@ export default function AdminServicesPage() {
       const res = await fetch("/api/services");
       const data = await res.json();
       setServices(data.services || []);
+      toast.showToast({
+        title: "Services loaded",
+        description: `${data.services?.length || 0} services loaded successfully`,
+        type: "success",
+      });
     } catch (err) {
       console.error("Error loading services:", err);
       toast.showToast({

@@ -29,6 +29,11 @@ export default function AdminUsersPage() {
       const res = await fetch("/api/profiles");
       const data = await res.json();
       setProfiles(data.profiles || []);
+      toast.showToast({
+        title: "Users loaded",
+        description: `${data.profiles?.length || 0} user profiles loaded successfully`,
+        type: "success",
+      });
     } catch (err) {
       console.error("Error loading profiles:", err);
       toast.showToast({

@@ -433,13 +433,25 @@ export async function createMessage(message: MessageData) {
 export async function getDashboardStats() {
   const client = await pool.connect();
   try {
-    const [bookingsRes, pendingRes] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0];
+    const queries = await Promise.all([
       client.query(`SELECT COUNT(*) as total FROM bookings`),
-      client.query(`SELECT COUNT(*) as pending FROM bookings WHERE status = 'pending'`)
+      client.query(`SELECT COUNT(*) as pending FROM bookings WHERE status = 'pending'`),
+      client.query(`SELECT COUNT(*) as today FROM bookings WHERE status = 'confirmed' AND flight_date = $1`, [today]),
+      client.query(`SELECT COUNT(*) as services FROM services WHERE active = true`),
+      client.query(`SELECT COUNT(*) as travelers FROM neon_auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') = 'traveler'`),
+      client.query(`SELECT COUNT(*) as agents FROM neon_auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') IN ('agent', 'admin', 'super_admin')`),
+      client.query(`SELECT COUNT(*) as completed FROM bookings WHERE status = 'completed'`)
     ]);
+
     return {
-      totalBookings: parseInt(bookingsRes.rows[0].total),
-      pendingBookings: parseInt(pendingRes.rows[0].pending),
+      totalBookings: parseInt(queries[0].rows[0].total),
+      pendingBookings: parseInt(queries[1].rows[0].pending),
+      todayBookings: parseInt(queries[2].rows[0].today),
+      totalServices: parseInt(queries[3].rows[0].services),
+      totalTravelers: parseInt(queries[4].rows[0].travelers),
+      totalAgents: parseInt(queries[5].rows[0].agents),
+      completedBookings: parseInt(queries[6].rows[0].completed),
     };
   } finally {
     client.release();

@@ -10,13 +10,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { X, Menu, Bell, Home, LogOut, Users, Calendar, Settings } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
+import {
+  X,
+  Menu,
+  Bell,
+  Home,
+  LogOut,
+  Users,
+  Calendar,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Plane
+} from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useResponsiveBreakpoints } from "@/lib/hooks";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -33,8 +47,11 @@ interface SidebarContentProps {
   currentPage: string;
   isMobile: boolean;
   isTablet: boolean;
+  isDesktop: boolean;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
   userEmail?: string;
   userName?: string;
 }
@@ -43,8 +60,11 @@ const SidebarContent = ({
   currentPage,
   isMobile,
   isTablet,
+  isDesktop,
   sidebarOpen,
   setSidebarOpen,
+  isCollapsed,
+  setIsCollapsed,
   userEmail,
   userName,
 }: SidebarContentProps) => {
@@ -63,50 +83,113 @@ const SidebarContent = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-6 border-b">
-        <h1 className="text-xl font-bold">Airport Concierge</h1>
-        {(isMobile || isTablet) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(false)}
-            className="touch-manipulation min-h-[44px] min-w-[44px]"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+      {/* Header with collapse button */}
+      <div className={cn(
+        "flex items-center justify-between border-b transition-all duration-300",
+        isCollapsed ? "px-3 py-4" : "p-6"
+      )}>
+        {isCollapsed ? (
+          <div className="flex items-center justify-center">
+            <Plane className="h-6 w-6 text-primary" />
+          </div>
+        ) : (
+          <h1 className="text-xl font-bold">Airport Concierge</h1>
         )}
+
+        <div className="flex items-center gap-2">
+          {/* Collapse/Expand button for desktop/tablet */}
+          {(isDesktop || isTablet) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="touch-manipulation min-h-[44px] min-w-[44px] hover:bg-muted"
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+
+          {/* Close button for mobile/tablet overlay */}
+          {(isMobile || isTablet) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+              className="touch-manipulation min-h-[44px] min-w-[44px]"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      {/* Navigation */}
+      <nav className={cn(
+        "flex-1 space-y-1 transition-all duration-300",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
         {navigation.map((item) => {
           const Icon = item.icon;
           const href = (item as any).href ? (item as any).href : `/admin/${item.id}`;
+          const isActive = currentPage === item.id;
+
           return (
             <Link key={item.id} href={href}>
               <Button
-                variant={currentPage === item.id ? "default" : "ghost"}
-                className="w-full justify-start"
+                variant={isActive ? "default" : "ghost"}
+                className={cn(
+                  "w-full transition-all duration-200 hover:bg-muted",
+                  isCollapsed ? "justify-center px-3 py-3" : "justify-start",
+                  isActive && isCollapsed ? "bg-primary text-primary-foreground hover:bg-primary hover:text-black" : "",
+                  isActive && !isCollapsed ? "hover:text-black hover:bg-primary/10" : ""
+                )}
                 onClick={() => setSidebarOpen(false)}
               >
-                <Icon className="mr-2 h-4 w-4" />
-                {item.name}
+                <Icon className={cn(
+                  "transition-all duration-200",
+                  isCollapsed ? "h-5 w-5" : "mr-3 h-4 w-4"
+                )} />
+                {!isCollapsed && (
+                  <span className="truncate">{item.name}</span>
+                )}
               </Button>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>{getInitials()}</AvatarFallback>
+      {/* User section */}
+      <div className={cn(
+        "border-t transition-all duration-300",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
+        <div className={cn(
+          "flex items-center transition-all duration-300",
+          isCollapsed ? "justify-center" : "space-x-3"
+        )}>
+          <Avatar className={cn(
+            "transition-all duration-200",
+            isCollapsed ? "h-6 w-6" : "h-8 w-8"
+          )}>
+            <AvatarFallback className={cn(
+              "transition-all duration-200",
+              isCollapsed ? "text-xs" : ""
+            )}>
+              {getInitials()}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{userName || "User"}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {userEmail || "No email"}
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{userName || "User"}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {userEmail || "No email"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -117,6 +200,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const { isMobile, isTablet, isDesktop } = useResponsiveBreakpoints();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const toast = useToast();
 
@@ -160,13 +244,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {isDesktop && (
-        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r">
+        <div className={cn(
+          "fixed inset-y-0 left-0 z-50 bg-card border-r transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-16" : "w-64"
+        )}>
           <SidebarContent
             currentPage={currentPage}
             isMobile={isMobile}
             isTablet={isTablet}
+            isDesktop={isDesktop}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
             userEmail={user?.email}
             userName={user?.name || user?.email?.split("@")[0]}
           />
@@ -175,23 +265,32 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {isTablet && (
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-transform duration-300 ease-in-out",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full",
+            isCollapsed ? "w-16" : "w-64"
+          )}
         >
           <SidebarContent
             currentPage={currentPage}
             isMobile={isMobile}
             isTablet={isTablet}
+            isDesktop={isDesktop}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
             userEmail={user?.email}
             userName={user?.name || user?.email?.split("@")[0]}
           />
         </div>
       )}
 
-      <div className={`${isDesktop ? "ml-64" : ""} ${isTablet && sidebarOpen ? "ml-64" : ""}`}>
+      <div className={cn(
+        "transition-all duration-300 ease-in-out",
+        isDesktop ? (isCollapsed ? "ml-16" : "ml-64") : "",
+        isTablet && sidebarOpen ? (isCollapsed ? "ml-16" : "ml-64") : ""
+      )}>
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6">
             <div className="flex items-center space-x-4">
