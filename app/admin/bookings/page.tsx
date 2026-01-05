@@ -684,9 +684,9 @@ export default function FullBookingsCRUDPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Full Bookings CRUD</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Airport Concierge Bookings</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Complete Create, Read, Update, Delete operations for all bookings
+            Manage and track all customer bookings with full create, read, update, and delete capabilities
           </p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
