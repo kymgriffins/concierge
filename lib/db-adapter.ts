@@ -193,7 +193,7 @@ export async function deleteBookingById(id: string) {
 export async function listProfiles() {
   const client = await pool.connect();
   try {
-    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users ORDER BY created_at DESC`);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM neon_auth.users ORDER BY created_at DESC`);
     return res.rows.map(row => ({
       id: row.user_id,
       user_id: row.user_id,
@@ -211,8 +211,8 @@ export async function listProfiles() {
 export async function updateProfileRole(profileId: string, role: string) {
   const client = await pool.connect();
   try {
-    await client.query(`UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || $2::jsonb WHERE id = $1`, [profileId, JSON.stringify({ role })]);
-    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM auth.users WHERE id = $1`, [profileId]);
+    await client.query(`UPDATE neon_auth.users SET raw_user_meta_data = raw_user_meta_data || $2::jsonb WHERE id = $1`, [profileId, JSON.stringify({ role })]);
+    const res = await client.query(`SELECT id, id as user_id, email, raw_user_meta_data->>'name' as name, raw_user_meta_data->>'phone' as phone, raw_user_meta_data->>'role' as role, created_at FROM neon_auth.users WHERE id = $1`, [profileId]);
     if (res.rowCount === 0) return null;
     const row = res.rows[0];
     return {
@@ -346,7 +346,7 @@ export async function getAgents() {
         au.raw_user_meta_data->>'phone' as phone,
         au.created_at,
         COALESCE(p.role, 'traveler') as role
-      FROM auth.users au
+      FROM neon_auth.users au
       LEFT JOIN profiles p ON au.id = p.user_id
       WHERE COALESCE(p.role, 'traveler') IN ('agent', 'admin', 'super_admin')
       ORDER BY COALESCE(au.raw_user_meta_data->>'name', au.email) ASC
@@ -378,7 +378,7 @@ export async function getTravelers() {
         au.raw_user_meta_data->>'phone' as phone,
         au.created_at,
         COALESCE(p.role, 'traveler') as role
-      FROM auth.users au
+      FROM neon_auth.users au
       LEFT JOIN profiles p ON au.id = p.user_id
       WHERE COALESCE(p.role, 'traveler') = 'traveler'
       ORDER BY COALESCE(au.raw_user_meta_data->>'name', au.email) ASC

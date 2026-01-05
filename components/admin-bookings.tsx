@@ -634,8 +634,18 @@ export function AdminBookings() {
         details: `Status changed to ${newStatus}`,
       });
       await loadBookings(); // Reload to get updated data
+      toast.showToast({
+        title: "Status updated",
+        description: `Booking status changed to ${newStatus.replace("_", " ")}`,
+        type: "success",
+      });
     } catch (error) {
       console.error("Error updating booking status:", error);
+      toast.showToast({
+        title: "Update failed",
+        description: "Failed to update booking status",
+        type: "error",
+      });
     }
   };
 

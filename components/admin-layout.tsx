@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { X, Menu, Bell, Home, LogOut, Users, Calendar } from "lucide-react";
+import { X, Menu, Bell, Home, LogOut, Users, Calendar, Settings } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +25,7 @@ interface AdminLayoutProps {
 const navigation = [
   { name: "Dashboard", id: "dashboard", icon: Home },
   { name: "Bookings", id: "bookings", icon: Calendar },
+  { name: "Services", id: "services", icon: Settings, href: "/admin/manage/services" },
   { name: "Users", id: "users", icon: Users, href: "/admin/manage/users" },
 ];
 
@@ -140,6 +141,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const getCurrentPage = (pathname: string) => {
     const segments = pathname.split("/").filter(Boolean);
     if (segments.length >= 2 && segments[0] === "admin") {
+      // Handle manage routes
+      if (segments[1] === "manage") {
+        if (segments[2] === "services") return "services";
+        if (segments[2] === "users") return "users";
+        if (segments[2] === "bookings") return "bookings";
+      }
+
       const lastSegment = segments[segments.length - 1];
       if (!navigation.some((nav) => nav.id === lastSegment)) return segments[1];
       return lastSegment;
