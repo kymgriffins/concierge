@@ -1,5 +1,5 @@
-import { AdminDashboard } from "@/components/admin-dashboard";
+import { SuperuserDashboard } from "@/components/superuser-dashboard";
 
 export default function DashboardPage() {
-  return <AdminDashboard />;
+  return <SuperuserDashboard />;
 }

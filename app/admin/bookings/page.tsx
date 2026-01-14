@@ -87,7 +87,7 @@ export default function FullBookingsCRUDPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "missed">("active");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [serviceFilter, setServiceFilter] = useState("all");
@@ -250,6 +250,17 @@ export default function FullBookingsCRUDPage() {
         (booking) =>
           booking.status === "completed" || booking.status === "cancelled"
       );
+    } else if (activeTab === "missed") {
+      // Show missed bookings (past date/time, not completed or cancelled)
+      const now = new Date();
+      filtered = filtered.filter((booking) => {
+        const bookingDateTime = new Date(`${booking.date || ""}T${booking.time || "23:59"}`);
+        return (
+          bookingDateTime < now &&
+          booking.status !== "completed" &&
+          booking.status !== "cancelled"
+        );
+      });
     }
 
     // Filter by status
@@ -771,6 +782,36 @@ export default function FullBookingsCRUDPage() {
                   }`}
                 >
                   {bookings.filter(b => b.status === "completed" || b.status === "cancelled").length}
+                </span>
+              </div>
+            </button>
+            <button
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                activeTab === "missed"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
+              }`}
+              onClick={() => setActiveTab("missed")}
+            >
+              <div className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Missed Bookings
+                </span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === "missed"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {(() => {
+                    const now = new Date();
+                    return bookings.filter(b => {
+                      const bookingDateTime = new Date(`${b.date || ""}T${b.time || "23:59"}`);
+                      return bookingDateTime < now && b.status !== "completed" && b.status !== "cancelled";
+                    }).length;
+                  })()}
                 </span>
               </div>
             </button>

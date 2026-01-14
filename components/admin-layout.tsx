@@ -22,7 +22,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Plane
+  Plane,
+  DollarSign,
+  Clock,
+  CheckCircle
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -43,6 +46,99 @@ const navigation = [
   { name: "Users", id: "users", icon: Users, href: "/admin/manage/users" },
 ];
 
+interface NotificationCenterProps {
+  dashboardStats: {
+    totalBookings?: number;
+    pendingBookings?: number;
+    todayBookings?: number;
+    monthlyEarnings?: number;
+    completedBookings?: number;
+    totalEarnings?: number;
+    customersServiced?: number;
+    completionPercentage?: number;
+  };
+  isCollapsed: boolean;
+}
+
+const NotificationCenter = ({ dashboardStats, isCollapsed }: NotificationCenterProps) => {
+  const [currentNotification, setCurrentNotification] = useState(0);
+
+  const notifications = [
+    {
+      icon: Calendar,
+      color: "text-blue-600",
+      label: "Total Bookings",
+      value: dashboardStats.totalBookings || 0,
+      unit: ""
+    },
+    {
+      icon: Clock,
+      color: "text-orange-600",
+      label: "Active Bookings",
+      value: dashboardStats.pendingBookings || 0,
+      unit: ""
+    },
+    {
+      icon: CheckCircle,
+      color: "text-green-600",
+      label: "Completed",
+      value: dashboardStats.completedBookings || 0,
+      unit: ""
+    },
+    {
+      icon: DollarSign,
+      color: "text-green-600",
+      label: "Monthly Revenue",
+      value: dashboardStats.monthlyEarnings || 0,
+      unit: "$"
+    },
+    {
+      icon: Users,
+      color: "text-purple-600",
+      label: "Customers",
+      value: dashboardStats.customersServiced || 0,
+      unit: ""
+    }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentNotification((prev) => (prev + 1) % notifications.length);
+    }, 15000); // 15 seconds
+
+    return () => clearInterval(interval);
+  }, [notifications.length]);
+
+  const current = notifications[currentNotification];
+  const Icon = current.icon;
+
+  return (
+    <div className={cn(
+      "flex items-center transition-all duration-500 ease-in-out",
+      isCollapsed ? "justify-center" : "justify-between"
+    )}>
+      <Icon className={cn(
+        "transition-all duration-200",
+        current.color,
+        isCollapsed ? "h-4 w-4" : "h-3 w-3 mr-2"
+      )} />
+      {!isCollapsed && (
+        <div className="flex-1 min-w-0">
+          <span className="text-xs text-muted-foreground truncate block">
+            {current.label}
+          </span>
+        </div>
+      )}
+      <span className={cn(
+        "font-semibold transition-all duration-200",
+        isCollapsed ? "text-xs" : "text-sm"
+      )}>
+        {current.unit}{current.value.toLocaleString()}
+      </span>
+    </div>
+  );
+};
+
 interface SidebarContentProps {
   currentPage: string;
   isMobile: boolean;
@@ -54,6 +150,16 @@ interface SidebarContentProps {
   setIsCollapsed: (collapsed: boolean) => void;
   userEmail?: string;
   userName?: string;
+  dashboardStats?: {
+    totalBookings?: number;
+    pendingBookings?: number;
+    todayBookings?: number;
+    monthlyEarnings?: number;
+    completedBookings?: number;
+    totalEarnings?: number;
+    customersServiced?: number;
+    completionPercentage?: number;
+  } | null;
 }
 
 const SidebarContent = ({
@@ -67,6 +173,7 @@ const SidebarContent = ({
   setIsCollapsed,
   userEmail,
   userName,
+  dashboardStats,
 }: SidebarContentProps) => {
   const getInitials = () => {
     if (userName) {
@@ -162,6 +269,24 @@ const SidebarContent = ({
         })}
       </nav>
 
+      {/* Notification Center */}
+      {dashboardStats && (
+        <div className={cn(
+          "border-t bg-muted/30 transition-all duration-300",
+          isCollapsed ? "p-2" : "p-4"
+        )}>
+          {!isCollapsed && (
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              System Status
+            </h3>
+          )}
+          <NotificationCenter
+            dashboardStats={dashboardStats}
+            isCollapsed={isCollapsed}
+          />
+        </div>
+      )}
+
       {/* User section */}
       <div className={cn(
         "border-t transition-all duration-300",
@@ -206,6 +331,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState<{
+    totalBookings?: number;
+    pendingBookings?: number;
+    todayBookings?: number;
+    monthlyEarnings?: number;
+    completedBookings?: number;
+    totalEarnings?: number;
+    customersServiced?: number;
+    completionPercentage?: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -219,7 +354,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         setIsLoading(false);
       }
     };
+
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard-stats');
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardStats(data.stats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      }
+    };
+
     fetchUser();
+    fetchDashboardStats();
   }, []);
 
   const getCurrentPage = (pathname: string) => {
@@ -259,6 +408,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             setIsCollapsed={setIsCollapsed}
             userEmail={user?.email}
             userName={user?.name || user?.email?.split("@")[0]}
+            dashboardStats={dashboardStats}
           />
         </div>
       )}
@@ -282,6 +432,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             setIsCollapsed={setIsCollapsed}
             userEmail={user?.email}
             userName={user?.name || user?.email?.split("@")[0]}
+            dashboardStats={dashboardStats}
           />
         </div>
       )}

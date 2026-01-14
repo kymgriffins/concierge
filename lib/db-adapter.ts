@@ -81,7 +81,7 @@ export async function getOrCreateProfileForUser(user: { id?: string; email?: str
     );
     if (res.rowCount > 0) return mapProfileRow(res.rows[0]);
 
-    const role = process.env.SUPER_ADMIN_EMAIL && user.email === process.env.SUPER_ADMIN_EMAIL ? 'super_admin' : 'traveler';
+    const role = process.env.SUPER_ADMIN_EMAIL && user.email === process.env.SUPER_ADMIN_EMAIL ? 'super_admin' : 'agent';
     const insert = await client.query(
       `INSERT INTO profiles (user_id, role, name, email, phone, created_at) VALUES ($1, $2, $3, $4, $5, now()) RETURNING *`,
       [user.id || null, role, user.name || user.email || 'Guest', user.email || null, null],
@@ -126,7 +126,7 @@ export async function createBookingForProfile(profile: ProfileRow | null, payloa
       payload.airport || null,
       payload.flight_type || payload.flightType || null,
       payload.special_requests || payload.specialRequests || null,
-      payload.status || 'pending',
+      payload.status || 'created',
       payload.assigned_agent_profile_id || null,
       profile?.id || null,
     ];
@@ -404,7 +404,7 @@ export async function getDashboardStats() {
 
     const queries = await Promise.all([
       client.query(`SELECT COUNT(*) as total FROM bookings`),
-      client.query(`SELECT COUNT(*) as pending FROM bookings WHERE status = 'pending'`),
+      client.query(`SELECT COUNT(*) as unassigned FROM bookings WHERE status IN ('created', 'assigned') AND assigned_agent_profile_id IS NULL`),
       client.query(`SELECT COUNT(*) as today FROM bookings WHERE DATE(created_at) = $1`, [today]),
       client.query(`SELECT COUNT(*) as services FROM services WHERE active = true`),
       client.query(`SELECT COUNT(*) as travelers FROM auth.users WHERE COALESCE(raw_user_meta_data->>'role', 'traveler') = 'traveler'`),
@@ -427,7 +427,7 @@ export async function getDashboardStats() {
 
     return {
       totalBookings: parseInt(queries[0].rows[0].total),
-      pendingBookings: parseInt(queries[1].rows[0].pending),
+      unassignedBookings: parseInt(queries[1].rows[0].unassigned),
       todayBookings: parseInt(queries[2].rows[0].today),
       totalServices: parseInt(queries[3].rows[0].services),
       totalTravelers: parseInt(queries[4].rows[0].travelers),
@@ -474,6 +474,138 @@ export async function listSessions() {
   try {
     const res = await client.query(`SELECT * FROM sessions ORDER BY created_at DESC`);
     return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+// SLA and workload functions
+export async function getAgentWorkload() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT
+        p.id,
+        p.name,
+        COUNT(b.id) as active_bookings,
+        COUNT(CASE WHEN b.status IN ('in_progress', 'waiting') THEN 1 END) as urgent_bookings,
+        AVG(EXTRACT(EPOCH FROM (now() - b.created_at))/3600) as avg_booking_age_hours
+      FROM profiles p
+      LEFT JOIN bookings b ON b.assigned_agent_profile_id = p.id AND b.status NOT IN ('completed', 'cancelled')
+      WHERE p.role IN ('agent', 'super_admin')
+      GROUP BY p.id, p.name
+      ORDER BY active_bookings DESC
+    `);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getSLAViolations(hoursThreshold = 24) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT
+        b.*,
+        p.name as agent_name,
+        EXTRACT(EPOCH FROM (now() - b.created_at))/3600 as age_hours
+      FROM bookings b
+      LEFT JOIN profiles p ON b.assigned_agent_profile_id = p.id
+      WHERE b.status NOT IN ('completed', 'cancelled')
+        AND EXTRACT(EPOCH FROM (now() - b.created_at))/3600 > $1
+      ORDER BY age_hours DESC
+    `, [hoursThreshold]);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getBookingWithDetails(id: string) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT
+        b.*,
+        s.name as service_name,
+        s.icon as service_icon,
+        creator.name as creator_name,
+        agent.name as agent_name,
+        al.action as last_action,
+        al.message as last_message,
+        al.created_at as last_activity_at
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      LEFT JOIN profiles creator ON b.created_by = creator.id
+      LEFT JOIN profiles agent ON b.assigned_agent_profile_id = agent.id
+      LEFT JOIN activity_logs al ON b.id = al.booking_id
+        AND al.id = (SELECT MAX(id) FROM activity_logs WHERE booking_id = b.id)
+      WHERE b.id = $1
+    `, [id]);
+    return res.rowCount ? res.rows[0] : null;
+  } finally {
+    client.release();
+  }
+}
+
+export async function assignBookingToAgent(bookingId: string, agentId: string, superuserId: string, instructions?: string) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Update booking
+    await client.query(
+      `UPDATE bookings SET status = 'assigned', assigned_agent_profile_id = $1, updated_at = now() WHERE id = $2`,
+      [agentId, bookingId]
+    );
+
+    // Create activity log
+    await client.query(
+      `INSERT INTO activity_logs (booking_id, actor_profile_id, action, message, meta) VALUES ($1, $2, $3, $4, $5)`,
+      [bookingId, superuserId, 'assigned', `Assigned to agent${instructions ? ': ' + instructions : ''}`, { assigned_to: agentId }]
+    );
+
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function reassignBooking(bookingId: string, newAgentId: string, superuserId: string, reason: string) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Get current assignment
+    const current = await client.query(`SELECT assigned_agent_profile_id FROM bookings WHERE id = $1`, [bookingId]);
+    const oldAgentId = current.rows[0]?.assigned_agent_profile_id;
+
+    // Update booking
+    await client.query(
+      `UPDATE bookings SET assigned_agent_profile_id = $1, updated_at = now() WHERE id = $2`,
+      [newAgentId, bookingId]
+    );
+
+    // Create activity log
+    await client.query(
+      `INSERT INTO activity_logs (booking_id, actor_profile_id, action, message, meta) VALUES ($1, $2, $3, $4, $5)`,
+      [bookingId, superuserId, 'reassigned', `Reassigned from ${oldAgentId} to ${newAgentId}. Reason: ${reason}`, {
+        old_agent: oldAgentId,
+        new_agent: newAgentId,
+        reason
+      }]
+    );
+
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
   } finally {
     client.release();
   }

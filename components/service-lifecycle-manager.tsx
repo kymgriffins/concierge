@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
 
 import ClientAPI, { Booking, Agent } from "@/lib/client-api";
 import { useToast } from "@/components/ui/toast";
@@ -272,6 +273,7 @@ export function ServiceLifecycleManager({
                   disabled={loading}
                   className="text-xs"
                 >
+                  {loading && <Spinner />}
                   {status === "pending_review" ? "Submit Review" : config.label}
                 </Button>
               );
@@ -285,6 +287,7 @@ export function ServiceLifecycleManager({
               disabled={loading}
               className="text-xs"
             >
+              {loading && <Spinner />}
               <Play className="w-3 h-3 mr-1" />
               Check
             </Button>
@@ -335,6 +338,7 @@ export function ServiceLifecycleManager({
               onClick={handleAutoTransitionCheck}
               disabled={loading}
             >
+              {loading && <Spinner />}
               <Play className="w-4 h-4 mr-2" />
               Run Auto-Transition
             </Button>
@@ -403,6 +407,7 @@ export function ServiceLifecycleManager({
                                     disabled={loading}
                                     size="sm"
                                   >
+                                    {loading && <Spinner />}
                                     {status === "pending_review"
                                       ? "Submit for Review"
                                       : "Approve & Complete"}
@@ -423,6 +428,7 @@ export function ServiceLifecycleManager({
                                 onClick={() => setShowReviewDialog(true)}
                                 disabled={loading || !canPerformAction}
                               >
+                                {loading && <Spinner />}
                                 {status === "pending_review"
                                   ? "Submit for Review"
                                   : "Approve"}
@@ -435,6 +441,7 @@ export function ServiceLifecycleManager({
                               onClick={() => handleStatusChange(status)}
                               disabled={loading || !canPerformAction}
                             >
+                              {loading && <Spinner />}
                               <ArrowRight className="w-4 h-4 mr-2" />
                               {config.label}
                             </Button>

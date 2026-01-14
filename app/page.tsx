@@ -1,27 +1,38 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { AuthView } from '@neondatabase/auth/react';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Hero Section */}
       <section className="relative py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Premium Airport Concierge
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Elevate your travel experience with our comprehensive concierge
-            services. From meet & greet to VIP lounge access, we handle every
-            detail.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <Link href="/auth/sign-in">Get Started</Link>
-            </Button>
-            <Button variant="outline" size="lg">
-              Learn More
-            </Button>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Side - Willis Protocol and Concierge Details */}
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Willis Protocol Concierge
+            </h1>
+            <div className="space-y-4 text-lg text-muted-foreground">
+              <p>
+                Experience premium airport concierge services designed for the modern traveler.
+                Our protocol combines cutting-edge technology with personalized service to ensure
+                every aspect of your journey is seamless and exceptional.
+              </p>
+              <p>
+                From AI-powered booking assistance to real-time flight monitoring and VIP lounge access,
+                Willis Protocol delivers the ultimate concierge experience.
+              </p>
+              <p>
+                Join our network of discerning travelers who demand nothing less than perfection
+                in their travel arrangements.
+              </p>
+            </div>
+          </div>
+
+          {/* Right Side - Signup Form */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              <AuthView path="sign-up" />
+            </div>
           </div>
         </div>
       </section>

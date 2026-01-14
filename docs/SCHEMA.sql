@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   airport TEXT,
   flight_type TEXT, -- arrival | departure | transit
   special_requests TEXT,
-  status TEXT NOT NULL DEFAULT 'created', -- created | assigned | in_progress | waiting | completed | cancelled
+  status TEXT NOT NULL DEFAULT 'pending', -- pending | active | complete | cancelled
   assigned_agent_profile_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -223,4 +223,3 @@ CREATE POLICY notifications_insert_policy ON notifications FOR INSERT WITH CHECK
   profile_id = current_profile_id() OR is_admin()
 );
 CREATE POLICY notifications_delete_policy ON notifications FOR DELETE USING (is_admin());
-
