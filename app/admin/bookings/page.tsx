@@ -47,7 +47,7 @@ interface Booking {
   airline?: string;
   date?: string;
   time?: string;
-  status?: "new" | "contacted" | "confirmed" | "in_progress" | "completed" | "pending_review" | "cancelled" | "pending";
+  status?: "new" | "contacted" | "confirmed" | "in_progress" | "completed" | "pending_review" | "cancelled" | "pending" | "missed";
   serviceId?: string;
   company?: string;
   phone?: string;
@@ -87,7 +87,7 @@ export default function FullBookingsCRUDPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"active" | "completed" | "missed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "cancelled" | "missed">("active");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [serviceFilter, setServiceFilter] = useState("all");
@@ -205,25 +205,54 @@ export default function FullBookingsCRUDPage() {
       }
       const result = await response.json();
       // Transform database format to component format
-      const transformedBookings = result.bookings.map((b: any) => ({
-        id: b.id,
-        passengerName: b.traveler_name || "",
-        company: "",
-        phone: b.traveler_phone || "",
-        email: b.traveler_email || "",
-        flightNumber: b.flight_number || "",
-        airline: "",
-        date: b.flight_date || "",
-        time: "",
-        terminal: b.airport || "",
-        passengerCount: 1,
-        serviceId: b.service_id || "",
-        specialRequests: b.special_requests || "",
-        status: b.status || "pending",
-        source: b.communication_channel || "manual",
-        createdAt: b.created_at || new Date().toISOString(),
-        updatedAt: b.updated_at || new Date().toISOString(),
-      }));
+      const transformedBookings = result.bookings.map((b: any) => {
+        const rawStatus = b.status || "pending";
+        let status = rawStatus as string;
+
+        // Determine if booking should be marked as missed:
+        // - missed = booking date is strictly before today (passed today)
+        // - and booking is not completed
+        try {
+          const now = new Date();
+          const todayStr = now.toISOString().split("T")[0];
+
+          const rawDate = b.flight_date || "";
+
+          // normalize date-only string (if ISO with time provided, strip time)
+          const bookingDateOnly = rawDate.includes("T") ? rawDate.split("T")[0] : rawDate;
+
+          if (
+            bookingDateOnly &&
+            bookingDateOnly < todayStr &&
+            rawStatus !== "completed" &&
+            rawStatus !== "cancelled"
+          ) {
+            status = "missed";
+          }
+        } catch (e) {
+          // ignore parsing errors and leave status as-is
+        }
+
+        return {
+          id: b.id,
+          passengerName: b.traveler_name || "",
+          company: "",
+          phone: b.traveler_phone || "",
+          email: b.traveler_email || "",
+          flightNumber: b.flight_number || "",
+          airline: "",
+          date: b.flight_date || "",
+          time: b.flight_time || "",
+          terminal: b.airport || "",
+          passengerCount: 1,
+          serviceId: b.service_id || "",
+          specialRequests: b.special_requests || "",
+          status: status as any,
+          source: b.communication_channel || "manual",
+          createdAt: b.created_at || new Date().toISOString(),
+          updatedAt: b.updated_at || new Date().toISOString(),
+        } as Booking;
+      });
       setBookings(transformedBookings);
     } catch (error) {
       console.error("Error loading bookings:", error);
@@ -239,28 +268,20 @@ export default function FullBookingsCRUDPage() {
 
     // First filter by active tab
     if (activeTab === "active") {
-      // Show active bookings (not completed or cancelled)
+      // Show active bookings (not completed, cancelled, or missed)
       filtered = filtered.filter(
         (booking) =>
-          booking.status !== "completed" && booking.status !== "cancelled"
+          booking.status !== "completed" && booking.status !== "cancelled" && booking.status !== "missed"
       );
     } else if (activeTab === "completed") {
-      // Show completed/cancelled bookings
-      filtered = filtered.filter(
-        (booking) =>
-          booking.status === "completed" || booking.status === "cancelled"
-      );
+      // Show completed bookings only
+      filtered = filtered.filter((booking) => booking.status === "completed");
+    } else if (activeTab === "cancelled") {
+      // Show cancelled bookings only
+      filtered = filtered.filter((booking) => booking.status === "cancelled");
     } else if (activeTab === "missed") {
-      // Show missed bookings (past date/time, not completed or cancelled)
-      const now = new Date();
-      filtered = filtered.filter((booking) => {
-        const bookingDateTime = new Date(`${booking.date || ""}T${booking.time || "23:59"}`);
-        return (
-          bookingDateTime < now &&
-          booking.status !== "completed" &&
-          booking.status !== "cancelled"
-        );
-      });
+      // Show bookings explicitly marked as missed
+      filtered = filtered.filter((booking) => booking.status === "missed");
     }
 
     // Filter by status
@@ -380,12 +401,39 @@ export default function FullBookingsCRUDPage() {
     }
   };
 
+  const isBookingMissed = (booking: Booking): boolean => {
+    if (booking.status === "missed") return true;
+    if (booking.status === "completed" || booking.status === "cancelled") return false;
+
+    // A booking is considered missed if its booking date is strictly before today
+    try {
+      const now = new Date();
+      const todayStr = now.toISOString().split("T")[0];
+      const dateStr = booking.date || "";
+
+      const bookingDateOnly = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+      const missed = bookingDateOnly && bookingDateOnly < todayStr;
+      if (missed) {
+        console.log(`Booking ${booking.id} is missed (date ${bookingDateOnly} < today ${todayStr})`, {
+          id: booking.id,
+          date: booking.date,
+          status: booking.status,
+        });
+      }
+      return Boolean(missed);
+    } catch (e) {
+      return false;
+    }
+  };
+
   const getStatusColor = (status: Booking["status"]): "default" | "secondary" | "outline" | "destructive" => {
     switch (status) {
       case "new":
         return "default";
       case "contacted":
         return "secondary";
+      case "missed":
+        return "destructive";
       case "confirmed":
         return "outline";
       case "in_progress":
@@ -426,6 +474,7 @@ export default function FullBookingsCRUDPage() {
         traveler_phone: form.phone || "",
         flight_number: form.flightNumber || "",
         flight_date: form.date || new Date().toISOString().split("T")[0],
+        flight_time: form.time || null,
         airport: form.terminal || "",
         flight_type: "arrival",
         special_requests: form.specialRequests || "",
@@ -562,24 +611,34 @@ export default function FullBookingsCRUDPage() {
         cell: (r) => {
           const formattedDate = formatDateUTC(r.date || "");
           let color: string;
-          const status = r.status || "new";
-          if (status === "completed") {
-            color = "text-green-600";
-          } else if (status === "in_progress") {
-            color = "text-orange-600";
-          } else if (status === "cancelled") {
-            color = "text-red-600";
-          } else if (status === "new" || status === "contacted" || status === "confirmed") {
-            color = "text-blue-600";
-          } else if (status === "pending_review") {
-            color = "text-yellow-600";
+
+          // Priority: missed bookings get red color, then status-based colors
+          if (isBookingMissed(r)) {
+            color = "text-red-600 font-semibold";
           } else {
-            color = "text-muted-foreground";
+            const status = r.status || "new";
+            if (status === "completed") {
+              color = "text-green-600";
+            } else if (status === "in_progress") {
+              color = "text-orange-600";
+            } else if (status === "cancelled") {
+              color = "text-gray-500";
+            } else if (status === "new" || status === "contacted" || status === "confirmed") {
+              color = "text-blue-600";
+            } else if (status === "pending_review") {
+              color = "text-yellow-600";
+            } else {
+              color = "text-muted-foreground";
+            }
           }
+
           return (
             <div>
               <div className={color}>{formattedDate}</div>
               <div className="text-sm text-muted-foreground">{r.time}</div>
+              {isBookingMissed(r) && (
+                <div className="text-xs text-red-500 font-medium">MISSED</div>
+              )}
             </div>
           );
         },
@@ -757,7 +816,7 @@ export default function FullBookingsCRUDPage() {
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {bookings.filter(b => b.status !== "completed" && b.status !== "cancelled").length}
+                  {bookings.filter(b => b.status !== "completed" && b.status !== "cancelled" && b.status !== "missed").length}
                 </span>
               </div>
             </button>
@@ -772,7 +831,7 @@ export default function FullBookingsCRUDPage() {
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-sm font-medium whitespace-nowrap">
-                  Completed/Cancelled
+                  Completed
                 </span>
                 <span
                   className={`text-xs px-1.5 py-0.5 rounded-full ${
@@ -781,7 +840,32 @@ export default function FullBookingsCRUDPage() {
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {bookings.filter(b => b.status === "completed" || b.status === "cancelled").length}
+                  {bookings.filter(b => b.status === "completed").length}
+                </span>
+              </div>
+            </button>
+
+            <button
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-0 sm:border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                activeTab === "cancelled"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted/50 sm:border-border text-foreground"
+              }`}
+              onClick={() => setActiveTab("cancelled")}
+            >
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4" />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Cancelled
+                </span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === "cancelled"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {bookings.filter(b => b.status === "cancelled").length}
                 </span>
               </div>
             </button>
@@ -805,13 +889,7 @@ export default function FullBookingsCRUDPage() {
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {(() => {
-                    const now = new Date();
-                    return bookings.filter(b => {
-                      const bookingDateTime = new Date(`${b.date || ""}T${b.time || "23:59"}`);
-                      return bookingDateTime < now && b.status !== "completed" && b.status !== "cancelled";
-                    }).length;
-                  })()}
+                  {bookings.filter(b => b.status === "missed").length}
                 </span>
               </div>
             </button>
@@ -1056,6 +1134,7 @@ export default function FullBookingsCRUDPage() {
                         <SelectItem value="in_progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="missed">Missed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -92,6 +92,7 @@ export default function NewBookingPage() {
         traveler_phone: form.phone || "",
         flight_number: form.flightNumber || "",
         flight_date: form.date || new Date().toISOString().split("T")[0],
+        flight_time: form.time || null,
         airport: form.terminal || "",
         flight_type: "arrival",
         special_requests: form.specialRequests || "",

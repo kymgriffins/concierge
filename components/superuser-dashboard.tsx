@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import { getDashboardStats, getAgentWorkload, getSLAViolations } from "@/lib/db-adapter";
+// Removed db-adapter imports - using API routes instead
 import { BookingCreationModal } from "./booking-creation-modal";
 import { BookingDetailView } from "./booking-detail-view";
 import { AssignmentModal } from "./assignment-modal";
@@ -29,6 +29,7 @@ interface DashboardStats {
   monthlyEarnings: number;
   customersServiced: number;
   completionPercentage: number;
+  missedBookings?: number;
 }
 
 interface AgentWorkload {
@@ -78,9 +79,10 @@ export function SuperuserDashboard() {
     setLoading(true);
     try {
       const [statsResult, workloadResult, slaResult, bookingsResult] = await Promise.allSettled([
-        getDashboardStats(),
-        getAgentWorkload(),
-        getSLAViolations(),
+        fetch("/api/dashboard-stats").then(r => r.ok ? r.json() : Promise.reject(r.status)),
+        // TODO: Create API routes for agent workload and SLA violations
+        Promise.resolve([]), // Placeholder for agent workload
+        Promise.resolve([]), // Placeholder for SLA violations
         fetch("/api/bookings").then(r => r.ok ? r.json() : Promise.reject(r.status)),
       ]);
 

@@ -23,6 +23,8 @@ interface BookingPayload {
   communication_channel?: string;
   flight_date?: string;
   date?: string;
+  flight_time?: string;
+  time?: string;
   flight_number?: string;
   flightNumber?: string;
   airport?: string;
@@ -112,8 +114,8 @@ export async function createBookingForProfile(profile: ProfileRow | null, payloa
   try {
     const query = `INSERT INTO bookings (
       traveler_profile_id, traveler_name, traveler_email, traveler_phone, service_id, communication_channel,
-      flight_date, flight_number, airport, flight_type, special_requests, status, assigned_agent_profile_id, created_at, updated_at, created_by
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, now(), now(), $14) RETURNING *`;
+      flight_date, flight_time, flight_number, airport, flight_type, special_requests, status, assigned_agent_profile_id, created_at, updated_at, created_by
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now(), now(), $15) RETURNING *`;
     const vals = [
       profile?.id || null,
       payload.traveler_name || payload.passengerName || null,
@@ -122,6 +124,7 @@ export async function createBookingForProfile(profile: ProfileRow | null, payloa
       payload.service_id || null,
       payload.communication_channel || null,
       payload.flight_date || payload.date || null,
+      payload.flight_time || payload.time || null,
       payload.flight_number || payload.flightNumber || null,
       payload.airport || null,
       payload.flight_type || payload.flightType || null,
@@ -154,7 +157,7 @@ export async function updateBookingById(id: string, patch: Partial<BookingPayloa
     const vals: any[] = [];
     let idx = 1;
     const allowed = [
-      'traveler_name', 'traveler_email', 'traveler_phone', 'flight_date', 'flight_number', 'airport', 'flight_type',
+      'traveler_name', 'traveler_email', 'traveler_phone', 'flight_date', 'flight_time', 'flight_number', 'airport', 'flight_type',
       'special_requests', 'status', 'assigned_agent_profile_id', 'service_id', 'communication_channel'
     ];
     for (const k of allowed) {
@@ -417,7 +420,9 @@ export async function getDashboardStats() {
       // Unique customers serviced (unique traveler emails or profile ids)
       client.query(`SELECT COUNT(DISTINCT COALESCE(b.traveler_email, b.traveler_profile_id::text)) as unique_customers FROM bookings b WHERE b.status = 'completed'`),
       // Cancelled bookings
-      client.query(`SELECT COUNT(*) as cancelled FROM bookings WHERE status = 'cancelled'`)
+      client.query(`SELECT COUNT(*) as cancelled FROM bookings WHERE status = 'cancelled'`),
+      // Missed bookings (past flight date/time, not completed or cancelled)
+      client.query(`SELECT COUNT(*) as missed FROM bookings WHERE (flight_date < CURRENT_DATE OR (flight_date = CURRENT_DATE AND flight_time < CURRENT_TIME)) AND status NOT IN ('completed', 'cancelled')`)
     ]);
 
     const completedBookings = parseInt(queries[6].rows[0].completed);
@@ -437,6 +442,7 @@ export async function getDashboardStats() {
       monthlyEarnings: parseFloat(queries[8].rows[0].monthly_earnings),
       customersServiced: parseInt(queries[9].rows[0].unique_customers),
       completionPercentage: Math.round(completionPercentage * 100) / 100, // Round to 2 decimal places
+      missedBookings: parseInt(queries[11].rows[0].missed),
     };
   } finally {
     client.release();

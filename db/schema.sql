@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- who created this booking (local profile id)
   created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
   flight_date DATE NOT NULL,
+  flight_time TIME,
   flight_number TEXT,
   airport TEXT,
   flight_type TEXT, -- arrival | departure | transit
@@ -223,4 +224,3 @@ CREATE POLICY notifications_insert_policy ON notifications FOR INSERT WITH CHECK
   profile_id = current_profile_id() OR is_admin()
 );
 CREATE POLICY notifications_delete_policy ON notifications FOR DELETE USING (is_admin());
-
